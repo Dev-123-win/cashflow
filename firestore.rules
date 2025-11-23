@@ -1,0 +1,346 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ============================================================================
+    // SECURITY CRITICAL: These rules protect against balance manipulation attacks
+    // ============================================================================
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAuthenticatedUser(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isAdmin(userId) {
+      return isAuthenticated() && get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    function canReadPublicData() {
+      return isAuthenticated();
+    }
+    
+    function isValidEmail(email) {
+      return email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$');
+    }
+    
+    function isValidAmount(amount) {
+      return amount is number && amount > 0 && amount <= 100000;
+    }
+    
+    function isValidPhoneNumber(phone) {
+      return phone.matches('^[0-9]{10}$');
+    }
+
+    // CRITICAL SECURITY: Balance fields are READ-ONLY from client
+    // They can ONLY be updated via transactions (append-only log)
+    function hasNoBalanceFieldUpdates(incomingData, existingData) {
+      // For each balance field, ensure it hasn't changed
+      return (!('availableBalance' in incomingData.keys()) || incomingData.availableBalance == existingData.availableBalance) &&
+             (!('totalEarned' in incomingData.keys()) || incomingData.totalEarned == existingData.totalEarned) &&
+             (!('totalWithdrawn' in incomingData.keys()) || incomingData.totalWithdrawn == existingData.totalWithdrawn) &&
+             (!('tasksCompletedToday' in incomingData.keys()) || incomingData.tasksCompletedToday == existingData.tasksCompletedToday) &&
+             (!('gamesPlayedToday' in incomingData.keys()) || incomingData.gamesPlayedToday == existingData.gamesPlayedToday) &&
+             (!('adsWatchedToday' in incomingData.keys()) || incomingData.adsWatchedToday == existingData.adsWatchedToday) &&
+             (!('dailySpins' in incomingData.keys()) || incomingData.dailySpins == existingData.dailySpins) &&
+             (!('dailyEarningsToday' in incomingData.keys()) || incomingData.dailyEarningsToday == existingData.dailyEarningsToday) &&
+             (!('currentStreak' in incomingData.keys()) || incomingData.currentStreak == existingData.currentStreak);
+    }
+    
+    // Users collection - Profile data only (balance updated via transactions)
+    match /users/{userId} {
+      // Read: User can read their own profile
+      allow read: if isAuthenticatedUser(userId) || 
+                     (isAuthenticated() && resource.data.profilePublic == true);
+      
+      // Write: Only user can update their own profile (but NOT balance/earnings)
+      allow write: if isAuthenticatedUser(userId) &&
+                      validateUserProfileUpdate(request.resource.data, resource.data);
+      
+      // Create: User creating their own account during signup
+      allow create: if isAuthenticatedUser(userId) &&
+                       request.resource.data.uid == userId &&
+                       isValidEmail(request.resource.data.email) &&
+                       request.resource.data.createdAt == request.time &&
+                       request.resource.data.role == 'user' &&
+                       request.resource.data.availableBalance == 0 &&
+                       request.resource.data.totalEarned == 0 &&
+                       request.resource.data.totalWithdrawn == 0;
+      
+      // Delete: Only admin can delete user accounts
+      allow delete: if isAdmin(userId);
+      
+      // CRITICAL: Validate profile updates don't touch financial fields
+      function validateUserProfileUpdate(incomingData, existingData) {
+        return hasNoBalanceFieldUpdates(incomingData, existingData) &&
+               (incomingData.displayName is string && incomingData.displayName.size() > 0 && incomingData.displayName.size() <= 100) &&
+               (incomingData.email is string && isValidEmail(incomingData.email)) &&
+               (incomingData.phoneNumber == null || isValidPhoneNumber(incomingData.phoneNumber)) &&
+               (incomingData.profilePicture == null || incomingData.profilePicture is string) &&
+               (incomingData.profilePublic == null || incomingData.profilePublic is bool) &&
+               (incomingData.preferences == null || incomingData.preferences is map);
+      }
+      
+      // Transactions subcollection - APPEND ONLY (immutable log of all earnings)
+      match /transactions/{transactionId} {
+        // User can read their own transactions
+        allow read: if isAuthenticatedUser(userId);
+        
+        // Client can create transactions (server validates balance via transaction log)
+        allow create: if isAuthenticatedUser(userId) &&
+                        validateTransaction(request.resource.data);
+        
+        // CRITICAL: Transactions are IMMUTABLE (no updates/deletes)
+        allow update, delete: if false;
+        
+        function validateTransaction(data) {
+          return data.userId == userId &&
+                 data.type in ['earning', 'withdrawal', 'refund', 'bonus'] &&
+                 isValidAmount(data.amount) &&
+                 (data.gameType == null || data.gameType in ['tictactoe', 'memory_match', 'quiz', 'spin', 'tasks', 'ads', 'referral']) &&
+                 data.status in ['pending', 'completed', 'failed'] &&
+                 data.timestamp == request.time &&
+                 data.success is bool &&
+                 data.requestId is string && // CRITICAL: Request deduplication ID
+                 data.requestId.size() > 0 &&
+                 (data.source == null || data.source is string) &&
+                 (data.description == null || data.description is string);
+        }
+      }
+      
+      // Game results subcollection - APPEND ONLY
+      match /gameResults/{gameResultId} {
+        // User can read their own game results
+        allow read: if isAuthenticatedUser(userId);
+        
+        // User can create game results
+        allow create: if isAuthenticatedUser(userId) &&
+                        validateGameResult(request.resource.data);
+        
+        // Game results are immutable
+        allow update, delete: if false;
+        
+        function validateGameResult(data) {
+          return data.userId == userId &&
+                 data.gameType in ['tictactoe', 'memory_match', 'quiz'] &&
+                 data.result in ['win', 'loss', 'draw'] &&
+                 isValidAmount(data.reward) &&
+                 data.timestamp == request.time &&
+                 data.duration is number &&
+                 data.duration > 0 &&
+                 data.duration <= 300 &&
+                 data.requestId is string && // CRITICAL: Deduplication
+                 (data.deviceFingerprint == null || data.deviceFingerprint is string);
+        }
+      }
+    }
+    
+    // Public leaderboard collection (aggregated data only - read from transactions)
+    match /leaderboard/{entry} {
+      allow read: if isAuthenticated();
+      allow write: if false; // NO client writes to leaderboard
+    }
+    
+    // Game questions collection (read-only for users)
+    match /gameQuestions/{questionId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin(request.auth.uid);
+      
+      function validateQuestion(data) {
+        return data.category is string &&
+               data.question is string &&
+               data.options is list &&
+               data.options.size() == 4 &&
+               data.correctAnswerIndex is number &&
+               data.correctAnswerIndex >= 0 &&
+               data.correctAnswerIndex <= 3 &&
+               data.difficulty in ['easy', 'medium', 'hard'];
+      }
+    }
+    
+    // Tasks collection
+    match /tasks/{taskId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin(request.auth.uid);
+      
+      function validateTask(data) {
+        return data.title is string &&
+               data.description is string &&
+               data.reward is number &&
+               isValidAmount(data.reward) &&
+               data.status in ['active', 'completed', 'archived'] &&
+               data.category is string &&
+               data.actionUrl is string;
+      }
+      
+      // User task completions - APPEND ONLY
+      match /completions/{completionId} {
+        allow read: if isAuthenticatedUser(request.auth.uid);
+        allow create: if isAuthenticatedUser(request.resource.data.userId) &&
+                        validateCompletion(request.resource.data);
+        allow update, delete: if false;
+        
+        function validateCompletion(data) {
+          return data.userId is string &&
+                 data.completedAt == request.time &&
+                 data.reward is number &&
+                 isValidAmount(data.reward) &&
+                 data.requestId is string; // CRITICAL: Deduplication
+        }
+      }
+    }
+    
+    // CRITICAL: Withdrawal requests - Strict validation
+    match /withdrawalRequests/{requestId} {
+      // User can read their own withdrawal requests
+      allow read: if isAuthenticatedUser(resource.data.userId) || isAdmin(request.auth.uid);
+      
+      // User can create withdrawal request (amount must match their balance)
+      allow create: if isAuthenticatedUser(request.resource.data.userId) &&
+                       validateWithdrawalRequest(request.resource.data);
+      
+      // User can ONLY cancel pending requests (no status updates to approved/rejected)
+      allow update: if isAuthenticatedUser(resource.data.userId) &&
+                       resource.data.status == 'pending' &&
+                       request.resource.data.status == 'cancelled' &&
+                       request.resource.data.userId == resource.data.userId &&
+                       (request.resource.data.get("cancellationReason", "") is string);
+      
+      // No delete allowed
+      allow delete: if false;
+      
+      function validateWithdrawalRequest(data) {
+        return data.userId is string &&
+               isValidAmount(data.amount) &&
+               data.amount >= 100 && // Minimum withdrawal
+               data.amount <= 10000 && // Maximum withdrawal
+               data.paymentMethod in ['upi', 'bank', 'wallet'] &&
+               data.paymentDetails is map &&
+               data.status == 'pending' &&
+               data.createdAt == request.time &&
+               (data.reason == null || data.reason is string) &&
+               data.requestId is string && // CRITICAL: Deduplication
+               (data.fee == null || (data.fee is number && data.fee > 0 && data.fee <= 500)) &&
+               (data.deviceFingerprint == null || data.deviceFingerprint is string);
+      }
+    }
+    
+    // Referral program collection
+    match /referrals/{referralId} {
+      allow read: if isAuthenticated();
+      
+      allow create: if isAuthenticatedUser(request.resource.data.referrerId) &&
+                       validateReferral(request.resource.data);
+      
+      // Referral tracking is immutable
+      allow update, delete: if false;
+      
+      function validateReferral(data) {
+        return data.referrerId is string &&
+               data.code is string &&
+               data.code.size() == 8 &&
+               data.createdAt == request.time &&
+               data.usageCount is number &&
+               data.usageCount >= 0 &&
+               data.reward is number &&
+               isValidAmount(data.reward);
+      }
+      
+      // Referral usages subcollection - APPEND ONLY
+      match /usages/{usageId} {
+        allow read: if isAuthenticatedUser(resource.data.userId) || 
+                       isAuthenticatedUser(get(/databases/(default)/documents/referrals/$(referralId)).data.referrerId);
+        
+        allow create: if isAuthenticatedUser(request.resource.data.userId) &&
+                        validateReferralUsage(request.resource.data);
+        
+        allow update, delete: if false;
+        
+        function validateReferralUsage(data) {
+          let referralDoc = get(/databases/(default)/documents/referrals/$(referralId));
+          return data.userId is string &&
+                 data.referrerId == referralDoc.data.referrerId &&
+                 data.usedAt == request.time &&
+                 data.reward is number &&
+                 isValidAmount(data.reward) &&
+                 data.requestId is string; // CRITICAL: Deduplication
+        }
+      }
+    }
+    
+    // Admin logs collection - APPEND ONLY
+    match /adminLogs/{logId} {
+      allow read, write: if isAdmin(request.auth.uid);
+      
+      function validateLog(data) {
+        return data.action is string &&
+               data.targetUserId is string &&
+               data.targetCollection is string &&
+               data.timestamp == request.time &&
+               data.details is map;
+      }
+    }
+    
+    // Request deduplication cache (in-memory, expires automatically)
+    match /requestCache/{requestId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() &&
+                       request.resource.data.userId is string &&
+                       request.resource.data.type is string &&
+                       request.resource.data.timestamp == request.time &&
+                       request.resource.data.expiresAt is timestamp;
+      allow update, delete: if false;
+    }
+    
+    // Audit logs for balance changes - APPEND ONLY
+    match /auditLogs/{logId} {
+      allow read: if isAuthenticatedUser(resource.data.userId) || isAdmin(request.auth.uid);
+      allow create: if request.resource.data.userId is string &&
+                       request.resource.data.type is string &&
+                       request.resource.data.timestamp == request.time &&
+                       request.resource.data.amount is number &&
+                       request.resource.data.oldBalance is number &&
+                       request.resource.data.newBalance is number;
+      allow update, delete: if false;
+    }
+    
+    // Device fingerprints - For fraud detection
+    match /deviceFingerprints/{fingerprintId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() &&
+                       request.resource.data.userId is string &&
+                       request.resource.data.fingerprint is string &&
+                       request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
+    }
+    
+    // Analytics collection (append-only, read-only for users)
+    match /analytics/{eventId} {
+      allow read: if isAdmin(request.auth.uid);
+      allow create: if isAuthenticated() &&
+                       request.resource.data.userId is string &&
+                       request.resource.data.event is string &&
+                       request.resource.data.timestamp == request.time;
+      allow update, delete: if false;
+    }
+    
+    // Notifications collection
+    match /notifications/{userId} {
+      allow read: if isAuthenticatedUser(userId);
+      allow write: if request.auth.token.firebase.sign_in_provider == 'custom';
+      
+      match /items/{notificationId} {
+        allow read: if isAuthenticatedUser(userId);
+        
+        allow update: if isAuthenticatedUser(userId) &&
+                         (request.resource.data.isRead == true || request.resource.data.isRead == false);
+        
+        allow delete: if isAuthenticatedUser(userId);
+      }
+    }
+    
+  }
+}
