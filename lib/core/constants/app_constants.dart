@@ -11,38 +11,39 @@ class AppConstants {
   static const String withdrawalEndpoint = '/api/withdrawal/request';
   static const String userStatsEndpoint = '/api/user/stats';
 
-  // Daily Limits
-  static const double maxDailyEarnings = 1.50;
+  // Daily Limits (OPTIMIZED for profitability)
+  static const double maxDailyEarnings = 1.20; // Reduced from 1.50
   static const int maxTasksPerDay = 3;
   static const int maxGamesPerDay = 6;
   static const int maxAdsPerDay = 15;
   static const int maxSpinsPerDay = 1;
 
-  // Withdrawal Settings (Backend source-of-truth: ₹50 min, ₹5000 max)
-  static const double minWithdrawalAmount = 50.0;
+  // Withdrawal Settings (OPTIMIZED - Backend source-of-truth)
+  static const double minWithdrawalAmount = 100.0; // Increased from 50.0
   static const double maxWithdrawalPerRequest = 5000.0;
   static const int minAccountAgeDays = 7;
+  static const double withdrawalFeePercentage = 0.02; // 2% fee
 
-  // Task Rewards
+  // Task Rewards (OPTIMIZED - Reduced by 15%)
   static const Map<String, double> taskRewards = {
-    'survey': 0.10,
-    'social_share': 0.10,
-    'app_rating': 0.10,
+    'survey': 0.085, // Was 0.10
+    'social_share': 0.085, // Was 0.10
+    'app_rating': 0.085, // Was 0.10
   };
 
-  // Game Rewards
+  // Game Rewards (OPTIMIZED - Reduced by 25%)
   static const Map<String, double> gameRewards = {
-    'tictactoe': 0.08,
-    'memory_match': 0.08,
+    'tictactoe': 0.06, // Was 0.08
+    'memory_match': 0.06, // Was 0.08
   };
 
-  // Ad Rewards
-  static const double rewardedAdReward = 0.03;
+  // Ad Rewards (OPTIMIZED - Reduced by 15%)
+  static const double rewardedAdReward = 0.025; // Was 0.03
   static const double interstitialAdReward = 0.02;
 
-  // Spin Rewards (Backend source-of-truth: random between 0.05 and 1.00)
+  // Spin Rewards (OPTIMIZED - Backend source-of-truth)
   static const double spinMinReward = 0.05;
-  static const double spinMaxReward = 1.00;
+  static const double spinMaxReward = 0.75; // Reduced from 1.00
   static const List<double> spinRewards = [
     0.05,
     0.10,
@@ -50,8 +51,7 @@ class AppConstants {
     0.20,
     0.30,
     0.50,
-    0.75,
-    1.00,
+    0.75, // Max reduced from 1.00
   ];
 
   // Cooldown Periods (in minutes)

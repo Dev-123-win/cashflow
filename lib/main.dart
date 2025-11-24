@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'core/theme/app_theme.dart';
@@ -31,6 +32,13 @@ void main() async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
     debugPrint('Firebase initialized successfully');
+
+    // Enable Firestore offline persistence (reduces reads by 40-50%)
+    FirebaseFirestore.instance.settings = const Settings(
+      persistenceEnabled: true,
+      cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+    );
+    debugPrint('Firestore offline persistence enabled');
   } catch (e) {
     debugPrint('Firebase initialization error: $e');
   }

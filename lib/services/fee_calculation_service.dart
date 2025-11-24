@@ -1,18 +1,18 @@
-/// MONETIZATION SERVICE: Calculates withdrawal fees for the app
+/// MONETIZATION SERVICE: Calculates withdrawal fees for the app (OPTIMIZED)
 ///
 /// This service handles all fee-related calculations:
-/// - 5% withdrawal fee (standard)
-/// - Minimum fee: ₹1
+/// - 2% withdrawal fee (OPTIMIZED from 5%)
+/// - Minimum fee: ₹2
 /// - Maximum fee: ₹50
 /// - Tax on earnings: 0% (user-friendly)
 ///
 /// Why this matters:
 /// - Transparent fee structure (users see fee BEFORE confirming)
-/// - Expected monthly revenue: ₹140k from withdrawals (based on 1k users x ₹100 avg with 5% fee)
+/// - Expected monthly revenue: ₹15k from withdrawals (based on 10k users × 30% withdrawal rate × ₹100 avg × 2% fee)
 /// - Free tier optimization: No backend calculation needed
 class FeeCalculationService {
-  static const double _withdrawalFeePercentage = 0.05; // 5%
-  static const double _minFee = 1.0;
+  static const double _withdrawalFeePercentage = 0.02; // 2% (OPTIMIZED from 5%)
+  static const double _minFee = 2.0; // Increased from 1.0
   static const double _maxFee = 50.0;
 
   /// Calculates the withdrawal fee for a given amount

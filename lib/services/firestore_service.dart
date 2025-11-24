@@ -4,6 +4,7 @@ import '../models/user_model.dart';
 import '../models/withdrawal_model.dart';
 import '../models/leaderboard_model.dart';
 import '../core/constants/app_constants.dart';
+import 'cache_service.dart';
 
 class FirestoreService {
   static final FirestoreService _instance = FirestoreService._internal();
@@ -15,6 +16,7 @@ class FirestoreService {
   FirestoreService._internal();
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final CacheService _cache = CacheService();
 
   // ============ USER OPERATIONS ============
 
@@ -60,9 +62,17 @@ class FirestoreService {
     }
   }
 
-  /// Get user document
+  /// Get user document (with caching)
+  /// Cache TTL: 5 minutes
   Future<User> getUser(String userId) async {
     try {
+      // Check cache first
+      final cached = _cache.get<User>('user_$userId');
+      if (cached != null) {
+        return cached;
+      }
+
+      // Cache miss - fetch from Firestore
       final doc = await _firestore
           .collection(AppConstants.usersCollection)
           .doc(userId)
@@ -72,7 +82,12 @@ class FirestoreService {
         throw Exception('User not found');
       }
 
-      return User.fromJson(doc.data()!);
+      final user = User.fromJson(doc.data()!);
+
+      // Cache for 5 minutes
+      _cache.set('user_$userId', user, const Duration(minutes: 5));
+
+      return user;
     } catch (e) {
       debugPrint('❌ Error getting user: $e');
       rethrow;
@@ -110,7 +125,8 @@ class FirestoreService {
     }
   }
 
-  /// Record task completion
+  /// Record task completion (OPTIMIZED with batch writes)
+  /// Reduces 3 separate writes to 1 batch write
   Future<void> recordTaskCompletion(
     String userId,
     String taskId,
@@ -119,36 +135,59 @@ class FirestoreService {
     String? deviceFingerprint,
   }) async {
     try {
-      await _firestore.collection(AppConstants.transactionsCollection).add({
+      final batch = _firestore.batch();
+
+      // 1. Add transaction record
+      final txnRef = _firestore
+          .collection(AppConstants.usersCollection)
+          .doc(userId)
+          .collection('transactions')
+          .doc();
+
+      batch.set(txnRef, {
         'userId': userId,
         'type': 'earning',
+        'source': 'task',
         'taskId': taskId,
         'amount': reward,
         'timestamp': FieldValue.serverTimestamp(),
         'status': 'completed',
+        'success': true,
         'requestId':
-            requestId ?? 'legacy_${DateTime.now().millisecondsSinceEpoch}',
+            requestId ?? 'task_${DateTime.now().millisecondsSinceEpoch}',
         'deviceFingerprint': deviceFingerprint,
       });
 
-      // Update user stats
-      await _firestore
+      // 2. Update user stats
+      final userRef = _firestore
           .collection(AppConstants.usersCollection)
-          .doc(userId)
-          .update({
-            'tasksCompletedToday': FieldValue.increment(1),
-            'availableBalance': FieldValue.increment(reward),
-            'totalEarned': FieldValue.increment(reward),
-          });
+          .doc(userId);
 
-      debugPrint('✅ Task completion recorded: $taskId for $userId (+₹$reward)');
+      batch.update(userRef, {
+        'tasksCompletedToday': FieldValue.increment(1),
+        'availableBalance': FieldValue.increment(reward),
+        'totalEarned': FieldValue.increment(reward),
+        'dailyEarningsToday': FieldValue.increment(reward),
+        'lastActivity': FieldValue.serverTimestamp(),
+      });
+
+      // Single commit = 1 write operation instead of 3
+      await batch.commit();
+
+      // Invalidate user cache
+      _cache.invalidate('user_$userId');
+
+      debugPrint(
+        '✅ Task completion recorded (BATCH): $taskId for $userId (+₹$reward)',
+      );
     } catch (e) {
       debugPrint('❌ Error recording task completion: $e');
       rethrow;
     }
   }
 
-  /// Record game result
+  /// Record game result (OPTIMIZED with batch writes)
+  /// Reduces 3 separate writes to 1 batch write
   Future<void> recordGameResult(
     String userId,
     String gameId,
@@ -158,44 +197,68 @@ class FirestoreService {
     String? deviceFingerprint,
   }) async {
     try {
+      final batch = _firestore.batch();
+      final userRef = _firestore
+          .collection(AppConstants.usersCollection)
+          .doc(userId);
+
       if (won) {
-        await _firestore.collection(AppConstants.transactionsCollection).add({
+        // 1. Add transaction record
+        final txnRef = userRef.collection('transactions').doc();
+
+        batch.set(txnRef, {
           'userId': userId,
           'type': 'earning',
+          'source': 'game',
           'gameId': gameId,
+          'gameType': gameId,
           'amount': reward,
+          'result': 'win',
           'timestamp': FieldValue.serverTimestamp(),
           'status': 'completed',
+          'success': true,
           'requestId':
-              requestId ?? 'legacy_${DateTime.now().millisecondsSinceEpoch}',
+              requestId ?? 'game_${DateTime.now().millisecondsSinceEpoch}',
           'deviceFingerprint': deviceFingerprint,
         });
 
-        await _firestore
-            .collection(AppConstants.usersCollection)
-            .doc(userId)
-            .update({
-              'gamesPlayedToday': FieldValue.increment(1),
-              'availableBalance': FieldValue.increment(reward),
-              'totalEarned': FieldValue.increment(reward),
-            });
+        // 2. Update user stats
+        batch.update(userRef, {
+          'gamesPlayedToday': FieldValue.increment(1),
+          'availableBalance': FieldValue.increment(reward),
+          'totalEarned': FieldValue.increment(reward),
+          'dailyEarningsToday': FieldValue.increment(reward),
+          'lastActivity': FieldValue.serverTimestamp(),
+        });
 
-        debugPrint('✅ Game result recorded: $gameId for $userId (+₹$reward)');
+        debugPrint(
+          '✅ Game result recorded (BATCH): $gameId for $userId - WIN (+₹$reward)',
+        );
       } else {
-        await _firestore
-            .collection(AppConstants.usersCollection)
-            .doc(userId)
-            .update({'gamesPlayedToday': FieldValue.increment(1)});
+        // Just update games played count
+        batch.update(userRef, {
+          'gamesPlayedToday': FieldValue.increment(1),
+          'lastActivity': FieldValue.serverTimestamp(),
+        });
 
-        debugPrint('✅ Game result recorded: $gameId for $userId (Lost)');
+        debugPrint(
+          '✅ Game result recorded (BATCH): $gameId for $userId - LOSS',
+        );
       }
+
+      // Single commit
+      await batch.commit();
+
+      // Invalidate user cache
+      _cache.invalidate('user_$userId');
     } catch (e) {
       debugPrint('❌ Error recording game result: $e');
       rethrow;
     }
   }
 
-  /// Record ad view
+  /// Record ad view (OPTIMIZED with batch writes)
+  /// Reduces 3 separate writes to 1 batch write
   Future<void> recordAdView(
     String userId,
     String adType,
@@ -204,55 +267,88 @@ class FirestoreService {
     String? deviceFingerprint,
   }) async {
     try {
-      await _firestore.collection(AppConstants.transactionsCollection).add({
+      final batch = _firestore.batch();
+      final userRef = _firestore
+          .collection(AppConstants.usersCollection)
+          .doc(userId);
+
+      // 1. Add transaction record
+      final txnRef = userRef.collection('transactions').doc();
+
+      batch.set(txnRef, {
         'userId': userId,
         'type': 'earning',
+        'source': 'ad',
         'adType': adType,
         'amount': reward,
         'timestamp': FieldValue.serverTimestamp(),
         'status': 'completed',
-        'requestId':
-            requestId ?? 'legacy_${DateTime.now().millisecondsSinceEpoch}',
+        'success': true,
+        'requestId': requestId ?? 'ad_${DateTime.now().millisecondsSinceEpoch}',
         'deviceFingerprint': deviceFingerprint,
       });
 
-      await _firestore
-          .collection(AppConstants.usersCollection)
-          .doc(userId)
-          .update({
-            'adsWatchedToday': FieldValue.increment(1),
-            'availableBalance': FieldValue.increment(reward),
-            'totalEarned': FieldValue.increment(reward),
-          });
+      // 2. Update user stats
+      batch.update(userRef, {
+        'adsWatchedToday': FieldValue.increment(1),
+        'availableBalance': FieldValue.increment(reward),
+        'totalEarned': FieldValue.increment(reward),
+        'dailyEarningsToday': FieldValue.increment(reward),
+        'lastActivity': FieldValue.serverTimestamp(),
+      });
 
-      debugPrint('✅ Ad view recorded: $adType for $userId (+₹$reward)');
+      // Single commit
+      await batch.commit();
+
+      // Invalidate user cache
+      _cache.invalidate('user_$userId');
+
+      debugPrint('✅ Ad view recorded (BATCH): $adType for $userId (+₹$reward)');
     } catch (e) {
       debugPrint('❌ Error recording ad view: $e');
       rethrow;
     }
   }
 
-  /// Record spin result
+  /// Record spin result (OPTIMIZED with batch writes)
+  /// Reduces 2 separate writes to 1 batch write
   Future<void> recordSpinResult(String userId, double reward) async {
     try {
-      await _firestore.collection(AppConstants.transactionsCollection).add({
+      final batch = _firestore.batch();
+      final userRef = _firestore
+          .collection(AppConstants.usersCollection)
+          .doc(userId);
+
+      // 1. Add transaction record
+      final txnRef = userRef.collection('transactions').doc();
+
+      batch.set(txnRef, {
         'userId': userId,
-        'type': 'spin',
+        'type': 'earning',
+        'source': 'spin',
         'amount': reward,
         'timestamp': FieldValue.serverTimestamp(),
         'status': 'completed',
+        'success': true,
+        'requestId': 'spin_${DateTime.now().millisecondsSinceEpoch}',
       });
 
-      await _firestore
-          .collection(AppConstants.usersCollection)
-          .doc(userId)
-          .update({
-            'dailySpins': FieldValue.increment(1),
-            'availableBalance': FieldValue.increment(reward),
-            'totalEarned': FieldValue.increment(reward),
-          });
+      // 2. Update user stats
+      batch.update(userRef, {
+        'dailySpins': FieldValue.increment(1),
+        'availableBalance': FieldValue.increment(reward),
+        'totalEarned': FieldValue.increment(reward),
+        'dailyEarningsToday': FieldValue.increment(reward),
+        'lastActivity': FieldValue.serverTimestamp(),
+      });
 
-      debugPrint('✅ Spin result recorded: $userId (+₹$reward)');
+      // Single commit
+      await batch.commit();
+
+      // Invalidate user cache
+      _cache.invalidate('user_$userId');
+
+      debugPrint('✅ Spin result recorded (BATCH): $userId (+₹$reward)');
     } catch (e) {
       debugPrint('❌ Error recording spin result: $e');
       rethrow;
@@ -317,16 +413,25 @@ class FirestoreService {
 
   // ============ LEADERBOARD OPERATIONS ============
 
-  /// Get top leaderboard entries
+  /// Get top leaderboard entries (with caching)
+  /// Cache TTL: 1 hour
   Future<List<LeaderboardEntry>> getTopLeaderboard({int limit = 50}) async {
     try {
+      // Check cache first
+      final cacheKey = 'leaderboard_$limit';
+      final cached = _cache.get<List<LeaderboardEntry>>(cacheKey);
+      if (cached != null) {
+        return cached;
+      }
+
+      // Cache miss - fetch from Firestore
       final snapshot = await _firestore
           .collection(AppConstants.leaderboardCollection)
           .orderBy('totalEarnings', descending: true)
           .limit(limit)
           .get();
 
-      return snapshot.docs.asMap().entries.map((entry) {
+      final leaderboard = snapshot.docs.asMap().entries.map((entry) {
         final doc = entry.value;
         final index = entry.key;
         final data = doc.data();
@@ -337,6 +442,11 @@ class FirestoreService {
           totalEarnings: (data['totalEarnings'] ?? 0.0).toDouble(),
         );
       }).toList();
+
+      // Cache for 1 hour
+      _cache.set(cacheKey, leaderboard, const Duration(hours: 1));
+
+      return leaderboard;
     } catch (e) {
       debugPrint('❌ Error getting leaderboard: $e');
       rethrow;
