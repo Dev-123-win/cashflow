@@ -69,6 +69,7 @@ class UserProvider extends ChangeNotifier {
   }
 
   /// Update balance and sync with Firebase
+  /// ✅ FIXED: Wait for backend confirmation before updating UI
   Future<void> updateBalance(double amount) async {
     try {
       if (!_isAuthenticated || _user.userId.isEmpty) {
@@ -77,16 +78,18 @@ class UserProvider extends ChangeNotifier {
         return;
       }
 
-      // Update in Firestore (will trigger stream update)
+      // ✅ STEP 1: Make API call FIRST (wait for server confirmation)
+      // This ensures backend validates the transaction before we update UI
       await _firestoreService.updateBalance(_user.userId, amount);
 
-      // Local update while waiting for Firestore
-      _user = _user.copyWith(
-        availableBalance: _user.availableBalance + amount,
-        totalEarnings: _user.totalEarnings + amount,
-      );
+      // ✅ STEP 2: THEN fetch updated user from Firestore
+      // This ensures we have the authoritative state from backend
+      final updatedUser = await _firestoreService.getUser(_user.userId);
+      _user = updatedUser;
+      _error = null;
       notifyListeners();
     } catch (e) {
+      // ✅ STEP 3: On error, UI is NEVER updated (consistency preserved)
       _error = 'Failed to update balance: $e';
       notifyListeners();
     }
@@ -131,7 +134,7 @@ class UserProvider extends ChangeNotifier {
       _user = updatedUser;
       _error = null;
       notifyListeners();
-        } catch (e) {
+    } catch (e) {
       _error = e.toString();
       notifyListeners();
     }

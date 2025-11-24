@@ -1,10 +1,40 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/user_provider.dart';
+import '../../services/auth_service.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
+
+  String _formatDate(DateTime? date) {
+    if (date == null) return 'Recently';
+    final now = DateTime.now();
+    final difference = now.difference(date);
+    if (difference.inDays == 0) return 'Today';
+    if (difference.inDays == 1) return 'Yesterday';
+    if (difference.inDays < 7) return '${difference.inDays} days ago';
+    if (difference.inDays < 30) {
+      return '${(difference.inDays / 7).toStringAsFixed(0)} weeks ago';
+    }
+    return '${(difference.inDays / 30).toStringAsFixed(0)} months ago';
+  }
+
+  void _logout(BuildContext context) async {
+    try {
+      await AuthService().signOut();
+      if (context.mounted) {
+        Navigator.of(context).pushReplacementNamed('/login');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Logout failed: $e')));
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,14 +44,31 @@ class ProfileScreen extends StatelessWidget {
         backgroundColor: AppTheme.backgroundColor,
         elevation: 0,
         title: const Text('My Profile'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () => _logout(context),
+          ),
+        ],
       ),
       body: Consumer<UserProvider>(
         builder: (context, userProvider, _) {
           final user = userProvider.user;
+          final currentUser = fb_auth.FirebaseAuth.instance.currentUser;
+          final initials = user.displayName.isNotEmpty
+              ? user.displayName
+                    .split(' ')
+                    .map((e) => e[0])
+                    .join()
+                    .toUpperCase()
+              : user.email.isNotEmpty
+              ? user.email[0].toUpperCase()
+              : '?';
           return SingleChildScrollView(
             padding: const EdgeInsets.all(AppTheme.space16),
             child: Column(
               children: [
+                // Profile Header Card
                 Container(
                   padding: const EdgeInsets.all(AppTheme.space24),
                   decoration: BoxDecoration(
@@ -37,9 +84,7 @@ class ProfileScreen extends StatelessWidget {
                           alpha: 0.2,
                         ),
                         child: Text(
-                          user.email.isNotEmpty
-                              ? user.email[0].toUpperCase()
-                              : '?',
+                          initials,
                           style: const TextStyle(
                             fontSize: 32,
                             fontWeight: FontWeight.bold,
@@ -48,21 +93,31 @@ class ProfileScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: AppTheme.space16),
                       Text(
-                        user.email,
-                        style: Theme.of(context).textTheme.headlineSmall,
+                        user.displayName.isNotEmpty ? user.displayName : 'User',
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(fontWeight: FontWeight.bold),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: AppTheme.space8),
                       Text(
-                        'Member since Oct 2025',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        user.email,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: AppTheme.textSecondary,
                         ),
+                        textAlign: TextAlign.center,
                       ),
+                      const SizedBox(height: AppTheme.space12),
+                      if (currentUser?.metadata.creationTime != null)
+                        Text(
+                          'Member since ${_formatDate(currentUser!.metadata.creationTime)}',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: AppTheme.textSecondary),
+                        ),
                     ],
                   ),
                 ),
                 const SizedBox(height: AppTheme.space32),
+                // Stats Grid
                 GridView.count(
                   crossAxisCount: 2,
                   shrinkWrap: true,
@@ -82,8 +137,18 @@ class ProfileScreen extends StatelessWidget {
                       'Day Streak',
                       '🔥',
                     ),
-                    _buildStatCard(context, '245', 'Ads Watched', '📺'),
-                    _buildStatCard(context, '89', 'Tasks Done', '✅'),
+                    _buildStatCard(
+                      context,
+                      '₹${user.monthlyEarnings.toStringAsFixed(2)}',
+                      'This Month',
+                      '📊',
+                    ),
+                    _buildStatCard(
+                      context,
+                      '₹${user.availableBalance.toStringAsFixed(2)}',
+                      'Available',
+                      '💳',
+                    ),
                   ],
                 ),
                 const SizedBox(height: AppTheme.space32),

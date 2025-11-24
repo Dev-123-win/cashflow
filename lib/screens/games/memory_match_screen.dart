@@ -21,6 +21,8 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
   int? _selectedIndex2;
   bool _isProcessing = false;
   late AnimationController _matchAnimation;
+  late AnimationController _matchPulseAnimation;
+  late AnimationController _successAnimation;
 
   @override
   void initState() {
@@ -30,7 +32,17 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
     _game = _gameService.createMemoryMatchGame();
 
     _matchAnimation = AnimationController(
-      duration: const Duration(milliseconds: 600),
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+
+    _matchPulseAnimation = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+
+    _successAnimation = AnimationController(
+      duration: const Duration(milliseconds: 800),
       vsync: this,
     );
   }
@@ -38,6 +50,8 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
   @override
   void dispose() {
     _matchAnimation.dispose();
+    _matchPulseAnimation.dispose();
+    _successAnimation.dispose();
     super.dispose();
   }
 
@@ -309,49 +323,89 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
                         final isRevealed = _game.revealed[index];
                         final isMatched = _game.matched[index];
                         final card = _game.cards[index];
+                        final isSelected =
+                            _selectedIndex1 == index ||
+                            _selectedIndex2 == index;
 
                         return GestureDetector(
                           onTap: _isProcessing || isMatched
                               ? null
                               : () => _handleCardTap(index),
-                          child: ScaleTransition(
-                            scale:
-                                _selectedIndex1 == index ||
-                                    _selectedIndex2 == index
-                                ? Tween(
-                                    begin: 1.0,
-                                    end: 0.95,
-                                  ).animate(_matchAnimation)
-                                : AlwaysStoppedAnimation(1.0),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: isRevealed || isMatched
-                                    ? AppTheme.backgroundColor
-                                    : AppTheme.primaryColor,
-                                borderRadius: BorderRadius.circular(
-                                  AppTheme.radiusS,
-                                ),
-                                border: Border.all(
-                                  color: isMatched
-                                      ? Colors.green
-                                      : AppTheme.surfaceVariant,
-                                  width: isMatched ? 3 : 1,
-                                ),
-                              ),
-                              child: Center(
-                                child: AnimatedOpacity(
-                                  opacity: isRevealed || isMatched ? 1.0 : 0.0,
-                                  duration: const Duration(milliseconds: 300),
-                                  child: Text(
-                                    card,
-                                    style: const TextStyle(
-                                      fontSize: 36,
-                                      fontWeight: FontWeight.bold,
+                          child: AnimatedBuilder(
+                            animation: Listenable.merge([
+                              _matchAnimation,
+                              _matchPulseAnimation,
+                            ]),
+                            builder: (context, child) {
+                              return Transform(
+                                alignment: Alignment.center,
+                                transform: Matrix4.identity()
+                                  ..setEntry(3, 2, 0.001)
+                                  ..rotateY(
+                                    (isRevealed || isMatched ? 0 : 1) *
+                                        (isSelected
+                                            ? _matchAnimation.value * 3.14159
+                                            : 0),
+                                  ),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: isRevealed || isMatched
+                                        ? Colors.white
+                                        : AppTheme.primaryColor,
+                                    borderRadius: BorderRadius.circular(
+                                      AppTheme.radiusS,
+                                    ),
+                                    border: Border.all(
+                                      color: isMatched
+                                          ? Colors.green
+                                          : isSelected
+                                          ? AppTheme.primaryColor.withValues(
+                                              alpha: 0.8,
+                                            )
+                                          : AppTheme.surfaceVariant,
+                                      width: isMatched
+                                          ? 3
+                                          : (isSelected ? 2 : 1),
+                                    ),
+                                    boxShadow: isSelected
+                                        ? [
+                                            BoxShadow(
+                                              color: AppTheme.primaryColor
+                                                  .withValues(alpha: 0.4),
+                                              blurRadius: 8,
+                                              spreadRadius: 2,
+                                            ),
+                                          ]
+                                        : AppTheme.cardShadow,
+                                  ),
+                                  child: Center(
+                                    child: AnimatedScale(
+                                      scale: (isRevealed || isMatched)
+                                          ? 1.0
+                                          : 0.5,
+                                      duration: const Duration(
+                                        milliseconds: 300,
+                                      ),
+                                      child: AnimatedOpacity(
+                                        opacity: isRevealed || isMatched
+                                            ? 1.0
+                                            : 0.0,
+                                        duration: const Duration(
+                                          milliseconds: 300,
+                                        ),
+                                        child: Text(
+                                          card,
+                                          style: const TextStyle(
+                                            fontSize: 36,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            ),
+                              );
+                            },
                           ),
                         );
                       }),

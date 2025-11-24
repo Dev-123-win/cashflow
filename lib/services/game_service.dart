@@ -35,28 +35,43 @@ class TicTacToeGame {
     return true;
   }
 
-  /// AI makes a move (simple minimax algorithm)
+  /// AI makes a move (easier difficulty - intentionally makes suboptimal moves)
   void aiMove() {
     if (isGameOver) return;
 
-    // Try to win
+    // 30% chance to play random move (makes AI beatable)
+    if (Random().nextDouble() < 0.3) {
+      final available = board
+          .asMap()
+          .entries
+          .where((e) => e.value.isEmpty)
+          .map((e) => e.key)
+          .toList();
+      if (available.isNotEmpty) {
+        board[available[Random().nextInt(available.length)]] = 'O';
+        _checkGameState();
+        return;
+      }
+    }
+
+    // Try to win (50% of the time)
     final winMove = _findWinningMove('O');
-    if (winMove != -1) {
+    if (winMove != -1 && Random().nextDouble() < 0.5) {
       board[winMove] = 'O';
       _checkGameState();
       return;
     }
 
-    // Block player from winning
+    // Block player from winning (40% of the time)
     final blockMove = _findWinningMove('X');
-    if (blockMove != -1) {
+    if (blockMove != -1 && Random().nextDouble() < 0.4) {
       board[blockMove] = 'O';
       _checkGameState();
       return;
     }
 
-    // Take center if available
-    if (board[4].isEmpty) {
+    // Take center if available (60% chance)
+    if (board[4].isEmpty && Random().nextDouble() < 0.6) {
       board[4] = 'O';
       _checkGameState();
       return;

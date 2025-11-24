@@ -53,7 +53,6 @@ cloudflare-worker/
 *.plist
 .env
 .env.local
-firebase_options.dart
 google-services.json
 GoogleService-Info.plist
 rewardly-new-firebase-adminsdk-fbsvc-93a4399265.json

@@ -53,8 +53,27 @@ class BalanceCard extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: AppTheme.primaryColor,
+                disabledBackgroundColor: Colors.white.withValues(alpha: 0.4),
+                disabledForegroundColor: AppTheme.primaryColor.withValues(
+                  alpha: 0.5,
+                ),
               ),
-              child: const Text('Withdraw'),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('Withdraw'),
+                  if (!canWithdraw)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        'Min ₹50',
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: AppTheme.primaryColor.withValues(alpha: 0.6),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
         ],

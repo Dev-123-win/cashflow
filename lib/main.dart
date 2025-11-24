@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'core/theme/app_theme.dart';
@@ -13,7 +12,7 @@ import 'screens/auth/splash_screen.dart';
 import 'screens/home/home_screen.dart';
 import 'screens/tasks/tasks_screen.dart';
 import 'screens/games/games_screen.dart';
-import 'screens/spin/spin_screen.dart';
+import 'screens/games/spin_screen.dart';
 import 'screens/withdrawal/withdrawal_screen.dart';
 import 'services/auth_service.dart';
 import 'services/notification_service.dart';
@@ -21,6 +20,7 @@ import 'services/cooldown_service.dart';
 import 'services/request_deduplication_service.dart';
 import 'services/fee_calculation_service.dart';
 import 'services/device_fingerprint_service.dart';
+import 'services/ad_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,9 +44,10 @@ void main() async {
     debugPrint('AuthService initialization error: $e');
   }
 
-  // Initialize Google Mobile Ads
+  // Initialize Google Mobile Ads and preload ads
   try {
-    await MobileAds.instance.initialize();
+    final adService = AdService();
+    await adService.initialize(); // This also preloads all ads
     debugPrint('Google Mobile Ads initialized successfully');
   } catch (e) {
     debugPrint('Google Mobile Ads initialization error: $e');
@@ -59,6 +60,15 @@ void main() async {
     debugPrint('Notification Service initialized successfully');
   } catch (e) {
     debugPrint('Notification Service initialization error: $e');
+  }
+
+  // Initialize CooldownService with persistent storage
+  try {
+    final cooldownService = CooldownService();
+    await cooldownService.initialize();
+    debugPrint('CooldownService initialized successfully');
+  } catch (e) {
+    debugPrint('CooldownService initialization error: $e');
   }
 
   runApp(const MyApp());
@@ -81,6 +91,8 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'EarnQuest',
         theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: ThemeMode.system,
         debugShowCheckedModeBanner: false,
         home: const AuthenticationWrapper(),
         routes: {
@@ -153,6 +165,16 @@ class _AuthenticationWrapperState extends State<AuthenticationWrapper> {
 
         // User is logged in
         if (snapshot.hasData && snapshot.data != null) {
+          // Initialize user provider with persistent session
+          // Using context.read synchronously within build method is safe
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) {
+              final userProvider = context.read<UserProvider>();
+              if (userProvider.user.userId.isEmpty) {
+                userProvider.initializeUser(snapshot.data!.uid);
+              }
+            }
+          });
           return const MainNavigationScreen();
         }
 

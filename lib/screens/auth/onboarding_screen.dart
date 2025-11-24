@@ -17,21 +17,51 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final List<OnboardingPage> _pages = [
     OnboardingPage(
       icon: '🎯',
-      title: 'Easy Tasks',
-      description: 'Complete simple tasks and earn real money instantly',
+      title: 'Complete Simple Tasks',
+      description:
+          'Earn ₹0.10-₹0.20 per task by completing surveys, social shares, and more. Fast & easy!',
+      details: ['📝 Surveys & Reviews', '🔗 Social Shares', '⭐ App Ratings'],
       color: const Color(0xFF6366F1),
     ),
     OnboardingPage(
       icon: '🎮',
-      title: 'Fun Games',
-      description: 'Play exciting games and win amazing rewards',
+      title: 'Play & Earn Games',
+      description:
+          'Win up to ₹0.08 per game. Play Tic-Tac-Toe, Memory Match, and more. 30-min cooldown.',
+      details: ['🎯 Tic-Tac-Toe', '🧩 Memory Match', '❓ Quiz Games'],
       color: const Color(0xFF8B5CF6),
     ),
     OnboardingPage(
+      icon: '🎰',
+      title: 'Spin & Win',
+      description:
+          'Spin the daily wheel once per day for random rewards between ₹0.05-₹1.00. Free spins!',
+      details: ['Daily Free Spin', 'Random Rewards', '💎 Bonus Multipliers'],
+      color: const Color(0xFFFFB800),
+    ),
+    OnboardingPage(
+      icon: '📺',
+      title: 'Watch Ads & Earn',
+      description:
+          'Watch short video ads and earn ₹0.02-₹0.05 per ad. Up to 15 ads per day.',
+      details: ['30-sec Videos', 'Instant Credit', 'No Spam'],
+      color: const Color(0xFF00D9C0),
+    ),
+    OnboardingPage(
       icon: '💰',
-      title: 'Real Earnings',
-      description: 'Withdraw your earnings directly to your bank account',
+      title: 'Withdraw Your Money',
+      description:
+          'Reach ₹50 minimum balance and withdraw directly to your UPI or bank account.',
+      details: ['₹50 Minimum', '24-48hr Processing', 'Real Money'],
       color: const Color(0xFFEC4899),
+    ),
+    OnboardingPage(
+      icon: '📈',
+      title: 'Daily Limit & Rewards',
+      description:
+          'Max earning: ₹1.50/day. Referrals: Earn ₹2 per friend. Streaks: Bonus rewards!',
+      details: ['₹1.50/Day Cap', '👥 Referral Bonus', '🔥 Streak Multipliers'],
+      color: const Color(0xFF00E676),
     ),
   ];
 
@@ -163,6 +193,37 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ).textTheme.bodyLarge?.copyWith(color: AppTheme.textSecondary),
             textAlign: TextAlign.center,
           ),
+          // Show details list if available
+          if (page.details != null && page.details!.isNotEmpty) ...[
+            const SizedBox(height: AppTheme.space24),
+            Container(
+              padding: const EdgeInsets.all(AppTheme.space16),
+              decoration: BoxDecoration(
+                color: page.color.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                border: Border.all(
+                  color: page.color.withValues(alpha: 0.2),
+                  width: 1,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ...page.details!.map(
+                    (detail) => Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AppTheme.space8,
+                      ),
+                      child: Text(
+                        detail,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -173,6 +234,7 @@ class OnboardingPage {
   final String icon;
   final String title;
   final String description;
+  final List<String>? details;
   final Color color;
 
   OnboardingPage({
@@ -180,5 +242,6 @@ class OnboardingPage {
     required this.title,
     required this.description,
     required this.color,
+    this.details,
   });
 }

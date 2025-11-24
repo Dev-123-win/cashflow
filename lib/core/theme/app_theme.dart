@@ -14,10 +14,20 @@ class AppTheme {
   static const Color surfaceColor = Color(0xFFFFFFFF);
   static const Color surfaceVariant = Color(0xFFF5F5F7);
 
+  // Dark Theme Background Colors
+  static const Color darkBackgroundColor = Color(0xFF121212);
+  static const Color darkSurfaceColor = Color(0xFF1E1E1E);
+  static const Color darkSurfaceVariant = Color(0xFF2A2A2A);
+
   // Light Theme Text Colors
   static const Color textPrimary = Color(0xFF1A1A1A);
   static const Color textSecondary = Color(0xFF666666);
   static const Color textTertiary = Color(0xFF999999);
+
+  // Dark Theme Text Colors
+  static const Color darkTextPrimary = Color(0xFFFFFFFF);
+  static const Color darkTextSecondary = Color(0xFFB0B0B0);
+  static const Color darkTextTertiary = Color(0xFF808080);
 
   // Spacing
   static const double space4 = 4.0;
@@ -143,6 +153,130 @@ class AppTheme {
           color: textPrimary,
           fontFamily: 'Manrope',
           letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+
+  // Dark Theme
+  static ThemeData get darkTheme {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: primaryColor,
+        brightness: Brightness.dark,
+      ),
+      scaffoldBackgroundColor: darkBackgroundColor,
+      appBarTheme: AppBarTheme(
+        backgroundColor: darkSurfaceColor,
+        elevation: 1,
+        centerTitle: false,
+        shadowColor: const Color(0x3F000000),
+        titleTextStyle: const TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: darkTextPrimary,
+          fontFamily: 'Manrope',
+        ),
+      ),
+      cardTheme: CardThemeData(
+        color: darkSurfaceColor,
+        elevation: 1,
+        shadowColor: const Color(0x3F000000),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(radiusM),
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: darkSurfaceVariant,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(radiusM),
+          borderSide: const BorderSide(color: Color(0xFF404040), width: 1),
+        ),
+        contentPadding: const EdgeInsets.all(space16),
+        hintStyle: const TextStyle(
+          color: darkTextSecondary,
+          fontFamily: 'Manrope',
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: primaryColor,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(
+            horizontal: space24,
+            vertical: space12,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(radiusM),
+          ),
+          textStyle: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            fontFamily: 'Manrope',
+          ),
+        ),
+      ),
+      textTheme: const TextTheme(
+        headlineLarge: TextStyle(
+          fontSize: 32,
+          fontWeight: FontWeight.w700,
+          color: darkTextPrimary,
+          fontFamily: 'Manrope',
+          height: 1.2,
+        ),
+        headlineMedium: TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.w700,
+          color: darkTextPrimary,
+          fontFamily: 'Manrope',
+          height: 1.3,
+        ),
+        headlineSmall: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: darkTextPrimary,
+          fontFamily: 'Manrope',
+          height: 1.3,
+        ),
+        titleLarge: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: darkTextPrimary,
+          fontFamily: 'Manrope',
+        ),
+        bodyLarge: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w400,
+          color: darkTextPrimary,
+          fontFamily: 'Manrope',
+          height: 1.5,
+        ),
+        bodyMedium: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w400,
+          color: darkTextSecondary,
+          fontFamily: 'Manrope',
+          height: 1.5,
+        ),
+        labelLarge: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: darkTextPrimary,
+          fontFamily: 'Manrope',
+          letterSpacing: 0.5,
+        ),
+      ),
+      checkboxTheme: CheckboxThemeData(
+        fillColor: WidgetStateProperty.all(primaryColor),
+      ),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? primaryColor
+              : Colors.grey,
         ),
       ),
     );

@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:provider/provider.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'dart:math' as math;
 import '../../core/theme/app_theme.dart';
 import '../../services/game_service.dart';
 import '../../services/cooldown_service.dart';
 import '../../services/request_deduplication_service.dart';
 import '../../services/device_fingerprint_service.dart';
 import '../../services/firestore_service.dart';
+import '../../services/ad_service.dart';
 import '../../providers/user_provider.dart';
 import '../../widgets/error_states.dart';
 
@@ -20,19 +23,37 @@ class TicTacToeScreen extends StatefulWidget {
 class _TicTacToeScreenState extends State<TicTacToeScreen> {
   late final GameService _gameService;
   late final CooldownService _cooldownService;
+  late final AdService _adService;
   late TicTacToeGame _game;
   bool _isProcessing = false;
+  bool _adShownPreGame = false;
 
   @override
   void initState() {
     super.initState();
     _gameService = GameService();
     _cooldownService = CooldownService();
+    _adService = AdService();
     _initializeGame();
+    _showPreGameAd();
   }
 
   void _initializeGame() {
     _game = _gameService.createTicTacToeGame();
+  }
+
+  // Show pre-game interstitial ad with 40% probability
+  Future<void> _showPreGameAd() async {
+    if (_adShownPreGame) return;
+
+    // 40% chance to show ad
+    if (math.Random().nextDouble() < 0.4) {
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (mounted) {
+        await _adService.showInterstitialAd();
+      }
+    }
+    _adShownPreGame = true;
   }
 
   Future<void> _handleTap(int index) async {
@@ -52,7 +73,7 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
           if (mounted) {
             _showGameResult(
               title: 'You Won! 🎉',
-              message: 'You earned ₹0.50',
+              message: 'You earned ₹0.08',
               won: true,
             );
           }
@@ -132,7 +153,7 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
         user.uid,
         'tictactoe',
         true,
-        0.50,
+        0.08,
         requestId: requestId,
         deviceFingerprint: deviceFingerprint,
       );
@@ -173,15 +194,41 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
             Text(message),
             const SizedBox(height: AppTheme.space16),
             Text(
-              won ? '₹0.50 earned!' : 'Better luck next time!',
+              won ? '₹0.08 earned!' : 'Better luck next time!',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 color: won ? Colors.green : Colors.orange,
                 fontWeight: FontWeight.bold,
               ),
             ),
+            if (won)
+              Padding(
+                padding: const EdgeInsets.only(top: 16),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withValues(alpha: 0.1),
+                    border: Border.all(color: Colors.blue),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'Watch ad for +₹0.10 bonus?',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: Colors.blue),
+                  ),
+                ),
+              ),
           ],
         ),
         actions: [
+          if (won)
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _watchBonusAd();
+              },
+              child: const Text('Watch Ad'),
+            ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
@@ -195,6 +242,28 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  // Watch rewarded ad for bonus +₹0.10
+  Future<void> _watchBonusAd() async {
+    await _adService.showRewardedAd(
+      onRewardEarned: (reward) async {
+        try {
+          final user = fb_auth.FirebaseAuth.instance.currentUser;
+          if (user == null) return;
+
+          // Add bonus to user balance
+          final userProvider = context.read<UserProvider>();
+          await userProvider.updateBalance(0.10);
+
+          if (mounted) {
+            StateSnackbar.showSuccess(context, 'Bonus ₹0.10 added!');
+          }
+        } catch (e) {
+          debugPrint('Error adding bonus: $e');
+        }
+      },
     );
   }
 
@@ -222,287 +291,320 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
         ),
         body: Consumer<UserProvider>(
           builder: (context, userProvider, _) {
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(AppTheme.space16),
-              child: Column(
-                children: [
-                  // Game Info Card
-                  Container(
+            return Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
                     padding: const EdgeInsets.all(AppTheme.space16),
-                    decoration: BoxDecoration(
-                      color: AppTheme.surfaceColor,
-                      borderRadius: BorderRadius.circular(AppTheme.radiusM),
-                      boxShadow: AppTheme.cardShadow,
-                    ),
                     child: Column(
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'You (X)',
-                                  style: Theme.of(context).textTheme.titleSmall,
+                        // Game Info Card
+                        Container(
+                          padding: const EdgeInsets.all(AppTheme.space16),
+                          decoration: BoxDecoration(
+                            color: AppTheme.surfaceColor,
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radiusM,
+                            ),
+                            boxShadow: AppTheme.cardShadow,
+                          ),
+                          child: Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'You (X)',
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.titleSmall,
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '₹0.08',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .headlineSmall
+                                            ?.copyWith(
+                                              color: Colors.green,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                  Text(
+                                    'vs',
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.titleLarge,
+                                  ),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Text(
+                                        'AI (O)',
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.titleSmall,
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'Win Reward',
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.bodySmall,
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: AppTheme.space32),
+
+                        // Game Board
+                        Container(
+                          padding: const EdgeInsets.all(AppTheme.space8),
+                          decoration: BoxDecoration(
+                            color: AppTheme.surfaceColor,
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radiusM,
+                            ),
+                            boxShadow: AppTheme.cardShadow,
+                          ),
+                          child: GridView.count(
+                            crossAxisCount: 3,
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            childAspectRatio: 1,
+                            mainAxisSpacing: 8,
+                            crossAxisSpacing: 8,
+                            children: List.generate(9, (index) {
+                              final cell = _game.board[index];
+                              final isEmpty = cell.isEmpty;
+
+                              return GestureDetector(
+                                onTap: isEmpty ? () => _handleTap(index) : null,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: isEmpty
+                                        ? AppTheme.surfaceVariant
+                                        : AppTheme.backgroundColor,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: AppTheme.primaryColor,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      cell,
+                                      style: const TextStyle(
+                                        fontSize: 32,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.blue,
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                                const SizedBox(height: 4),
+                              );
+                            }),
+                          ),
+                        ),
+                        const SizedBox(height: AppTheme.space32),
+
+                        // Game Status
+                        Container(
+                          padding: const EdgeInsets.all(AppTheme.space16),
+                          decoration: BoxDecoration(
+                            color: AppTheme.surfaceColor,
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radiusM,
+                            ),
+                            boxShadow: AppTheme.cardShadow,
+                          ),
+                          child: Column(
+                            children: [
+                              if (!_game.isGameOver)
+                                Column(
+                                  children: [
+                                    Text(
+                                      'Your turn - Tap to make a move',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(
+                                            color: AppTheme.textSecondary,
+                                          ),
+                                    ),
+                                    const SizedBox(height: AppTheme.space12),
+                                    SizedBox(
+                                      height: 4,
+                                      child: LinearProgressIndicator(
+                                        backgroundColor:
+                                            AppTheme.surfaceVariant,
+                                        valueColor: AlwaysStoppedAnimation(
+                                          AppTheme.primaryColor,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              else
                                 Text(
-                                  '₹0.50',
+                                  _game.playerWon()
+                                      ? 'You Won! 🎉'
+                                      : _game.winner == 'draw'
+                                      ? 'Draw Game!'
+                                      : 'AI Won 🤖',
                                   style: Theme.of(context)
                                       .textTheme
                                       .headlineSmall
                                       ?.copyWith(
-                                        color: Colors.green,
                                         fontWeight: FontWeight.bold,
+                                        color: _game.playerWon()
+                                            ? Colors.green
+                                            : Colors.orange,
                                       ),
                                 ),
-                              ],
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: AppTheme.space32),
+
+                        // Action Buttons
+                        Row(
+                          children: [
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                onPressed: _game.isGameOver ? _resetGame : null,
+                                icon: const Icon(Icons.refresh),
+                                label: const Text('New Game'),
+                              ),
                             ),
-                            Text(
-                              'vs',
-                              style: Theme.of(context).textTheme.titleLarge,
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  'AI (O)',
-                                  style: Theme.of(context).textTheme.titleSmall,
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Win Reward',
-                                  style: Theme.of(context).textTheme.bodySmall,
-                                ),
-                              ],
+                            const SizedBox(width: AppTheme.space16),
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: () => Navigator.pop(context),
+                                icon: const Icon(Icons.arrow_back),
+                                label: const Text('Exit'),
+                              ),
                             ),
                           ],
                         ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: AppTheme.space32),
+                        const SizedBox(height: AppTheme.space16),
 
-                  // Game Board
-                  Container(
-                    padding: const EdgeInsets.all(AppTheme.space8),
-                    decoration: BoxDecoration(
-                      color: AppTheme.surfaceColor,
-                      borderRadius: BorderRadius.circular(AppTheme.radiusM),
-                      boxShadow: AppTheme.cardShadow,
-                    ),
-                    child: GridView.count(
-                      crossAxisCount: 3,
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      childAspectRatio: 1,
-                      mainAxisSpacing: 8,
-                      crossAxisSpacing: 8,
-                      children: List.generate(9, (index) {
-                        final cell = _game.board[index];
-                        final isEmpty = cell.isEmpty;
+                        // Cooldown Info (if on cooldown)
+                        Consumer<CooldownService>(
+                          builder: (context, cooldownService, _) {
+                            final remaining = cooldownService
+                                .getRemainingCooldown(
+                                  userProvider.user.userId,
+                                  'game_tictactoe',
+                                );
 
-                        return GestureDetector(
-                          onTap: isEmpty && !_game.isGameOver && !_isProcessing
-                              ? () => _handleTap(index)
-                              : null,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: isEmpty
-                                  ? AppTheme.backgroundColor
-                                  : AppTheme.primaryColor.withValues(
-                                      alpha: 0.1,
+                            if (remaining > 0) {
+                              return Column(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(
+                                      AppTheme.space12,
                                     ),
-                              borderRadius: BorderRadius.circular(
-                                AppTheme.radiusS,
-                              ),
-                              border: Border.all(
-                                color: AppTheme.surfaceVariant,
-                                width: 2,
-                              ),
-                            ),
-                            child: Center(
-                              child: Text(
-                                cell,
-                                style: TextStyle(
-                                  fontSize: 48,
-                                  fontWeight: FontWeight.bold,
-                                  color: cell == 'X'
-                                      ? Colors.blue
-                                      : cell == 'O'
-                                      ? Colors.red
-                                      : Colors.transparent,
-                                ),
-                              ),
-                            ),
-                          ),
-                        );
-                      }),
-                    ),
-                  ),
-                  const SizedBox(height: AppTheme.space32),
-
-                  // Game Status
-                  Container(
-                    padding: const EdgeInsets.all(AppTheme.space16),
-                    decoration: BoxDecoration(
-                      color: AppTheme.surfaceColor,
-                      borderRadius: BorderRadius.circular(AppTheme.radiusM),
-                      boxShadow: AppTheme.cardShadow,
-                    ),
-                    child: Column(
-                      children: [
-                        if (!_game.isGameOver)
-                          Column(
-                            children: [
-                              Text(
-                                'Your turn - Tap to make a move',
-                                style: Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(color: AppTheme.textSecondary),
-                              ),
-                              const SizedBox(height: AppTheme.space12),
-                              SizedBox(
-                                height: 4,
-                                child: LinearProgressIndicator(
-                                  backgroundColor: AppTheme.surfaceVariant,
-                                  valueColor: AlwaysStoppedAnimation(
-                                    AppTheme.primaryColor,
+                                    decoration: BoxDecoration(
+                                      color: Colors.orange.withValues(
+                                        alpha: 0.1,
+                                      ),
+                                      border: Border.all(color: Colors.orange),
+                                      borderRadius: BorderRadius.circular(
+                                        AppTheme.radiusS,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.schedule,
+                                          color: Colors.orange,
+                                        ),
+                                        const SizedBox(width: AppTheme.space12),
+                                        Expanded(
+                                          child: Text(
+                                            'Next game available in ${cooldownService.formatCooldown(remaining)}',
+                                            style: Theme.of(
+                                              context,
+                                            ).textTheme.bodySmall,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              ),
-                            ],
-                          )
-                        else
-                          Text(
-                            _game.playerWon()
-                                ? 'You Won! 🎉'
-                                : _game.winner == 'draw'
-                                ? 'Draw Game!'
-                                : 'AI Won 🤖',
-                            style: Theme.of(context).textTheme.headlineSmall
-                                ?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: _game.playerWon()
-                                      ? Colors.green
-                                      : Colors.orange,
-                                ),
-                          ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: AppTheme.space32),
+                                ],
+                              );
+                            }
 
-                  // Action Buttons
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: _game.isGameOver ? _resetGame : null,
-                          icon: const Icon(Icons.refresh),
-                          label: const Text('New Game'),
+                            return const SizedBox.shrink();
+                          },
                         ),
-                      ),
-                      const SizedBox(width: AppTheme.space16),
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () => Navigator.pop(context),
-                          icon: const Icon(Icons.arrow_back),
-                          label: const Text('Exit'),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppTheme.space16),
+                        const SizedBox(height: AppTheme.space32),
 
-                  // Cooldown Info (if on cooldown)
-                  Consumer<CooldownService>(
-                    builder: (context, cooldownService, _) {
-                      final remaining = cooldownService.getRemainingCooldown(
-                        userProvider.user.userId,
-                        'game_tictactoe',
-                      );
-
-                      if (remaining > 0) {
-                        return Container(
+                        // How to Play
+                        Container(
                           padding: const EdgeInsets.all(AppTheme.space16),
                           decoration: BoxDecoration(
-                            color: Colors.orange.withValues(alpha: 0.1),
+                            color: AppTheme.surfaceColor,
                             borderRadius: BorderRadius.circular(
                               AppTheme.radiusM,
                             ),
-                            border: Border.all(color: Colors.orange, width: 1),
+                            boxShadow: AppTheme.cardShadow,
                           ),
-                          child: Row(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Icon(Icons.timer, color: Colors.orange),
-                              const SizedBox(width: AppTheme.space12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Cooldown Active',
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.labelLarge,
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'Next game available in ${cooldownService.formatCooldown(remaining)}',
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.bodySmall,
-                                    ),
-                                  ],
-                                ),
+                              Text(
+                                '❓ How to Play',
+                                style: Theme.of(context).textTheme.titleLarge,
+                              ),
+                              const SizedBox(height: AppTheme.space12),
+                              Text(
+                                '• Mark your position with X\n• AI will respond with O\n• Get 3 in a row to win\n• Win to earn ₹0.08',
+                                style: Theme.of(context).textTheme.bodySmall,
                               ),
                             ],
                           ),
-                        );
-                      }
-
-                      return const SizedBox.shrink();
-                    },
-                  ),
-                  const SizedBox(height: AppTheme.space32),
-
-                  // How to Play
-                  Container(
-                    padding: const EdgeInsets.all(AppTheme.space16),
-                    decoration: BoxDecoration(
-                      color: AppTheme.surfaceColor,
-                      borderRadius: BorderRadius.circular(AppTheme.radiusM),
-                      boxShadow: AppTheme.cardShadow,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '📋 How to Play',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: AppTheme.space12),
-                        Text(
-                          '• You play as X, AI plays as O\n'
-                          '• Tap any empty cell to place your mark\n'
-                          '• Get 3 in a row (horizontal, vertical, diagonal) to win\n'
-                          '• Win: ₹0.50 | You can play once every 5 minutes',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: AppTheme.textSecondary,
-                                height: 1.6,
-                              ),
                         ),
                       ],
                     ),
                   ),
-                ],
-              ),
+                ),
+                // Banner Ad at the bottom
+                _buildBannerAd(),
+              ],
             );
           },
         ),
       ),
+    );
+  }
+
+  // Build banner ad widget
+  Widget _buildBannerAd() {
+    return Container(
+      alignment: Alignment.center,
+      width: AdSize.banner.width.toDouble(),
+      height: AdSize.banner.height.toDouble(),
+      child: _adService.getBannerAd() != null
+          ? AdWidget(ad: _adService.getBannerAd()!)
+          : Container(
+              color: AppTheme.surfaceColor,
+              child: const Center(
+                child: Text('Loading ad...', style: TextStyle(fontSize: 12)),
+              ),
+            ),
     );
   }
 }

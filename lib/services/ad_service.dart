@@ -20,15 +20,28 @@ class AdService {
       await MobileAds.instance.initialize();
       _isInitialized = true;
       debugPrint('✅ Google Mobile Ads initialized successfully');
+      // Preload ads after initialization for better UX
+      _preloadAllAds();
     } catch (e) {
       debugPrint('❌ Failed to initialize Google Mobile Ads: $e');
     }
+  }
+
+  // Preload all ad types in background for seamless experience
+  void _preloadAllAds() {
+    loadInterstitialAd();
+    loadRewardedAd();
+    loadAppOpenAd();
+    createBannerAd();
+    debugPrint('🔄 All ads preloading in background');
   }
 
   // Banner Ad
   BannerAd? _bannerAd;
 
   void createBannerAd() {
+    if (_bannerAd != null) return; // Prevent duplicate creation
+
     _bannerAd = BannerAd(
       adUnitId: AppConstants.bannerAdUnitId,
       size: AdSize.banner,
@@ -40,6 +53,7 @@ class AdService {
         onAdFailedToLoad: (ad, error) {
           debugPrint('❌ Banner Ad failed to load: ${error.message}');
           ad.dispose();
+          _bannerAd = null;
         },
       ),
     );
@@ -172,33 +186,36 @@ class AdService {
         onAdFailedToLoad: (LoadAdError error) {
           _isRewardedInterstitialAdReady = false;
           debugPrint(
-              '❌ Rewarded Interstitial Ad failed to load: ${error.message}');
+            '❌ Rewarded Interstitial Ad failed to load: ${error.message}',
+          );
         },
       ),
     );
   }
 
-  Future<bool> showRewardedInterstitialAd(
-      {required Function(int) onRewardEarned}) async {
+  Future<bool> showRewardedInterstitialAd({
+    required Function(int) onRewardEarned,
+  }) async {
     if (_isRewardedInterstitialAdReady) {
       _rewardedInterstitialAd?.fullScreenContentCallback =
           FullScreenContentCallback(
-        onAdShowedFullScreenContent: (ad) {
-          debugPrint('✅ Rewarded Interstitial Ad showed');
-        },
-        onAdDismissedFullScreenContent: (ad) {
-          debugPrint('✅ Rewarded Interstitial Ad dismissed');
-          ad.dispose();
-          _isRewardedInterstitialAdReady = false;
-          loadRewardedInterstitialAd(); // Preload next ad
-        },
-        onAdFailedToShowFullScreenContent: (ad, error) {
-          debugPrint(
-              '❌ Rewarded Interstitial Ad failed to show: ${error.message}');
-          ad.dispose();
-          _isRewardedInterstitialAdReady = false;
-        },
-      );
+            onAdShowedFullScreenContent: (ad) {
+              debugPrint('✅ Rewarded Interstitial Ad showed');
+            },
+            onAdDismissedFullScreenContent: (ad) {
+              debugPrint('✅ Rewarded Interstitial Ad dismissed');
+              ad.dispose();
+              _isRewardedInterstitialAdReady = false;
+              loadRewardedInterstitialAd(); // Preload next ad
+            },
+            onAdFailedToShowFullScreenContent: (ad, error) {
+              debugPrint(
+                '❌ Rewarded Interstitial Ad failed to show: ${error.message}',
+              );
+              ad.dispose();
+              _isRewardedInterstitialAdReady = false;
+            },
+          );
 
       await _rewardedInterstitialAd?.show(
         onUserEarnedReward: (ad, reward) {

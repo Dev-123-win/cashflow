@@ -43,7 +43,17 @@ class TaskProvider extends ChangeNotifier {
       _isLoading = true;
       notifyListeners();
 
+      // ✅ CRITICAL: Check daily cap BEFORE recording (client-side validation)
+      if (_dailyEarnings + reward > _dailyCap) {
+        _error = 'Daily limit reached. You can only earn ₹$_dailyCap/day.';
+        notifyListeners();
+        throw Exception(
+          'Daily cap exceeded: $_dailyEarnings + $reward > $_dailyCap',
+        );
+      }
+
       // Record task completion in Firestore (atomically)
+      // ⚠️ Server also validates daily cap - if fails, UI is NOT updated
       await _firestoreService.recordTaskCompletion(userId, taskId, reward);
 
       // Update local task state
@@ -85,6 +95,15 @@ class TaskProvider extends ChangeNotifier {
       _isLoading = true;
       notifyListeners();
 
+      // ✅ CRITICAL: Check daily cap BEFORE recording
+      if (won && _dailyEarnings + reward > _dailyCap) {
+        _error = 'Daily limit reached. Come back tomorrow to earn more!';
+        notifyListeners();
+        throw Exception(
+          'Daily cap exceeded for game: $_dailyEarnings + $reward > $_dailyCap',
+        );
+      }
+
       // Record game result in Firestore
       await _firestoreService.recordGameResult(userId, gameId, won, reward);
 
@@ -106,6 +125,15 @@ class TaskProvider extends ChangeNotifier {
       _isLoading = true;
       notifyListeners();
 
+      // ✅ CRITICAL: Check daily cap BEFORE recording
+      if (_dailyEarnings + reward > _dailyCap) {
+        _error = 'Daily limit reached! Maximum ₹$_dailyCap per day.';
+        notifyListeners();
+        throw Exception(
+          'Daily cap exceeded for spin: $_dailyEarnings + $reward > $_dailyCap',
+        );
+      }
+
       // Record spin in Firestore
       await _firestoreService.recordSpinResult(userId, reward);
 
@@ -126,6 +154,15 @@ class TaskProvider extends ChangeNotifier {
     try {
       _isLoading = true;
       notifyListeners();
+
+      // ✅ CRITICAL: Check daily cap BEFORE recording ad reward
+      if (_dailyEarnings + reward > _dailyCap) {
+        _error = 'You\'ve reached today\'s earning limit.';
+        notifyListeners();
+        throw Exception(
+          'Daily cap exceeded for ad: $_dailyEarnings + $reward > $_dailyCap',
+        );
+      }
 
       // Record ad view in Firestore
       await _firestoreService.recordAdView(userId, adType, reward);

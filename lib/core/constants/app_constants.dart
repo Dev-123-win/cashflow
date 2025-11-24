@@ -18,9 +18,9 @@ class AppConstants {
   static const int maxAdsPerDay = 15;
   static const int maxSpinsPerDay = 1;
 
-  // Withdrawal Settings
+  // Withdrawal Settings (Backend source-of-truth: ₹50 min, ₹5000 max)
   static const double minWithdrawalAmount = 50.0;
-  static const double maxWithdrawalPerRequest = 500.0;
+  static const double maxWithdrawalPerRequest = 5000.0;
   static const int minAccountAgeDays = 7;
 
   // Task Rewards
@@ -40,8 +40,19 @@ class AppConstants {
   static const double rewardedAdReward = 0.03;
   static const double interstitialAdReward = 0.02;
 
-  // Spin Rewards
-  static const List<double> spinRewards = [0.05, 0.10, 0.20, 0.50, 1.00];
+  // Spin Rewards (Backend source-of-truth: random between 0.05 and 1.00)
+  static const double spinMinReward = 0.05;
+  static const double spinMaxReward = 1.00;
+  static const List<double> spinRewards = [
+    0.05,
+    0.10,
+    0.15,
+    0.20,
+    0.30,
+    0.50,
+    0.75,
+    1.00,
+  ];
 
   // Cooldown Periods (in minutes)
   static const int taskCooldownMinutes = 0;

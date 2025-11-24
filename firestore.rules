@@ -34,21 +34,37 @@ service cloud.firestore {
     function isValidPhoneNumber(phone) {
       return phone.matches('^[0-9]{10}$');
     }
-
-    // CRITICAL SECURITY: Balance fields are READ-ONLY from client
-    // They can ONLY be updated via transactions (append-only log)
-    function hasNoBalanceFieldUpdates(incomingData, existingData) {
-      // For each balance field, ensure it hasn't changed
-      return (!('availableBalance' in incomingData.keys()) || incomingData.availableBalance == existingData.availableBalance) &&
-             (!('totalEarned' in incomingData.keys()) || incomingData.totalEarned == existingData.totalEarned) &&
-             (!('totalWithdrawn' in incomingData.keys()) || incomingData.totalWithdrawn == existingData.totalWithdrawn) &&
-             (!('tasksCompletedToday' in incomingData.keys()) || incomingData.tasksCompletedToday == existingData.tasksCompletedToday) &&
-             (!('gamesPlayedToday' in incomingData.keys()) || incomingData.gamesPlayedToday == existingData.gamesPlayedToday) &&
-             (!('adsWatchedToday' in incomingData.keys()) || incomingData.adsWatchedToday == existingData.adsWatchedToday) &&
-             (!('dailySpins' in incomingData.keys()) || incomingData.dailySpins == existingData.dailySpins) &&
-             (!('dailyEarningsToday' in incomingData.keys()) || incomingData.dailyEarningsToday == existingData.dailyEarningsToday) &&
-             (!('currentStreak' in incomingData.keys()) || incomingData.currentStreak == existingData.currentStreak);
+    
+    function isValidUPI(upi) {
+      // UPI format: username@bankname (e.g., user@upi, user@okhdfcbank)
+      return upi.matches('^[a-zA-Z0-9._-]+@[a-zA-Z]+$');
     }
+
+    // CRITICAL: Validate profile updates don't touch financial fields
+      function validateUserProfileUpdate(incomingData, existingData) {
+        return hasNoBalanceFieldUpdates(incomingData, existingData) &&
+               (incomingData.displayName is string && incomingData.displayName.size() > 0 && incomingData.displayName.size() <= 100) &&
+               (incomingData.email is string && isValidEmail(incomingData.email)) &&
+               (incomingData.phoneNumber == null || isValidPhoneNumber(incomingData.phoneNumber)) &&
+               (incomingData.profilePicture == null || incomingData.profilePicture is string) &&
+               (incomingData.profilePublic == null || incomingData.profilePublic is bool) &&
+               (incomingData.preferences == null || incomingData.preferences is map);
+      }
+
+      /// ✅ CRITICAL: Calculate today's earnings (security check)
+      function getTodayEarnings() {
+        let today = now.toDate().toLocalTime().date().toString(); // YYYY-MM-DD format
+        return path(['/databases/', database, '/documents/users/', userId, '/transactions']).limit(10000)
+          .where(function(doc) {
+            return doc.data.timestamp.toDate().toLocalTime().date().toString() == today &&
+                   doc.data.type == 'earning' &&
+                   doc.data.status == 'completed';
+          })
+          .toList()
+          .aggregate(function(sum, doc) {
+            return sum + doc.data.amount;
+          });
+      }
     
     // Users collection - Profile data only (balance updated via transactions)
     match /users/{userId} {
@@ -96,7 +112,15 @@ service cloud.firestore {
         // CRITICAL: Transactions are IMMUTABLE (no updates/deletes)
         allow update, delete: if false;
         
+        /// ✅ CRITICAL: Validate transaction with daily cap enforcement
         function validateTransaction(data) {
+          // CRITICAL: Only accept completed earnings for daily cap calculation
+          let query = get(/databases/(default)/documents/users/$(userId));
+          let todayEarnings = query.data.get('dailyEarningsToday', 0);
+          
+          // Daily earning cap is ₹1.50
+          let dailyCap = 1.50;
+          
           return data.userId == userId &&
                  data.type in ['earning', 'withdrawal', 'refund', 'bonus'] &&
                  isValidAmount(data.amount) &&
@@ -107,7 +131,9 @@ service cloud.firestore {
                  data.requestId is string && // CRITICAL: Request deduplication ID
                  data.requestId.size() > 0 &&
                  (data.source == null || data.source is string) &&
-                 (data.description == null || data.description is string);
+                 (data.description == null || data.description is string) &&
+                 // ✅ CRITICAL: Enforce daily cap (₹1.50) - ONLY for completed earnings
+                 (data.type != 'earning' || data.status != 'completed' || (todayEarnings + data.amount) <= dailyCap);
         }
       }
       
@@ -215,10 +241,12 @@ service cloud.firestore {
       function validateWithdrawalRequest(data) {
         return data.userId is string &&
                isValidAmount(data.amount) &&
-               data.amount >= 100 && // Minimum withdrawal
-               data.amount <= 10000 && // Maximum withdrawal
+               data.amount >= 50 &&         // Minimum withdrawal (₹50) - Backend source-of-truth
+               data.amount <= 5000 &&       // Maximum withdrawal (₹5000) - Backend source-of-truth
                data.paymentMethod in ['upi', 'bank', 'wallet'] &&
                data.paymentDetails is map &&
+               // ✅ CRITICAL: Validate UPI format if payment method is UPI
+               (data.paymentMethod != 'upi' || isValidUPI(data.paymentDetails.upiId)) &&
                data.status == 'pending' &&
                data.createdAt == request.time &&
                (data.reason == null || data.reason is string) &&
@@ -327,8 +355,25 @@ service cloud.firestore {
       allow update, delete: if false;
     }
     
-    // Notifications collection
-    match /notifications/{userId} {
+    // CRITICAL: User sessions - Prevent account takeover via multi-device login
+    match /userSessions/{sessionId} {
+      allow read: if isAuthenticatedUser(resource.data.userId);
+      
+      allow create: if isAuthenticatedUser(request.resource.data.userId) &&
+                       request.resource.data.createdAt == request.time &&
+                       request.resource.data.deviceFingerprint is string &&
+                       request.resource.data.deviceFingerprint.size() > 0 &&
+                       request.resource.data.expiresAt is timestamp;
+      
+      // User can only update their own session (extend expiry)
+      allow update: if isAuthenticatedUser(resource.data.userId) &&
+                       resource.data.deviceFingerprint == request.resource.data.deviceFingerprint &&
+                       request.resource.data.expiresAt > resource.data.expiresAt;
+      
+      // User can logout (delete session)
+      allow delete: if isAuthenticatedUser(resource.data.userId);
+    }
+    
       allow read: if isAuthenticatedUser(userId);
       allow write: if request.auth.token.firebase.sign_in_provider == 'custom';
       

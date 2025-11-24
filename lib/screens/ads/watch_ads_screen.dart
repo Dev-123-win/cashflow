@@ -6,6 +6,7 @@ import '../../services/ad_service.dart';
 import '../../services/firestore_service.dart';
 import '../../services/request_deduplication_service.dart';
 import '../../services/device_fingerprint_service.dart';
+import '../../core/constants/app_constants.dart';
 import '../../widgets/error_states.dart';
 
 class WatchAdsScreen extends StatefulWidget {
@@ -18,37 +19,15 @@ class WatchAdsScreen extends StatefulWidget {
 class _WatchAdsScreenState extends State<WatchAdsScreen> {
   late final AdService _adService;
   int _adsWatchedToday = 0;
-  final int _maxAdsPerDay = 5;
+  final int _maxAdsPerDay = AppConstants.maxAdsPerDay;
   bool _isLoadingAd = false;
-
-  final List<AdItem> _availableAds = [
-    AdItem(
-      id: '1',
-      title: 'Brand Video Ad',
-      description: '30 seconds',
-      reward: 0.03,
-      watched: false,
-    ),
-    AdItem(
-      id: '2',
-      title: 'Game Promotion',
-      description: '30 seconds',
-      reward: 0.03,
-      watched: false,
-    ),
-    AdItem(
-      id: '3',
-      title: 'Shopping App',
-      description: '30 seconds',
-      reward: 0.03,
-      watched: false,
-    ),
-  ];
+  double _totalEarned = 0.0;
 
   @override
   void initState() {
     super.initState();
     _adService = AdService();
+    // Ensure rewarded ads are preloaded
     _adService.loadRewardedAd();
   }
 
@@ -57,18 +36,21 @@ class _WatchAdsScreenState extends State<WatchAdsScreen> {
     super.dispose();
   }
 
-  Future<void> _watchAd(AdItem ad) async {
+  Future<void> _watchRewardedAd() async {
     if (_adsWatchedToday >= _maxAdsPerDay) {
-      StateSnackbar.showWarning(
-        context,
-        'Daily ad limit reached. Come back tomorrow!',
-      );
+      if (mounted) {
+        StateSnackbar.showWarning(
+          context,
+          'Daily ad limit reached. Come back tomorrow!',
+        );
+      }
       return;
     }
 
     setState(() => _isLoadingAd = true);
 
     try {
+      // Show the rewarded ad using Google's native ad implementation
       final success = await _adService.showRewardedAd(
         onRewardEarned: (rewardAmount) async {
           // Get auth and services
@@ -96,10 +78,11 @@ class _WatchAdsScreenState extends State<WatchAdsScreen> {
             final deviceFingerprint = await fingerprint.getDeviceFingerprint();
 
             // Generate unique request ID for deduplication
-            final requestId = dedup.generateRequestId(user.uid, 'ad_view', {
-              'adId': ad.id,
-              'reward': ad.reward,
-            });
+            final requestId = dedup
+                .generateRequestId(user.uid, 'ad_view_rewarded', {
+                  'timestamp': DateTime.now().millisecondsSinceEpoch,
+                  'reward': AppConstants.rewardedAdReward,
+                });
 
             // Check if already processed (prevents duplicate earnings)
             final cachedRecord = dedup.getFromLocalCache(requestId);
@@ -114,7 +97,7 @@ class _WatchAdsScreenState extends State<WatchAdsScreen> {
             await firestore.recordAdView(
               user.uid,
               'rewarded',
-              ad.reward,
+              AppConstants.rewardedAdReward,
               requestId: requestId,
               deviceFingerprint: deviceFingerprint,
             );
@@ -124,21 +107,20 @@ class _WatchAdsScreenState extends State<WatchAdsScreen> {
               requestId: requestId,
               requestHash: requestId.hashCode.toString(),
               success: true,
-              transactionId:
-                  '${ad.id}:${DateTime.now().millisecondsSinceEpoch}',
+              transactionId: 'ad_${DateTime.now().millisecondsSinceEpoch}',
             );
 
             // Update UI
             if (mounted) {
               setState(() {
                 _adsWatchedToday++;
-                ad.watched = true;
+                _totalEarned += AppConstants.rewardedAdReward;
               });
 
               // Show success message
               StateSnackbar.showSuccess(
                 context,
-                'Great! You earned ₹${ad.reward.toStringAsFixed(2)}',
+                'Great! You earned ₹${AppConstants.rewardedAdReward.toStringAsFixed(2)}',
               );
             }
           } catch (e) {
@@ -154,7 +136,9 @@ class _WatchAdsScreenState extends State<WatchAdsScreen> {
       );
 
       if (!success && mounted) {
-        StateSnackbar.showWarning(context, 'Ad not ready. Please try again.');
+        StateSnackbar.showWarning(context, 'Ad not ready. Loading...');
+        // Retry loading
+        _adService.loadRewardedAd();
       }
     } catch (e) {
       if (mounted) {
@@ -181,6 +165,7 @@ class _WatchAdsScreenState extends State<WatchAdsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Earnings Summary
             Container(
               padding: const EdgeInsets.all(AppTheme.space16),
               decoration: BoxDecoration(
@@ -191,9 +176,39 @@ class _WatchAdsScreenState extends State<WatchAdsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Today: $_adsWatchedToday/$_maxAdsPerDay ads',
-                    style: Theme.of(context).textTheme.labelLarge,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Ads Watched',
+                            style: Theme.of(context).textTheme.labelLarge,
+                          ),
+                          const SizedBox(height: AppTheme.space8),
+                          Text(
+                            '$_adsWatchedToday/$_maxAdsPerDay',
+                            style: Theme.of(context).textTheme.headlineSmall,
+                          ),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            'Earned Today',
+                            style: Theme.of(context).textTheme.labelLarge,
+                          ),
+                          const SizedBox(height: AppTheme.space8),
+                          Text(
+                            '₹${_totalEarned.toStringAsFixed(2)}',
+                            style: Theme.of(context).textTheme.headlineSmall
+                                ?.copyWith(color: AppTheme.primaryColor),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                   const SizedBox(height: AppTheme.space12),
                   ClipRRect(
@@ -205,86 +220,116 @@ class _WatchAdsScreenState extends State<WatchAdsScreen> {
                       valueColor: AlwaysStoppedAnimation(AppTheme.primaryColor),
                     ),
                   ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppTheme.space32),
+
+            // Info Box
+            Container(
+              padding: const EdgeInsets.all(AppTheme.space16),
+              decoration: BoxDecoration(
+                color: AppTheme.surfaceColor,
+                borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                border: Border.all(color: AppTheme.tertiaryColor, width: 1),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.info_outline, size: 20),
+                      const SizedBox(width: AppTheme.space12),
+                      Expanded(
+                        child: Text(
+                          'How to Earn',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: AppTheme.space12),
                   Text(
-                    'Earned: ₹${(_adsWatchedToday * 0.03).toStringAsFixed(2)}',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppTheme.textSecondary,
-                    ),
+                    '• Watch full video advertisements\n• Get ₹${AppConstants.rewardedAdReward.toStringAsFixed(2)} per ad\n• Limit: $_maxAdsPerDay ads per day\n• Ads reset daily at midnight',
+                    style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ],
               ),
             ),
             const SizedBox(height: AppTheme.space32),
-            Text(
-              'Available Ads',
-              style: Theme.of(context).textTheme.headlineSmall,
+
+            // Watch Ad Button
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: (_adsWatchedToday >= _maxAdsPerDay || _isLoadingAd)
+                    ? null
+                    : _watchRewardedAd,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryColor,
+                ),
+                child: _isLoadingAd
+                    ? const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation(Colors.white),
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          Text('Loading Ad...'),
+                        ],
+                      )
+                    : Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text('Watch Video Ad'),
+                          if (_adsWatchedToday < _maxAdsPerDay)
+                            Text(
+                              'Earn ₹${AppConstants.rewardedAdReward.toStringAsFixed(2)}',
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(color: Colors.white),
+                            ),
+                        ],
+                      ),
+              ),
             ),
-            const SizedBox(height: AppTheme.space16),
-            ..._availableAds.map((ad) => _buildAdCard(ad)),
+
+            if (_adsWatchedToday >= _maxAdsPerDay)
+              Padding(
+                padding: const EdgeInsets.only(top: AppTheme.space16),
+                child: Container(
+                  padding: const EdgeInsets.all(AppTheme.space12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withValues(alpha: 0.1),
+                    border: Border.all(color: Colors.orange),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusS),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.schedule, color: Colors.orange),
+                      const SizedBox(width: AppTheme.space12),
+                      Expanded(
+                        child: Text(
+                          'Daily ad limit reached. Claim more tomorrow!',
+                          style: Theme.of(
+                            context,
+                          ).textTheme.bodySmall?.copyWith(color: Colors.orange),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            const SizedBox(height: AppTheme.space32),
           ],
         ),
       ),
     );
   }
-
-  Widget _buildAdCard(AdItem ad) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppTheme.space12),
-      padding: const EdgeInsets.all(AppTheme.space16),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceColor,
-        borderRadius: BorderRadius.circular(AppTheme.radiusM),
-        boxShadow: AppTheme.cardShadow,
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(ad.title, style: Theme.of(context).textTheme.labelLarge),
-                const SizedBox(height: 4),
-                Text(
-                  ad.description,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppTheme.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Earn: ₹${ad.reward.toStringAsFixed(2)}',
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: AppTheme.primaryColor,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: AppTheme.space16),
-          ElevatedButton(
-            onPressed: ad.watched || _isLoadingAd ? null : () => _watchAd(ad),
-            child: Text(ad.watched ? 'Watched' : 'Watch'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class AdItem {
-  final String id;
-  final String title;
-  final String description;
-  final double reward;
-  bool watched;
-
-  AdItem({
-    required this.id,
-    required this.title,
-    required this.description,
-    required this.reward,
-    required this.watched,
-  });
 }
