@@ -1,55 +1,69 @@
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter/material.dart';
 import '../core/constants/app_constants.dart';
+import 'cloudflare_workers_service.dart';
+import 'device_fingerprint_service.dart';
 
+/// Service responsible for loading, showing and tracking ad interactions.
+/// All ad view earnings are recorded via the Cloudflare Workers backend.
 class AdService {
+  // -----------------------------------------------------------------
+  // Singleton pattern
+  // -----------------------------------------------------------------
   static final AdService _instance = AdService._internal();
-
-  factory AdService() {
-    return _instance;
-  }
-
+  factory AdService() => _instance;
   AdService._internal();
 
+  // -----------------------------------------------------------------
+  // Backend services
+  // -----------------------------------------------------------------
+  final CloudflareWorkersService _cloudflare = CloudflareWorkersService();
+  final DeviceFingerprintService _deviceFingerprint =
+      DeviceFingerprintService();
+
+  // -----------------------------------------------------------------
+  // Initialization state
+  // -----------------------------------------------------------------
   bool _isInitialized = false;
 
+  /// Initialise Google Mobile Ads SDK and preload all ad formats.
   Future<void> initialize() async {
     if (_isInitialized) return;
-
     try {
       await MobileAds.instance.initialize();
       _isInitialized = true;
       debugPrint('✅ Google Mobile Ads initialized successfully');
-      // Preload ads after initialization for better UX
       _preloadAllAds();
     } catch (e) {
-      debugPrint('❌ Failed to initialize Google Mobile Ads: $e');
+      debugPrint('❌ Failed to initialise Google Mobile Ads: $e');
     }
   }
 
-  // Preload all ad types in background for seamless experience
+  // -----------------------------------------------------------------
+  // Pre‑load all ad formats for a smooth user experience.
+  // -----------------------------------------------------------------
   void _preloadAllAds() {
     loadInterstitialAd();
     loadRewardedAd();
+    loadRewardedInterstitialAd();
     loadAppOpenAd();
     createBannerAd();
     debugPrint('🔄 All ads preloading in background');
   }
 
-  // Banner Ad
+  // -----------------------------------------------------------------
+  // Banner ad handling
+  // -----------------------------------------------------------------
   BannerAd? _bannerAd;
 
   void createBannerAd() {
-    if (_bannerAd != null) return; // Prevent duplicate creation
-
+    if (_bannerAd != null) return;
     _bannerAd = BannerAd(
       adUnitId: AppConstants.bannerAdUnitId,
       size: AdSize.banner,
       request: const AdRequest(),
       listener: BannerAdListener(
-        onAdLoaded: (ad) {
-          debugPrint('✅ Banner Ad loaded');
-        },
+        onAdLoaded: (_) => debugPrint('✅ Banner Ad loaded'),
         onAdFailedToLoad: (ad, error) {
           debugPrint('❌ Banner Ad failed to load: ${error.message}');
           ad.dispose();
@@ -61,13 +75,11 @@ class AdService {
   }
 
   BannerAd? getBannerAd() => _bannerAd;
+  void disposeBannerAd() => _bannerAd?.dispose();
 
-  void disposeBannerAd() {
-    _bannerAd?.dispose();
-    _bannerAd = null;
-  }
-
-  // Interstitial Ad
+  // -----------------------------------------------------------------
+  // Interstitial ad handling
+  // -----------------------------------------------------------------
   InterstitialAd? _interstitialAd;
   bool _isInterstitialAdReady = false;
 
@@ -92,14 +104,13 @@ class AdService {
   Future<void> showInterstitialAd() async {
     if (_isInterstitialAdReady) {
       _interstitialAd?.fullScreenContentCallback = FullScreenContentCallback(
-        onAdShowedFullScreenContent: (ad) {
-          debugPrint('✅ Interstitial Ad showed');
-        },
+        onAdShowedFullScreenContent: (_) =>
+            debugPrint('✅ Interstitial Ad showed'),
         onAdDismissedFullScreenContent: (ad) {
           debugPrint('✅ Interstitial Ad dismissed');
           ad.dispose();
           _isInterstitialAdReady = false;
-          loadInterstitialAd(); // Preload next ad
+          loadInterstitialAd();
         },
         onAdFailedToShowFullScreenContent: (ad, error) {
           debugPrint('❌ Interstitial Ad failed to show: ${error.message}');
@@ -114,7 +125,9 @@ class AdService {
     }
   }
 
-  // Rewarded Ad
+  // -----------------------------------------------------------------
+  // Rewarded ad handling
+  // -----------------------------------------------------------------
   RewardedAd? _rewardedAd;
   bool _isRewardedAdReady = false;
 
@@ -139,14 +152,12 @@ class AdService {
   Future<bool> showRewardedAd({required Function(int) onRewardEarned}) async {
     if (_isRewardedAdReady) {
       _rewardedAd?.fullScreenContentCallback = FullScreenContentCallback(
-        onAdShowedFullScreenContent: (ad) {
-          debugPrint('✅ Rewarded Ad showed');
-        },
+        onAdShowedFullScreenContent: (_) => debugPrint('✅ Rewarded Ad showed'),
         onAdDismissedFullScreenContent: (ad) {
           debugPrint('✅ Rewarded Ad dismissed');
           ad.dispose();
           _isRewardedAdReady = false;
-          loadRewardedAd(); // Preload next ad
+          loadRewardedAd();
         },
         onAdFailedToShowFullScreenContent: (ad, error) {
           debugPrint('❌ Rewarded Ad failed to show: ${error.message}');
@@ -154,9 +165,8 @@ class AdService {
           _isRewardedAdReady = false;
         },
       );
-
       await _rewardedAd?.show(
-        onUserEarnedReward: (ad, reward) {
+        onUserEarnedReward: (_, reward) {
           debugPrint('🎉 User earned reward: ${reward.amount}');
           onRewardEarned(reward.amount.toInt());
         },
@@ -169,7 +179,9 @@ class AdService {
     }
   }
 
-  // Rewarded Interstitial Ad
+  // -----------------------------------------------------------------
+  // Rewarded Interstitial ad handling
+  // -----------------------------------------------------------------
   RewardedInterstitialAd? _rewardedInterstitialAd;
   bool _isRewardedInterstitialAdReady = false;
 
@@ -199,14 +211,13 @@ class AdService {
     if (_isRewardedInterstitialAdReady) {
       _rewardedInterstitialAd?.fullScreenContentCallback =
           FullScreenContentCallback(
-            onAdShowedFullScreenContent: (ad) {
-              debugPrint('✅ Rewarded Interstitial Ad showed');
-            },
+            onAdShowedFullScreenContent: (_) =>
+                debugPrint('✅ Rewarded Interstitial Ad showed'),
             onAdDismissedFullScreenContent: (ad) {
               debugPrint('✅ Rewarded Interstitial Ad dismissed');
               ad.dispose();
               _isRewardedInterstitialAdReady = false;
-              loadRewardedInterstitialAd(); // Preload next ad
+              loadRewardedInterstitialAd();
             },
             onAdFailedToShowFullScreenContent: (ad, error) {
               debugPrint(
@@ -216,9 +227,8 @@ class AdService {
               _isRewardedInterstitialAdReady = false;
             },
           );
-
       await _rewardedInterstitialAd?.show(
-        onUserEarnedReward: (ad, reward) {
+        onUserEarnedReward: (_, reward) {
           debugPrint('🎉 User earned reward: ${reward.amount}');
           onRewardEarned(reward.amount.toInt());
         },
@@ -231,7 +241,9 @@ class AdService {
     }
   }
 
-  // App Open Ad
+  // -----------------------------------------------------------------
+  // App Open ad handling
+  // -----------------------------------------------------------------
   AppOpenAd? _appOpenAd;
   bool _isAppOpenAdReady = false;
 
@@ -256,9 +268,7 @@ class AdService {
   Future<void> showAppOpenAd() async {
     if (_isAppOpenAdReady) {
       _appOpenAd?.fullScreenContentCallback = FullScreenContentCallback(
-        onAdShowedFullScreenContent: (ad) {
-          debugPrint('✅ App Open Ad showed');
-        },
+        onAdShowedFullScreenContent: (_) => debugPrint('✅ App Open Ad showed'),
         onAdDismissedFullScreenContent: (ad) {
           debugPrint('✅ App Open Ad dismissed');
           ad.dispose();
@@ -274,9 +284,11 @@ class AdService {
     }
   }
 
-  // Native Ad
+  // -----------------------------------------------------------------
+  // Native ad handling
+  // -----------------------------------------------------------------
   void loadNativeAd({required Function(NativeAd) onAdLoaded}) {
-    final NativeAd nativeAd = NativeAd(
+    final nativeAd = NativeAd(
       adUnitId: AppConstants.nativeAdUnitId,
       factoryId: 'adFactoryExample',
       request: const AdRequest(),
@@ -294,25 +306,39 @@ class AdService {
     nativeAd.load();
   }
 
-  // Dispose all ads
+  // -----------------------------------------------------------------
+  // Record an ad view via the Cloudflare Workers backend.
+  // -----------------------------------------------------------------
+  Future<bool> recordAdView(String userId, String adType) async {
+    try {
+      final deviceId = await _deviceFingerprint.getDeviceFingerprint();
+      final result = await _cloudflare.recordAdView(
+        userId: userId,
+        adType: adType,
+        deviceId: deviceId,
+      );
+      final success = result['success'] ?? false;
+      debugPrint(
+        success
+            ? '✅ Ad view recorded for $userId (type: $adType) via backend'
+            : '⚠️ Ad view failed: ${result['error'] ?? 'unknown'}',
+      );
+      return success;
+    } catch (e) {
+      debugPrint('❌ Error recording ad view: $e');
+      return false;
+    }
+  }
+
+  // -----------------------------------------------------------------
+  // Dispose all ad objects.
+  // -----------------------------------------------------------------
   void disposeAllAds() {
     _bannerAd?.dispose();
     _interstitialAd?.dispose();
     _rewardedAd?.dispose();
     _rewardedInterstitialAd?.dispose();
     _appOpenAd?.dispose();
-
-    _bannerAd = null;
-    _interstitialAd = null;
-    _rewardedAd = null;
-    _rewardedInterstitialAd = null;
-    _appOpenAd = null;
-
-    _isRewardedAdReady = false;
-    _isInterstitialAdReady = false;
-    _isRewardedInterstitialAdReady = false;
-    _isAppOpenAdReady = false;
-
     debugPrint('✅ All ads disposed');
   }
 }

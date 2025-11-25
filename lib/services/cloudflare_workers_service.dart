@@ -10,7 +10,8 @@ import 'package:flutter/material.dart';
 /// - Withdrawal requests
 /// - User statistics
 class CloudflareWorkersService {
-  static const String _baseUrl = 'https://earnquest.workers.dev';
+  static const String _baseUrl =
+      'https://earnquest-worker.earnplay12345.workers.dev';
   static const Duration _timeout = Duration(seconds: 30);
 
   // Singleton instance

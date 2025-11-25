@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:math';
-import 'firestore_service.dart';
+import 'cloudflare_workers_service.dart';
+import 'device_fingerprint_service.dart';
 
 // ============ TIC-TAC-TOE GAME (Top-level class) ============
 
@@ -227,7 +228,10 @@ class GameService {
 
   GameService._internal();
 
-  final FirestoreService _firestoreService = FirestoreService();
+  final CloudflareWorkersService _cloudflareService =
+      CloudflareWorkersService();
+  final DeviceFingerprintService _deviceFingerprint =
+      DeviceFingerprintService();
 
   // Game cooldown constants (in minutes)
   static const int gameCooldownMinutes = 5;
@@ -296,8 +300,18 @@ class GameService {
   }) async {
     try {
       final reward = customReward ?? gameWinReward;
-      await _firestoreService.recordGameResult(userId, gameId, true, reward);
-      debugPrint('✅ Game won: $gameId for $userId (+₹$reward)');
+      final deviceId = await _deviceFingerprint.getDeviceFingerprint();
+
+      // Route through Cloudflare Workers backend
+      await _cloudflareService.recordGameResult(
+        userId: userId,
+        gameId: gameId,
+        won: true,
+        score: 0, // Can be enhanced to pass actual score
+        deviceId: deviceId,
+      );
+
+      debugPrint('✅ Game won: $gameId for $userId (+₹$reward) via backend');
     } catch (e) {
       debugPrint('❌ Error recording game win: $e');
       rethrow;
@@ -311,14 +325,24 @@ class GameService {
     double? customReward,
   }) async {
     try {
-      // Some games give consolation prize for losing
+      final deviceId = await _deviceFingerprint.getDeviceFingerprint();
+
+      // Route through Cloudflare Workers backend
+      await _cloudflareService.recordGameResult(
+        userId: userId,
+        gameId: gameId,
+        won: false,
+        score: 0,
+        deviceId: deviceId,
+      );
+
       final reward = customReward ?? 0.0;
       if (reward > 0) {
-        await _firestoreService.recordGameResult(userId, gameId, false, reward);
-        debugPrint('✅ Game lost: $gameId for $userId (+₹$reward consolation)');
+        debugPrint(
+          '✅ Game lost: $gameId for $userId (+₹$reward consolation) via backend',
+        );
       } else {
-        await _firestoreService.recordGameResult(userId, gameId, false, 0);
-        debugPrint('✅ Game lost: $gameId for $userId (no reward)');
+        debugPrint('✅ Game lost: $gameId for $userId (no reward) via backend');
       }
     } catch (e) {
       debugPrint('❌ Error recording game loss: $e');
@@ -331,7 +355,7 @@ class GameService {
   /// Get game statistics for user
   Future<Map<String, dynamic>> getGameStats(String userId) async {
     try {
-      final stats = await _firestoreService.getUserStats(userId);
+      final stats = await _cloudflareService.getUserStats(userId: userId);
       return {
         'gamesPlayedToday': stats['gamesPlayedToday'] ?? 0,
         'maxGamesPerDay': maxGamesPerDay,
