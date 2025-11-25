@@ -1,0 +1,365 @@
+Connected devices:
+sdk gphone64 x86 64 (mobile) • emulator-5554  • android-x64 • Android 16 (API 36) (emulator)
+sdk gphone64 x86 64 (mobile) • localhost:5555 • android-x64 • Android 16 (API 36) (emulator)
+[1]: sdk gphone64 x86 64 (emulator-5554)
+[2]: sdk gphone64 x86 64 (localhost:5555)
+Please choose one (or "q" to quit): 1
+Launching lib/main.dart on sdk gphone64 x86 64 in debug mode...
+Running Gradle task 'assembleDebug'...                             15.7s
+✓ Built build/app/outputs/flutter-apk/app-debug.apk
+Installing build/app/outputs/flutter-apk/app-debug.apk...        1,743ms
+D/FlutterJNI( 6995): Beginning load of flutter...
+D/FlutterJNI( 6995): flutter (null) was loaded normally!
+I/flutter ( 6995): [IMPORTANT:flutter/shell/platform/android/android_context_gl_impeller.cc(104)] Using the Impeller rendering backend (OpenGLES).
+Syncing files to device sdk gphone64 x86 64...                     199ms
+
+Flutter run key commands.
+r Hot reload. 🔥🔥🔥
+R Hot restart.
+h List all available interactive commands.
+d Detach (terminate "flutter run" but leave application running).
+c Clear the screen
+q Quit (terminate the application on the device).
+
+A Dart VM Service on sdk gphone64 x86 64 is available at: http://127.0.0.1:41289/xeUmIFLTwNI=/
+The Flutter DevTools debugger and profiler on sdk gphone64 x86 64 is available at: http://127.0.0.1:41289/xeUmIFLTwNI=/devtools/?uri=ws://127.0.0.1:41289/xeUmIFLTwNI=/ws
+I/Choreographer( 6995): Skipped 69 frames!  The application may be doing too much work on its main thread.
+D/WindowLayoutComponentImpl( 6995): Register WindowLayoutInfoListener on Context=com.supreet.rewardly.MainActivity@3cd2d62, of which baseContext=android.app.ContextImpl@cde2272
+I/FirebaseApp( 6995): Device unlocked: initializing all Firebase APIs for app [DEFAULT]
+I/flutter ( 6995): Firebase initialized successfully
+I/flutter ( 6995): Firestore offline persistence enabled
+I/flutter ( 6995): AuthService initialized successfully
+I/upreet.rewardly( 6995): AssetManager2(0x71eaf44b5e58) locale list changing from [] to [en-US]
+D/ApplicationLoaders( 6995): Returning zygote-cached class loader: /system/framework/org.apache.http.legacy.jar
+D/ApplicationLoaders( 6995): Returning zygote-cached class loader: /system/framework/com.android.media.remotedisplay.jar
+D/ApplicationLoaders( 6995): Returning zygote-cached class loader: /system/framework/com.android.location.provider.jar
+D/ApplicationLoaders( 6995): Returning zygote-cached class loader: /system_ext/framework/androidx.window.extensions.jar
+D/ApplicationLoaders( 6995): Returning zygote-cached class loader: /system_ext/framework/androidx.window.sidecar.jar
+D/nativeloader( 6995): InitLlndkLibrariesProduct: libEGL.so:libGLESv1_CM.so:libGLESv2.so:libGLESv3.so:libRS.so:libandroid_net.so:libapexsupport.so:libavf.so:libbinder_ndk.so:libc.so:libcgrouprc.so:libclang_rt.asan-x86_64-android.so:libcom.android.tethering.connectivity_native.so:libdl.so:libft2.so:liblog.so:libm.so:libmediandk.so:libnativewindow.so:libneuralnetworks.so:libselinux.so:libsync.so:libvendorsupport.so:libvndksupport.so:libvulkan.so
+D/nativeloader( 6995): Configuring product-clns-10 for unbundled product apk /product/priv-app/PrebuiltGmsCore/PrebuiltGmsCore.apk. target_sdk_version=35, uses_libraries=, library_path=/product/priv-app/PrebuiltGmsCore/lib/x86_64:/product/priv-app/PrebuiltGmsCore/PrebuiltGmsCore.apk!/lib/x86_64:/product/lib64:/system/product/lib64, permitted_path=/data:/mnt/expand:/data/user/0/com.google.android.gms:/product/lib64:/system/product/lib64
+D/nativeloader( 6995): InitVndkspLibrariesProduct: VNDK is deprecated with product
+I/DynamiteModule( 6995): Considering local module com.google.android.gms.ads.dynamite:0 and remote module com.google.android.gms.ads.dynamite:244410203
+I/DynamiteModule( 6995): Selected remote version of com.google.android.gms.ads.dynamite, version >= 244410203
+I/upreet.rewardly( 6995): AssetManager2(0x71eaf44a3898) locale list changing from [] to [en-US]
+D/DynamitePackage( 6995): Instantiated singleton DynamitePackage.
+D/DynamitePackage( 6995): Instantiating com.google.android.gms.ads.ChimeraMobileAdsSettingManagerCreatorImpl
+D/CompatChangeReporter( 6995): Compat change id reported: 288912692; UID 10217; state: ENABLED
+I/flutter ( 6995): ✅ Google Mobile Ads initialized successfully
+I/flutter ( 6995): 🔄 All ads preloading in background
+I/flutter ( 6995): Google Mobile Ads initialized successfully
+I/upreet.rewardly( 6995): AssetManager2(0x71eaf44b09f8) locale list changing from [] to [en-US]
+I/WebViewFactory( 6995): Loading com.google.android.webview version 133.0.6943.137 (code 694313738)
+I/upreet.rewardly( 6995): AssetManager2(0x71eaf44b6ad8) locale list changing from [] to [en-US]
+I/upreet.rewardly( 6995): AssetManager2(0x71eaf44b5818) locale list changing from [] to [en-US]
+I/upreet.rewardly( 6995): AssetManager2(0x71eaf44af0f8) locale list changing from [] to [en-US]
+I/upreet.rewardly( 6995): AssetManager2(0x71eaf44b3298) locale list changing from [] to [en-US]
+I/upreet.rewardly( 6995): AssetManager2(0x71eaf44b3bf8) locale list changing from [] to [en-US]
+I/upreet.rewardly( 6995): AssetManager2(0x71eaf44b1358) locale list changing from [] to [en-US]
+I/upreet.rewardly( 6995): AssetManager2(0x71eaf44b2618) locale list changing from [] to [en-US]
+V/ResourcesManager( 6995): The following library key has been added: ResourcesKey{ mHash=6ae2c715 mResDir=null mSplitDirs=[] mOverlayDirs=[] mLibDirs=[/data/app/~~r0XZIe20n_j1buFP8PclEQ==/com.google.android.webview-FKA8Zm_aTuGo6ObhjH0Q2A==/WebViewGoogle.apk,/data/app/~~hGYhTPqg-Ko0lbY3lJ2nBA==/com.google.android.trichromelibrary_694313738-XyJv4hNtGevMZQVLiiWHVA==/TrichromeLibrary.apk] mDisplayId=0 mOverrideConfig=v36 mCompatInfo={440dpi always-compat} mLoaders=[]}
+W/upreet.rewardly( 6995): Failed to find entry 'classes.dex': Entry not found
+D/nativeloader( 6995): Configuring clns-11 for other apk /data/app/~~hGYhTPqg-Ko0lbY3lJ2nBA==/com.google.android.trichromelibrary_694313738-XyJv4hNtGevMZQVLiiWHVA==/TrichromeLibrary.apk. target_sdk_version=34, uses_libraries=ALL, library_path=/data/app/~~r0XZIe20n_j1buFP8PclEQ==/com.google.android.webview-FKA8Zm_aTuGo6ObhjH0Q2A==/lib/x86_64:/data/app/~~r0XZIe20n_j1buFP8PclEQ==/com.google.android.webview-FKA8Zm_aTuGo6ObhjH0Q2A==/WebViewGoogle.apk!/lib/x86_64:/data/app/~~hGYhTPqg-Ko0lbY3lJ2nBA==/com.google.android.trichromelibrary_694313738-XyJv4hNtGevMZQVLiiWHVA==/TrichromeLibrary.apk!/lib/x86_64, permitted_path=/data:/mnt/expand
+D/ApplicationLoaders( 6995): Returning zygote-cached class loader: /system_ext/framework/androidx.window.extensions.jar
+D/nativeloader( 6995): Configuring clns-12 for other apk /data/app/~~r0XZIe20n_j1buFP8PclEQ==/com.google.android.webview-FKA8Zm_aTuGo6ObhjH0Q2A==/WebViewGoogle.apk. target_sdk_version=34, uses_libraries=, library_path=/data/app/~~r0XZIe20n_j1buFP8PclEQ==/com.google.android.webview-FKA8Zm_aTuGo6ObhjH0Q2A==/lib/x86_64:/data/app/~~r0XZIe20n_j1buFP8PclEQ==/com.google.android.webview-FKA8Zm_aTuGo6ObhjH0Q2A==/WebViewGoogle.apk!/lib/x86_64:/data/app/~~hGYhTPqg-Ko0lbY3lJ2nBA==/com.google.android.trichromelibrary_694313738-XyJv4hNtGevMZQVLiiWHVA==/TrichromeLibrary.apk!/lib/x86_64, permitted_path=/data:/mnt/expand
+I/cr_WVCFactoryProvider( 6995): version=133.0.6943.137 (694313738) minSdkVersion=29 isBundle=false multiprocess=true packageId=2
+D/nativeloader( 6995): Load /data/app/~~hGYhTPqg-Ko0lbY3lJ2nBA==/com.google.android.trichromelibrary_694313738-XyJv4hNtGevMZQVLiiWHVA==/TrichromeLibrary.apk!/lib/x86_64/libmonochrome_64.so using class loader ns clns-12 (caller=/data/app/~~r0XZIe20n_j1buFP8PclEQ==/com.google.android.webview-FKA8Zm_aTuGo6ObhjH0Q2A==/WebViewGoogle.apk): ok
+D/nativeloader( 6995): Load /system/lib64/libwebviewchromium_plat_support.so using class loader ns clns-12 (caller=/data/app/~~r0XZIe20n_j1buFP8PclEQ==/com.google.android.webview-FKA8Zm_aTuGo6ObhjH0Q2A==/WebViewGoogle.apk): ok
+E/chromium( 6995): [1124/131344.526756:ERROR:variations_seed_loader.cc(39)] Seed missing signature.
+I/chromium( 6995): [1124/131344.529013:INFO:variations_seed_loader.cc(67)] Failed to open file for reading.: No such file or directory (2)
+I/cr_LibraryLoader( 6995): Successfully loaded native library
+I/cr_CachingUmaRecorder( 6995): Flushed 6 samples from 6 histograms, 0 samples were dropped.
+I/cr_CombinedPProvider( 6995): #registerProvider() provider:WV.C8@e6eeb1f isPolicyCacheEnabled:false policyProvidersSize:0
+I/cr_PolicyProvider( 6995): #setManagerAndSource() 0
+I/cr_CombinedPProvider( 6995): #linkNativeInternal() 1
+I/cr_AppResProvider( 6995): #getApplicationRestrictionsFromUserManager() Bundle[EMPTY_PARCEL]
+I/cr_PolicyProvider( 6995): #notifySettingsAvailable() 0
+I/cr_CombinedPProvider( 6995): #onSettingsAvailable() 0
+I/cr_CombinedPProvider( 6995): #flushPolicies()
+I/upreet.rewardly( 6995): AssetManager2(0x71eaf44a89d8) locale list changing from [] to [en-US]
+I/upreet.rewardly( 6995): AssetManager2(0x71eaf44a9fb8) locale list changing from [] to [en-US]
+I/Choreographer( 6995): Skipped 44 frames!  The application may be doing too much work on its main thread.
+I/CameraManagerGlobal( 6995): Connecting to camera service
+I/upreet.rewardly( 6995): AssetManager2(0x71eaf44a86b8) locale list changing from [] to [en-US]
+D/DynamitePackage( 6995): Instantiating com.google.android.gms.ads.ChimeraAdManagerCreatorImpl
+I/Ads     ( 6995): This request is sent from a test device.
+D/nativeloader( 6995): Configuring clns-13 for other apk . target_sdk_version=36, uses_libraries=ALL, library_path=, permitted_path=/data:/mnt/expand
+D/nativeloader( 6995): Load /data/user/0/com.supreet.rewardly/app_pccache/6/74EA326355192A2079026D450CEDAD8446E2A8D8/pcam.jar!/libd7BE5A3456687.so using isolated ns clns-13 (caller=/data/user/0/com.supreet.rewardly/app_pccache/6/74EA326355192A2079026D450CEDAD8446E2A8D8/pcam.jar): ok
+W/AdWorker(Defaul( 6995): type=1400 audit(0.0:74): avc:  granted  { execute } for  path="/data/data/com.supreet.rewardly/app_pccache/6/74EA326355192A2079026D450CEDAD8446E2A8D8/pcam.jar" dev="dm-55" ino=361787 scontext=u:r:untrusted_app:s0:c217,c256,c512,c768 tcontext=u:object_r:app_data_file:s0:c217,c256,c512,c768 tclass=file app=com.supreet.rewardly
+W/ConnectionStatusConfig( 6995): Dynamic lookup for intent failed for action: com.google.android.gms.ads.service.CACHE
+I/DynamiteModule( 6995): Considering local module com.google.android.gms.ads.dynamite:0 and remote module com.google.android.gms.ads.dynamite:244410203
+I/DynamiteModule( 6995): Selected remote version of com.google.android.gms.ads.dynamite, version >= 244410203
+V/DynamiteModule( 6995): Dynamite loader version >= 2, using loadModule2NoCrashUtils
+I/upreet.rewardly( 6995): AssetManager2(0x71eaf44abef8) locale list changing from [] to [en-US]
+I/upreet.rewardly( 6995): AssetManager2(0x71eaf44a9018) locale list changing from [] to [en-US]
+I/upreet.rewardly( 6995): AssetManager2(0x71eaf44a7d58) locale list changing from [] to [en-US]
+I/Ads     ( 6995): This request is sent from a test device.
+D/DynamitePackage( 6995): Instantiating com.google.android.gms.ads.ChimeraAdManagerCreatorImpl
+I/Ads     ( 6995): This request is sent from a test device.
+D/DynamitePackage( 6995): Instantiating com.google.android.gms.ads.ChimeraAdManagerCreatorImpl
+I/Ads     ( 6995): This request is sent from a test device.
+W/cr_media( 6995): BLUETOOTH_CONNECT permission is missing.
+W/cr_media( 6995): getBluetoothAdapter() requires BLUETOOTH permission
+W/cr_media( 6995): registerBluetoothIntentsIfNeeded: Requires BLUETOOTH permission
+W/libc    ( 6995): Access denied finding property "vendor.mesa.log"
+W/libc    ( 6995): Access denied finding property "vendor.mesa.log.file"
+E/MESA    ( 6995): Failed to open rendernode: No such file or directory
+I/flutter ( 6995): User granted notification permission
+W/Ads     ( 6995): Not retrying to fetch app settings
+W/Ads     ( 6995): Not retrying to fetch app settings
+W/Ads     ( 6995): Not retrying to fetch app settings
+I/flutter ( 6995): FCM Token: d0ErwmCaS62Ap7O7Ax0K15:APA91bHqMOY7CPqiZuSsTgzJVsCylo4e5cgYgsiSSSRsYSibABIdRzkaZzyDvbye7YauOKf_aXGdABqr4vDAaLAVRfjm_9wmn4IfZR6ksbxhnN3_nLIZ08g
+W/Ads     ( 6995): Not retrying to fetch app settings
+W/ConnectionStatusConfig( 6995): Dynamic lookup for intent failed for action: com.google.android.gms.ads.service.START
+I/flutter ( 6995): Notification Service initialized successfully
+I/flutter ( 6995): ✅ CooldownService initialized
+I/flutter ( 6995): CooldownService initialized successfully
+D/vulkan  ( 6995): searching for layers in '/data/app/~~v7T9BHESE0eugel0ueBSZw==/com.supreet.rewardly-Bbm9Nt5adYLRNTwZCOPKvA==/lib/x86_64'
+D/vulkan  ( 6995): searching for layers in '/data/app/~~v7T9BHESE0eugel0ueBSZw==/com.supreet.rewardly-Bbm9Nt5adYLRNTwZCOPKvA==/base.apk!/lib/x86_64'
+W/libc    ( 6995): Access denied finding property "vendor.mesa.vk.trace.per.submit"
+W/libc    ( 6995): Access denied finding property "vendor.mesa.gallium.print.optio"
+W/libc    ( 6995): Access denied finding property "vendor.mesa.vk.trace.frame"
+W/libc    ( 6995): Access denied finding property "vendor.mesa.vk.wsi.headless.swa"
+W/chromium( 6995): [WARNING:viz_main_impl.cc(85)] VizNullHypothesis is disabled (not a warning)
+I/Ads     ( 6995): JS: The jsLoaded GMSG has been sent (https://googleads.g.doubleclick.net/mads/static/mad/sdk/native/production/sdk-core-v40-impl.html:1008)
+I/chromium( 6995): [INFO:CONSOLE(1008)] "The jsLoaded GMSG has been sent", source: https://googleads.g.doubleclick.net/mads/static/mad/sdk/native/production/sdk-core-v40-impl.html (1008)
+I/Choreographer( 6995): Skipped 77 frames!  The application may be doing too much work on its main thread.
+D/ProfileInstaller( 6995): Installing profile for com.supreet.rewardly
+W/FlutterJNI( 6995): FlutterJNI.loadLibrary called more than once
+D/FlutterJNI( 6995): Beginning load of flutter...
+D/FlutterJNI( 6995): flutter (null) was loaded normally!
+W/FlutterJNI( 6995): FlutterJNI.prefetchDefaultFontManager called more than once
+I/ResourceExtractor( 6995): Found extracted resources res_timestamp-1-1763990016274
+W/FlutterJNI( 6995): FlutterJNI.init called more than once
+I/FLTFireBGExecutor( 6995): Creating background FlutterEngine instance, with args: [--enable-dart-profiling]
+I/upreet.rewardly( 6995): AssetManager2(0x71eaf44b4238) locale list changing from [] to [en-US]
+I/flutter ( 6995): [IMPORTANT:flutter/shell/platform/android/android_context_gl_impeller.cc(104)] Using the Impeller rendering backend (OpenGLES).
+E/FA      ( 6995): Missing google_app_id. Firebase Analytics disabled. See https://goo.gl/NAOOOI
+I/upreet.rewardly( 6995): Background concurrent mark compact GC freed 9859KB AllocSpace bytes, 88(6036KB) LOS objects, 49% free, 8522KB/16MB, paused 1.902ms,4.182ms total 104.574ms
+I/Choreographer( 6995): Skipped 93 frames!  The application may be doing too much work on its main thread.
+I/HWUI    ( 6995): Davey! duration=1732ms; Flags=1, FrameTimelineVsyncId=39842, IntendedVsync=780316293900, Vsync=781866293838, InputEventId=0, HandleInputStart=781867300162, AnimationStart=781867301647, PerformTraversalsStart=781870229799, DrawStart=781873848680, FrameDeadline=780332960566, FrameStartTime=781866650947, FrameInterval=16666666, WorkloadTarget=16666666, SyncQueued=781877213813, SyncStart=781877911041, IssueDrawCommandsStart=781878695472, SwapBuffers=781900070776, FrameCompleted=782049851340, DequeueBufferDuration=1569441, QueueBufferDuration=1069283, GpuCompleted=782049851340, SwapBuffersCompleted=782048308219, DisplayPresentTime=929, CommandSubmissionCompleted=781900070776, 
+I/Ads     ( 6995): Ad failed to load : 3
+I/Ads     ( 6995): Ad failed to load : 3
+I/Ads     ( 6995): Ad failed to load : 3
+
+══╡ EXCEPTION CAUGHT BY RENDERING LIBRARY ╞═════════════════════════════════════════════════════════
+The following assertion was thrown during layout:
+A RenderFlex overflowed by 44 pixels on the bottom.
+
+The relevant error-causing widget was:
+  Column Column:file:///home/user/myapp/lib/screens/auth/onboarding_screen.dart:166:14
+
+To inspect this widget in Flutter DevTools, visit:
+http://127.0.0.1:41289/xeUmIFLTwNI=/devtools//#/inspector?uri=http%3A%2F%2F127.0.0.1%3A41289%2FxeUmIFLTwNI%3D%2F&inspectorRef=inspector-0
+
+The overflowing RenderFlex has an orientation of Axis.vertical.
+The edge of the RenderFlex that is overflowing has been marked in the rendering with a yellow and
+black striped pattern. This is usually caused by the contents being too big for the RenderFlex.
+Consider applying a flex factor (e.g. using an Expanded widget) to force the children of the
+RenderFlex to fit within the available space instead of being sized to their natural size.
+This is considered an error condition because it indicates that there is content that cannot be
+seen. If the content is legitimately bigger than the available space, consider clipping it with a
+ClipRect widget before putting it in the flex, or using a scrollable container rather than a Flex,
+like a ListView.
+The specific RenderFlex in question is: RenderFlex#2254e OVERFLOWING:
+  creator: Column ← Padding ← Container ← RepaintBoundary ← IndexedSemantics ← _SelectionKeepAlive ←
+    NotificationListener<KeepAliveNotification> ← KeepAlive ← AutomaticKeepAlive ← KeyedSubtree ←
+    _SliverFillViewportRenderObjectWidget ← _SliverFractionalPadding ← ⋯
+  parentData: offset=Offset(24.0, 24.0) (can use size)
+  constraints: BoxConstraints(w=344.7, h=402.2)
+  size: Size(344.7, 402.2)
+  direction: vertical
+  mainAxisAlignment: center
+  mainAxisSize: max
+  crossAxisAlignment: center
+  verticalDirection: down
+  spacing: 0.0
+◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+I/FLTFireMsgService( 6995): FlutterFirebaseMessagingBackgroundService started!
+I/Choreographer( 6995): Skipped 105 frames!  The application may be doing too much work on its main thread.
+I/flutter ( 6995): ❌ App Open Ad failed to load: Publisher data not found. <https://support.google.com/admob/answer/9905175#9>
+I/flutter ( 6995): ❌ Interstitial Ad failed to load: No fill.
+I/flutter ( 6995): ❌ Rewarded Ad failed to load: No fill.
+W/WindowOnBackDispatcher( 6995): sendCancelIfRunning: isInProgress=false callback=io.flutter.embedding.android.FlutterActivity$1@aa66731
+D/InsetsController( 6995): hide(ime(), fromIme=false)
+I/ImeTracker( 6995): com.supreet.rewardly:a13bc668: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+I/DynamiteModule( 6995): Considering local module com.google.android.gms.ads.dynamite:0 and remote module com.google.android.gms.ads.dynamite:244410203
+I/DynamiteModule( 6995): Selected remote version of com.google.android.gms.ads.dynamite, version >= 244410203
+I/upreet.rewardly( 6995): AssetManager2(0x71eaf44c0718) locale list changing from [] to [en-US]
+I/upreet.rewardly( 6995): AssetManager2(0x71eaf44c35f8) locale list changing from [] to [en-US]
+I/upreet.rewardly( 6995): AssetManager2(0x71eaf44c4ef8) locale list changing from [] to [en-US]
+I/flutter ( 6995): ✅ Banner Ad loaded
+I/Ads     ( 6995): JS: The jsLoaded GMSG has been sent (https://googleads.g.doubleclick.net/mads/static/mad/sdk/native/production/sdk-core-v40-impl.html:1008)
+I/chromium( 6995): [INFO:CONSOLE(1008)] "The jsLoaded GMSG has been sent", source: https://googleads.g.doubleclick.net/mads/static/mad/sdk/native/production/sdk-core-v40-impl.html (1008)
+Another exception was thrown: A RenderFlex overflowed by 20 pixels on the bottom.
+Another exception was thrown: A RenderFlex overflowed by 42 pixels on the bottom.
+Another exception was thrown: A RenderFlex overflowed by 17 pixels on the bottom.
+Another exception was thrown: A RenderFlex overflowed by 17 pixels on the bottom.
+Another exception was thrown: A RenderFlex overflowed by 19 pixels on the bottom.
+I/upreet.rewardly( 6995): AssetManager2(0x71eaf44db978) locale list changing from [] to [en-US]
+I/ImeTracker( 6995): com.supreet.rewardly:fc6d4598: onRequestShow at ORIGIN_CLIENT reason SHOW_SOFT_INPUT fromUser false
+D/InsetsController( 6995): show(ime(), fromIme=false)
+D/InsetsController( 6995): Setting requestedVisibleTypes to -1 (was -9)
+D/InputConnectionAdaptor( 6995): The input method toggled cursor monitoring on
+I/AssistStructure( 6995): Flattened final assist data: 492 bytes, containing 1 windows, 3 views
+W/InteractionJankMonitor( 6995): Initializing without READ_DEVICE_CONFIG permission. enabled=false, interval=1, missedFrameThreshold=3, frameTimeThreshold=64, package=com.supreet.rewardly
+I/ImeTracker( 6995): com.supreet.rewardly:fc6d4598: onShown
+I/ImeTracker( 6995): com.supreet.rewardly:4fb7a3c7: onRequestShow at ORIGIN_CLIENT reason SHOW_SOFT_INPUT fromUser false
+D/InsetsController( 6995): show(ime(), fromIme=false)
+I/ImeTracker( 6995): com.supreet.rewardly:4fb7a3c7: onCancelled at PHASE_CLIENT_APPLY_ANIMATION
+D/InputConnectionAdaptor( 6995): The input method toggled cursor monitoring on
+I/AssistStructure( 6995): Flattened final assist data: 484 bytes, containing 1 windows, 3 views
+I/FirebaseAuth( 6995): Logging in as supreetdalawai112@gmail.com with empty reCAPTCHA token
+W/System  ( 6995): Ignoring header X-Firebase-Locale because its value was null.
+I/ImeTracker( 6995): com.supreet.rewardly:e74730de: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser false
+D/InsetsController( 6995): hide(ime(), fromIme=false)
+W/WindowOnBackDispatcher( 6995): sendCancelIfRunning: isInProgress=false callback=android.view.ImeBackAnimationController@6066bc2
+D/InsetsController( 6995): Setting requestedVisibleTypes to -9 (was -1)
+D/CompatChangeReporter( 6995): Compat change id reported: 395521150; UID 10217; state: ENABLED
+W/System  ( 6995): Ignoring header X-Firebase-Locale because its value was null.
+I/ImeTracker( 6995): system_server:e063e879: onCancelled at PHASE_CLIENT_ON_CONTROLS_CHANGED
+D/FirebaseAuth( 6995): Notifying id token listeners about user ( yCxe646Sx2SvmlHa6EuAqxLaWEt1 ).
+W/DynamiteModule( 6995): Local module descriptor class for com.google.android.gms.providerinstaller.dynamite not found.
+I/DynamiteModule( 6995): Considering local module com.google.android.gms.providerinstaller.dynamite:0 and remote module com.google.android.gms.providerinstaller.dynamite:0
+W/ProviderInstaller( 6995): Failed to load providerinstaller module: No acceptable module com.google.android.gms.providerinstaller.dynamite found. Local version is 0 and remote version is 0.
+D/ApplicationLoaders( 6995): Returning zygote-cached class loader: /system/framework/org.apache.http.legacy.jar
+D/ApplicationLoaders( 6995): Returning zygote-cached class loader: /system/framework/com.android.media.remotedisplay.jar
+D/ApplicationLoaders( 6995): Returning zygote-cached class loader: /system/framework/com.android.location.provider.jar
+D/ApplicationLoaders( 6995): Returning zygote-cached class loader: /system_ext/framework/androidx.window.extensions.jar
+D/ApplicationLoaders( 6995): Returning zygote-cached class loader: /system_ext/framework/androidx.window.sidecar.jar
+W/ProviderInstaller( 6995): Failed to report request stats: com.google.android.gms.common.security.ProviderInstallerImpl.reportRequestStats [class android.content.Context, long, long]
+I/upreet.rewardly( 6995): Waiting for a blocking GC ClassLinker
+I/upreet.rewardly( 6995): WaitForGcToComplete blocked ClassLinker on Background for 44.483ms
+D/nativeloader( 6995): Load /product/priv-app/PrebuiltGmsCore/PrebuiltGmsCore.apk!/lib/x86_64/libconscrypt_gmscore_jni.so using class loader ns product-clns-10 (caller=/product/priv-app/PrebuiltGmsCore/PrebuiltGmsCore.apk!classes3.dex): ok
+V/NativeCrypto( 6995): Registering com/google/android/gms/org/conscrypt/NativeCrypto's 308 native methods...
+I/upreet.rewardly( 6995): hiddenapi: Accessing hidden method Ldalvik/system/VMStack;->getStackClass2()Ljava/lang/Class; (runtime_flags=0, domain=core-platform, api=unsupported) from Lfjlv; (domain=app) using reflection: allowed
+I/euco    ( 6995): Unable to retrieve flag snapshot for com.google.android.gms.providerinstaller#com.google.android.gms, using defaults.
+I/upreet.rewardly( 6995): hiddenapi: Accessing hidden method Ljava/security/spec/ECParameterSpec;->getCurveName()Ljava/lang/String; (runtime_flags=0, domain=core-platform, api=unsupported) from Lcom/google/android/gms/org/conscrypt/Platform; (domain=app) using reflection: allowed
+I/ProviderInstaller( 6995): Installed default security provider GmsCore_OpenSSL
+E/GoogleApiManager( 6995): Failed to get service from broker. 
+E/GoogleApiManager( 6995): java.lang.SecurityException: Unknown calling package name 'com.google.android.gms'.
+E/GoogleApiManager( 6995): 	at android.os.Parcel.createExceptionOrNull(Parcel.java:3340)
+E/GoogleApiManager( 6995): 	at android.os.Parcel.createException(Parcel.java:3324)
+E/GoogleApiManager( 6995): 	at android.os.Parcel.readException(Parcel.java:3307)
+E/GoogleApiManager( 6995): 	at android.os.Parcel.readException(Parcel.java:3249)
+E/GoogleApiManager( 6995): 	at asrs.a(:com.google.android.gms@250834038@25.08.34 (260800-739221510):36)
+E/GoogleApiManager( 6995): 	at aspz.z(:com.google.android.gms@250834038@25.08.34 (260800-739221510):143)
+E/GoogleApiManager( 6995): 	at arxi.run(:com.google.android.gms@250834038@25.08.34 (260800-739221510):54)
+E/GoogleApiManager( 6995): 	at android.os.Handler.handleCallback(Handler.java:995)
+E/GoogleApiManager( 6995): 	at android.os.Handler.dispatchMessage(Handler.java:103)
+E/GoogleApiManager( 6995): 	at bzmg.my(:com.google.android.gms@250834038@25.08.34 (260800-739221510):1)
+E/GoogleApiManager( 6995): 	at bzmg.dispatchMessage(:com.google.android.gms@250834038@25.08.34 (260800-739221510):5)
+E/GoogleApiManager( 6995): 	at android.os.Looper.loopOnce(Looper.java:248)
+E/GoogleApiManager( 6995): 	at android.os.Looper.loop(Looper.java:338)
+E/GoogleApiManager( 6995): 	at android.os.HandlerThread.run(HandlerThread.java:85)
+W/CondFlagRegistrar( 6995): Failed to register com.google.android.gms.providerinstaller#com.google.android.gms
+W/CondFlagRegistrar( 6995): eudb: 17: 17: API: Phenotype.API is not available on this device. Connection failed with: ConnectionResult{statusCode=DEVELOPER_ERROR, resolution=null, message=null}
+W/CondFlagRegistrar( 6995): 	at eudd.a(:com.google.android.gms@250834038@25.08.34 (260800-739221510):13)
+W/CondFlagRegistrar( 6995): 	at fodf.d(:com.google.android.gms@250834038@25.08.34 (260800-739221510):3)
+W/CondFlagRegistrar( 6995): 	at fodh.run(:com.google.android.gms@250834038@25.08.34 (260800-739221510):130)
+W/CondFlagRegistrar( 6995): 	at fofn.execute(:com.google.android.gms@250834038@25.08.34 (260800-739221510):1)
+W/CondFlagRegistrar( 6995): 	at fodx.h(:com.google.android.gms@250834038@25.08.34 (260800-739221510):1)
+W/CondFlagRegistrar( 6995): 	at fodx.l(:com.google.android.gms@250834038@25.08.34 (260800-739221510):101)
+W/CondFlagRegistrar( 6995): 	at fodx.p(:com.google.android.gms@250834038@25.08.34 (260800-739221510):19)
+W/CondFlagRegistrar( 6995): 	at emtb.hJ(:com.google.android.gms@250834038@25.08.34 (260800-739221510):35)
+W/CondFlagRegistrar( 6995): 	at ebcn.run(:com.google.android.gms@250834038@25.08.34 (260800-739221510):14)
+W/CondFlagRegistrar( 6995): 	at fofn.execute(:com.google.android.gms@250834038@25.08.34 (260800-739221510):1)
+W/CondFlagRegistrar( 6995): 	at ebco.b(:com.google.android.gms@250834038@25.08.34 (260800-739221510):18)
+W/CondFlagRegistrar( 6995): 	at ebdd.b(:com.google.android.gms@250834038@25.08.34 (260800-739221510):36)
+W/CondFlagRegistrar( 6995): 	at ebdf.d(:com.google.android.gms@250834038@25.08.34 (260800-739221510):25)
+W/CondFlagRegistrar( 6995): 	at aruq.c(:com.google.android.gms@250834038@25.08.34 (260800-739221510):9)
+W/CondFlagRegistrar( 6995): 	at arxg.q(:com.google.android.gms@250834038@25.08.34 (260800-739221510):48)
+W/CondFlagRegistrar( 6995): 	at arxg.d(:com.google.android.gms@250834038@25.08.34 (260800-739221510):10)
+W/CondFlagRegistrar( 6995): 	at arxg.g(:com.google.android.gms@250834038@25.08.34 (260800-739221510):211)
+W/CondFlagRegistrar( 6995): 	at arxg.onConnectionFailed(:com.google.android.gms@250834038@25.08.34 (260800-739221510):2)
+W/CondFlagRegistrar( 6995): 	at arxi.run(:com.google.android.gms@250834038@25.08.34 (260800-739221510):82)
+W/CondFlagRegistrar( 6995): 	at android.os.Handler.handleCallback(Handler.java:995)
+W/CondFlagRegistrar( 6995): 	at android.os.Handler.dispatchMessage(Handler.java:103)
+W/CondFlagRegistrar( 6995): 	at bzmg.my(:com.google.android.gms@250834038@25.08.34 (260800-739221510):1)
+W/CondFlagRegistrar( 6995): 	at bzmg.dispatchMessage(:com.google.android.gms@250834038@25.08.34 (260800-739221510):5)
+W/CondFlagRegistrar( 6995): 	at android.os.Looper.loopOnce(Looper.java:248)
+W/CondFlagRegistrar( 6995): 	at android.os.Looper.loop(Looper.java:338)
+W/CondFlagRegistrar( 6995): 	at android.os.HandlerThread.run(HandlerThread.java:85)
+W/CondFlagRegistrar( 6995): Caused by: arti: 17: API: Phenotype.API is not available on this device. Connection failed with: ConnectionResult{statusCode=DEVELOPER_ERROR, resolution=null, message=null}
+W/CondFlagRegistrar( 6995): 	at aspl.a(:com.google.android.gms@250834038@25.08.34 (260800-739221510):15)
+W/CondFlagRegistrar( 6995): 	at arut.a(:com.google.android.gms@250834038@25.08.34 (260800-739221510):1)
+W/CondFlagRegistrar( 6995): 	at aruq.c(:com.google.android.gms@250834038@25.08.34 (260800-739221510):5)
+W/CondFlagRegistrar( 6995): 	... 12 more
+W/WindowOnBackDispatcher( 6995): sendCancelIfRunning: isInProgress=false callback=io.flutter.embedding.android.FlutterActivity$1@aa66731
+I/upreet.rewardly( 6995): hiddenapi: Accessing hidden field Ljava/net/Socket;->impl:Ljava/net/SocketImpl; (runtime_flags=0, domain=core-platform, api=unsupported) from Lcom/google/android/gms/org/conscrypt/Platform; (domain=app) using reflection: allowed
+I/upreet.rewardly( 6995): hiddenapi: Accessing hidden method Ljava/security/spec/ECParameterSpec;->setCurveName(Ljava/lang/String;)V (runtime_flags=0, domain=core-platform, api=unsupported) from Lcom/google/android/gms/org/conscrypt/Platform; (domain=app) using reflection: allowed
+E/GoogleApiManager( 6995): Failed to get service from broker. 
+E/GoogleApiManager( 6995): java.lang.SecurityException: Unknown calling package name 'com.google.android.gms'.
+E/GoogleApiManager( 6995): 	at android.os.Parcel.createExceptionOrNull(Parcel.java:3340)
+E/GoogleApiManager( 6995): 	at android.os.Parcel.createException(Parcel.java:3324)
+E/GoogleApiManager( 6995): 	at android.os.Parcel.readException(Parcel.java:3307)
+E/GoogleApiManager( 6995): 	at android.os.Parcel.readException(Parcel.java:3249)
+E/GoogleApiManager( 6995): 	at asrs.a(:com.google.android.gms@250834038@25.08.34 (260800-739221510):36)
+E/GoogleApiManager( 6995): 	at aspz.z(:com.google.android.gms@250834038@25.08.34 (260800-739221510):143)
+E/GoogleApiManager( 6995): 	at arxi.run(:com.google.android.gms@250834038@25.08.34 (260800-739221510):54)
+E/GoogleApiManager( 6995): 	at android.os.Handler.handleCallback(Handler.java:995)
+E/GoogleApiManager( 6995): 	at android.os.Handler.dispatchMessage(Handler.java:103)
+E/GoogleApiManager( 6995): 	at bzmg.my(:com.google.android.gms@250834038@25.08.34 (260800-739221510):1)
+E/GoogleApiManager( 6995): 	at bzmg.dispatchMessage(:com.google.android.gms@250834038@25.08.34 (260800-739221510):5)
+E/GoogleApiManager( 6995): 	at android.os.Looper.loopOnce(Looper.java:248)
+E/GoogleApiManager( 6995): 	at android.os.Looper.loop(Looper.java:338)
+E/GoogleApiManager( 6995): 	at android.os.HandlerThread.run(HandlerThread.java:85)
+I/flutter ( 6995): Device ID: BE2A.250530.026.D1
+Another exception was thrown: A RenderFlex overflowed by 24 pixels on the right.
+I/PlatformViewsController( 6995): Hosting view in view hierarchy for platform view: 0
+I/PlatformViewsController( 6995): PlatformView is using SurfaceProducer backend
+I/Choreographer( 6995): Skipped 70 frames!  The application may be doing too much work on its main thread.
+Another exception was thrown: This AdWidget is already in the Widget tree
+E/FA      ( 6995): Missing google_app_id. Firebase Analytics disabled. See https://goo.gl/NAOOOI
+I/flutter ( 6995): ⚠️ Interstitial Ad not ready
+D/DynamitePackage( 6995): Instantiating com.google.android.gms.ads.ChimeraAdManagerCreatorImpl
+I/Ads     ( 6995): This request is sent from a test device.
+W/ConnectionStatusConfig( 6995): Dynamic lookup for intent failed for action: com.google.android.gms.ads.service.CACHE
+W/ConnectionStatusConfig( 6995): Dynamic lookup for intent failed for action: com.google.android.gms.ads.service.START
+I/Ads     ( 6995): Ad failed to load : 3
+I/flutter ( 6995): ❌ Interstitial Ad failed to load: No fill.
+I/upreet.rewardly( 6995): Background concurrent mark compact GC freed 5455KB AllocSpace bytes, 13(2292KB) LOS objects, 49% free, 10MB/21MB, paused 995us,4.891ms total 102.601ms
+I/flutter ( 6995): Wheel animation ended
+Another exception was thrown: A RenderFlex overflowed by 24 pixels on the right.
+I/PlatformViewsController( 6995): Hosting view in view hierarchy for platform view: 1
+I/PlatformViewsController( 6995): PlatformView is using SurfaceProducer backend
+I/Ads     ( 6995): This request is sent from a test device.
+W/ConnectionStatusConfig( 6995): Dynamic lookup for intent failed for action: com.google.android.gms.ads.service.START
+E/FA      ( 6995): Missing google_app_id. Firebase Analytics disabled. See https://goo.gl/NAOOOI
+I/DynamiteModule( 6995): Considering local module com.google.android.gms.ads.dynamite:0 and remote module com.google.android.gms.ads.dynamite:244410203
+I/DynamiteModule( 6995): Selected remote version of com.google.android.gms.ads.dynamite, version >= 244410203
+I/upreet.rewardly( 6995): AssetManager2(0x71eaf45033d8) locale list changing from [] to [en-US]
+I/upreet.rewardly( 6995): AssetManager2(0x71eaf45049b8) locale list changing from [] to [en-US]
+I/flutter ( 6995): ✅ Banner Ad loaded
+E/flutter ( 6995): [ERROR:flutter/runtime/dart_vm_initializer.cc(40)] Unhandled Exception: PlatformException(error, java.lang.IllegalStateException: The Android view returned from PlatformView#getView() was already added to a parent view.
+E/flutter ( 6995): 	at io.flutter.plugin.platform.PlatformViewsController$1.createForTextureLayer(PlatformViewsController.java:220)
+E/flutter ( 6995): 	at io.flutter.plugin.platform.PlatformViewsControllerDelegator.createForTextureLayer(PlatformViewsControllerDelegator.java:134)
+E/flutter ( 6995): 	at io.flutter.embedding.engine.systemchannels.PlatformViewsChannel$1.create(PlatformViewsChannel.java:133)
+E/flutter ( 6995): 	at io.flutter.embedding.engine.systemchannels.PlatformViewsChannel$1.onMethodCall(PlatformViewsChannel.java:55)
+E/flutter ( 6995): 	at io.flutter.plugin.common.MethodChannel$IncomingMethodCallHandler.onMessage(MethodChannel.java:267)
+E/flutter ( 6995): 	at io.flutter.embedding.engine.dart.DartMessenger.invokeHandler(DartMessenger.java:292)
+E/flutter ( 6995): 	at io.flutter.embedding.engine.dart.DartMessenger.lambda$dispatchMessageToQueue$0$io-flutter-embedding-engine-dart-DartMessenger(DartMessenger.java:319)
+E/flutter ( 6995): 	at io.flutter.embedding.engine.dart.DartMessenger$$ExternalSyntheticLambda0.run(D8$$SyntheticClass:0)
+E/flutter ( 6995): 	at android.os.Handler.handleCallback(Handler.java:995)
+E/flutter ( 6995): 	at android.os.Handler.dispatchMessage(Handler.java:103)
+E/flutter ( 6995): 	at android.os.Looper.loopOnce(Looper.java:248)
+E/flutter ( 6995): 	at android.os.Looper.loop(Looper.java:338)
+E/flutter ( 6995): 	at android.app.ActivityThread.main(ActivityThread.java:9067)
+E/flutter ( 6995): 	at java.lang.reflect.Method.invoke(Native Method)
+E/flutter ( 6995): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:593)
+E/flutter ( 6995): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:932)
+E/flutter ( 6995): , null, null)
+E/flutter ( 6995): #0      StandardMethodCodec.decodeEnvelope (package:flutter/src/services/message_codecs.dart:653:7)
+E/flutter ( 6995): #1      MethodChannel._invokeMethod (package:flutter/src/services/platform_channel.dart:367:18)
+E/flutter ( 6995): <asynchronous suspension>
+E/flutter ( 6995): #2      SurfaceAndroidViewController._sendCreateMessage (package:flutter/src/services/platform_views.dart:1053:30)
+E/flutter ( 6995): <asynchronous suspension>
+E/flutter ( 6995): #3      AndroidViewController.create (package:flutter/src/services/platform_views.dart:842:5)
+E/flutter ( 6995): <asynchronous suspension>
+E/flutter ( 6995): 
+I/flutter ( 6995): ⚠️ Interstitial Ad not ready
+D/DynamitePackage( 6995): Instantiating com.google.android.gms.ads.ChimeraAdManagerCreatorImpl
+I/Ads     ( 6995): This request is sent from a test device.
+W/Ads     ( 6995): Not retrying to fetch app settings
+Lost connection to device.

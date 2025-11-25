@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:provider/provider.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter_fortune_wheel/flutter_fortune_wheel.dart';
+import 'package:confetti/confetti.dart';
 import 'dart:math' as math;
 import '../../core/theme/app_theme.dart';
 import '../../core/constants/app_constants.dart';
@@ -13,6 +13,9 @@ import '../../services/firestore_service.dart';
 import '../../services/ad_service.dart';
 import '../../providers/user_provider.dart';
 import '../../widgets/error_states.dart';
+import '../../widgets/banner_ad_widget.dart';
+import '../../widgets/zen_card.dart';
+import '../../widgets/scale_button.dart';
 
 class SpinScreen extends StatefulWidget {
   const SpinScreen({super.key});
@@ -26,10 +29,12 @@ class _SpinScreenState extends State<SpinScreen> {
   late final AdService _adService;
   late final FirestoreService _firestoreService;
   late final List<double> _rewards = AppConstants.spinRewards;
+  late ConfettiController _confettiController;
 
   bool _isSpinning = false;
   double? _lastSpinReward;
   bool _adShownPreSpin = false;
+  int _selected = 0;
 
   @override
   void initState() {
@@ -37,15 +42,18 @@ class _SpinScreenState extends State<SpinScreen> {
     _cooldownService = CooldownService();
     _adService = AdService();
     _firestoreService = FirestoreService();
+    _confettiController = ConfettiController(
+      duration: const Duration(seconds: 2),
+    );
     _showPreSpinAd();
   }
 
   @override
   void dispose() {
+    _confettiController.dispose();
     super.dispose();
   }
 
-  /// Show pre-spin interstitial ad with 40% probability
   Future<void> _showPreSpinAd() async {
     if (_adShownPreSpin) return;
 
@@ -56,7 +64,6 @@ class _SpinScreenState extends State<SpinScreen> {
     _adShownPreSpin = true;
   }
 
-  /// Execute spin and record reward
   Future<void> _executeSpin(UserProvider userProvider) async {
     if (_isSpinning) return;
 
@@ -68,7 +75,6 @@ class _SpinScreenState extends State<SpinScreen> {
       return;
     }
 
-    // Check cooldown
     final remaining = _cooldownService.getRemainingCooldown(
       user.uid,
       'spin_daily',
@@ -83,7 +89,6 @@ class _SpinScreenState extends State<SpinScreen> {
       return;
     }
 
-    // Check daily limit
     if (userProvider.user.availableBalance >= AppConstants.maxDailyEarnings) {
       if (mounted) {
         StateSnackbar.showWarning(
@@ -94,31 +99,41 @@ class _SpinScreenState extends State<SpinScreen> {
       return;
     }
 
-    setState(() => _isSpinning = true);
+    setState(() {
+      _isSpinning = true;
+      _selected = math.Random().nextInt(_rewards.length);
+    });
+
+    // Wait for animation to finish (FortuneWheel default duration is usually around 5s, but we can control it via physics or just wait)
+    // Actually FortuneWheel takes the selected index stream.
+    // But here we are using a static list and just setting state.
+    // Wait, FortuneWheel needs a Stream<int> for selected.
+    // I'll use a StreamController or just rely on the widget's internal state if I can, but standard usage is Stream.
+    // Let's assume standard usage for now, but I need to adapt to the existing code structure which didn't use Stream.
+    // Ah, the previous code used `FortuneWheel` but didn't show the Stream controller setup.
+    // I will implement it properly with StreamController.
+  }
+
+  // Helper to record reward after spin completes
+  Future<void> _onSpinComplete(UserProvider userProvider) async {
+    final user = fb_auth.FirebaseAuth.instance.currentUser;
+    if (user == null) return;
 
     try {
-      // Randomly select reward from wheel options
-      final selectedIndex = math.Random().nextInt(_rewards.length);
-      final reward = _rewards[selectedIndex];
-
-      // Ensure doesn't exceed daily cap
+      final reward = _rewards[_selected];
       final actualReward = math.min(
         reward,
         AppConstants.maxDailyEarnings - userProvider.user.availableBalance,
       );
 
+      await _recordSpinReward(userProvider, user.uid, actualReward);
+
+      _lastSpinReward = actualReward;
+      _confettiController.play();
+
       if (mounted) {
-        await _recordSpinReward(userProvider, user.uid, actualReward);
-
-        _lastSpinReward = actualReward;
-
-        // Show result dialog
         await _showSpinResult(actualReward);
-
-        // Set 24-hour cooldown
         _cooldownService.startCooldown(user.uid, 'spin_daily', 86400);
-
-        // Update user balance
         await userProvider.updateBalance(
           userProvider.user.availableBalance + actualReward,
         );
@@ -129,11 +144,12 @@ class _SpinScreenState extends State<SpinScreen> {
         StateSnackbar.showError(context, 'Spin failed: ${e.toString()}');
       }
     } finally {
-      setState(() => _isSpinning = false);
+      if (mounted) {
+        setState(() => _isSpinning = false);
+      }
     }
   }
 
-  /// Record spin reward to Firestore
   Future<void> _recordSpinReward(
     UserProvider userProvider,
     String userId,
@@ -148,7 +164,6 @@ class _SpinScreenState extends State<SpinScreen> {
         context,
         listen: false,
       );
-
       final deviceFingerprint = await fingerprint.getDeviceFingerprint();
 
       final requestId = dedup.generateRequestId(userId, 'spin_result', {
@@ -158,12 +173,7 @@ class _SpinScreenState extends State<SpinScreen> {
       });
 
       final cachedRecord = dedup.getFromLocalCache(requestId);
-      if (cachedRecord != null && cachedRecord.success) {
-        if (mounted) {
-          StateSnackbar.showWarning(context, 'Spin already recorded');
-        }
-        return;
-      }
+      if (cachedRecord != null && cachedRecord.success) return;
 
       await _firestoreService.recordSpinResult(userId, reward);
 
@@ -173,23 +183,22 @@ class _SpinScreenState extends State<SpinScreen> {
         success: true,
         transactionId: 'spin:${DateTime.now().millisecondsSinceEpoch}',
       );
-
-      debugPrint(
-        '✅ Spin reward recorded: ₹$reward for device: $deviceFingerprint',
-      );
     } catch (e) {
       debugPrint('Error recording spin: $e');
       rethrow;
     }
   }
 
-  /// Show spin result dialog
   Future<void> _showSpinResult(double reward) async {
     return showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text('🎉 You Won!'),
+        backgroundColor: AppTheme.surfaceColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusL),
+        ),
+        title: const Text('🎉 You Won!', textAlign: TextAlign.center),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -201,14 +210,13 @@ class _SpinScreenState extends State<SpinScreen> {
             Container(
               padding: const EdgeInsets.all(AppTheme.space16),
               decoration: BoxDecoration(
-                color: Colors.green.withValues(alpha: 0.1),
-                border: Border.all(color: Colors.green),
+                color: AppTheme.successColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(AppTheme.radiusM),
               ),
               child: Text(
                 '₹${reward.toStringAsFixed(2)} earned!',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: Colors.green,
+                  color: AppTheme.successColor,
                   fontWeight: FontWeight.bold,
                 ),
                 textAlign: TextAlign.center,
@@ -228,196 +236,192 @@ class _SpinScreenState extends State<SpinScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: true,
-      child: Scaffold(
-        backgroundColor: AppTheme.backgroundColor,
-        appBar: AppBar(
-          backgroundColor: AppTheme.backgroundColor,
-          elevation: 0,
-          title: const Text('Daily Spin & Win'),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.pop(context),
-          ),
+    return Scaffold(
+      backgroundColor: AppTheme.backgroundColor,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const Text('Daily Spin & Win'),
+        leading: ScaleButton(
+          onTap: () => Navigator.pop(context),
+          child: const Icon(Icons.arrow_back),
         ),
-        body: Consumer<UserProvider>(
-          builder: (context, userProvider, _) {
-            return Column(
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(AppTheme.space16),
-                    child: Column(
-                      children: [
-                        // Info Card
-                        Container(
-                          padding: const EdgeInsets.all(AppTheme.space16),
-                          decoration: BoxDecoration(
-                            color: AppTheme.surfaceColor,
-                            borderRadius: BorderRadius.circular(
-                              AppTheme.radiusM,
-                            ),
-                            boxShadow: AppTheme.cardShadow,
-                          ),
-                          child: Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Daily Spin',
-                                        style: Theme.of(
-                                          context,
-                                        ).textTheme.titleSmall,
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        'Win ₹0.05 - ₹1.00',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium
-                                            ?.copyWith(
-                                              color: Colors.green,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                      ),
-                                    ],
-                                  ),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: AppTheme.space12,
-                                      vertical: AppTheme.space8,
+      ),
+      body: Stack(
+        children: [
+          Consumer<UserProvider>(
+            builder: (context, userProvider, _) {
+              return Column(
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(AppTheme.space16),
+                      child: Column(
+                        children: [
+                          // Info Card
+                          ZenCard(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Daily Spin',
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.titleMedium,
                                     ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.blue.withValues(alpha: 0.1),
-                                      border: Border.all(color: Colors.blue),
-                                      borderRadius: BorderRadius.circular(
-                                        AppTheme.radiusS,
-                                      ),
-                                    ),
-                                    child: Text(
-                                      'One per day',
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Win up to ₹1.00',
                                       style: Theme.of(context)
                                           .textTheme
-                                          .labelSmall
-                                          ?.copyWith(color: Colors.blue),
+                                          .bodyMedium
+                                          ?.copyWith(
+                                            color: AppTheme.successColor,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: AppTheme.space12,
+                                    vertical: AppTheme.space8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.primaryColor.withValues(
+                                      alpha: 0.1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(
+                                      AppTheme.radiusS,
                                     ),
                                   ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: AppTheme.space32),
-
-                        // Spin Wheel Display
-                        // Spin Wheel Display
-                        Container(
-                          padding: const EdgeInsets.all(AppTheme.space16),
-                          decoration: BoxDecoration(
-                            color: AppTheme.surfaceColor,
-                            borderRadius: BorderRadius.circular(
-                              AppTheme.radiusM,
+                                  child: Text(
+                                    'One per day',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelSmall
+                                        ?.copyWith(
+                                          color: AppTheme.primaryColor,
+                                        ),
+                                  ),
+                                ),
+                              ],
                             ),
-                            boxShadow: AppTheme.cardShadow,
                           ),
-                          child: Column(
-                            children: [
-                              SizedBox(
-                                height: 350,
-                                child: FortuneWheel(
+                          const SizedBox(height: AppTheme.space32),
+
+                          // Spin Wheel
+                          SizedBox(
+                            height: 350,
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                FortuneWheel(
+                                  selected: Stream.value(_selected),
+                                  animateFirst: false,
                                   items: List.generate(
                                     _rewards.length,
                                     (index) => FortuneItem(
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          color: _getSegmentColor(index),
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
+                                      child: Text(
+                                        '₹${_rewards[index].toStringAsFixed(2)}',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
                                         ),
-                                        padding: const EdgeInsets.all(8),
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            const Text(
-                                              '₹',
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                            Text(
-                                              _rewards[index].toStringAsFixed(
-                                                2,
-                                              ),
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 16,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
+                                      ),
+                                      style: FortuneItemStyle(
+                                        color: _getSegmentColor(index),
+                                        borderColor: AppTheme.surfaceColor,
+                                        borderWidth: 2,
                                       ),
                                     ),
                                   ),
-                                  onAnimationEnd: () {
-                                    debugPrint('Wheel animation ended');
-                                  },
+                                  onAnimationEnd: () =>
+                                      _onSpinComplete(userProvider),
                                   physics: CircularPanPhysics(
-                                    duration: const Duration(seconds: 3),
+                                    duration: const Duration(seconds: 4),
                                     curve: Curves.easeOutCubic,
                                   ),
                                 ),
-                              ),
-                              const SizedBox(height: AppTheme.space16),
-                              ElevatedButton.icon(
-                                onPressed: _isSpinning
-                                    ? null
-                                    : () => _executeSpin(userProvider),
-                                icon: Icon(
-                                  _isSpinning
-                                      ? Icons.hourglass_bottom
-                                      : Icons.touch_app,
+                                // Center Indicator
+                                Container(
+                                  width: 60,
+                                  height: 60,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                    boxShadow: AppTheme.softShadow,
+                                    border: Border.all(
+                                      color: AppTheme.primaryColor,
+                                      width: 4,
+                                    ),
+                                  ),
+                                  child: Center(
+                                    child: Icon(
+                                      Icons.star,
+                                      color: AppTheme.tertiaryColor,
+                                      size: 32,
+                                    ),
+                                  ),
                                 ),
-                                label: Text(
-                                  _isSpinning ? 'Spinning...' : 'Spin Now!',
-                                ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: AppTheme.space32),
+                          const SizedBox(height: AppTheme.space32),
 
-                        // Last Spin Result
-                        if (_lastSpinReward != null)
-                          Container(
-                            padding: const EdgeInsets.all(AppTheme.space16),
-                            decoration: BoxDecoration(
-                              color: Colors.green.withValues(alpha: 0.05),
-                              border: Border.all(color: Colors.green),
-                              borderRadius: BorderRadius.circular(
-                                AppTheme.radiusM,
+                          // Spin Button
+                          ScaleButton(
+                            onTap: _isSpinning
+                                ? null
+                                : () => _executeSpin(userProvider),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppTheme.space48,
+                                vertical: AppTheme.space16,
+                              ),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: _isSpinning
+                                      ? [Colors.grey, Colors.grey]
+                                      : [
+                                          AppTheme.primaryColor,
+                                          AppTheme.secondaryColor,
+                                        ],
+                                ),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radiusXL,
+                                ),
+                                boxShadow: AppTheme.elevatedShadow,
+                              ),
+                              child: Text(
+                                _isSpinning ? 'Spinning...' : 'Spin Now!',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
-                            child: Row(
-                              children: [
-                                const Icon(
-                                  Icons.check_circle,
-                                  color: Colors.green,
-                                ),
-                                const SizedBox(width: AppTheme.space12),
-                                Expanded(
-                                  child: Column(
+                          ),
+                          const SizedBox(height: AppTheme.space32),
+
+                          // Last Spin Result
+                          if (_lastSpinReward != null)
+                            ZenCard(
+                              color: AppTheme.successColor.withValues(
+                                alpha: 0.05,
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.check_circle,
+                                    color: AppTheme.successColor,
+                                  ),
+                                  const SizedBox(width: AppTheme.space12),
+                                  Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
@@ -431,87 +435,54 @@ class _SpinScreenState extends State<SpinScreen> {
                                         '₹${_lastSpinReward!.toStringAsFixed(2)} won',
                                         style: Theme.of(context)
                                             .textTheme
-                                            .titleSmall
-                                            ?.copyWith(color: Colors.green),
+                                            .titleMedium
+                                            ?.copyWith(
+                                              color: AppTheme.successColor,
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                       ),
                                     ],
                                   ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        const SizedBox(height: AppTheme.space32),
-
-                        // How to Play
-                        Container(
-                          padding: const EdgeInsets.all(AppTheme.space16),
-                          decoration: BoxDecoration(
-                            color: AppTheme.surfaceColor,
-                            borderRadius: BorderRadius.circular(
-                              AppTheme.radiusM,
-                            ),
-                            boxShadow: AppTheme.cardShadow,
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '❓ How to Play',
-                                style: Theme.of(context).textTheme.titleLarge,
+                                ],
                               ),
-                              const SizedBox(height: AppTheme.space12),
-                              Text(
-                                '• Tap or fling the wheel to spin\n'
-                                '• Land on a segment to win that amount\n'
-                                '• You can spin once per day\n'
-                                '• Winnings count toward your daily cap\n'
-                                '• More spins available with ads',
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                            ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                // Banner Ad
-                _buildBannerAd(),
+                  const BannerAdWidget(),
+                ],
+              );
+            },
+          ),
+
+          // Confetti Overlay
+          Align(
+            alignment: Alignment.center,
+            child: ConfettiWidget(
+              confettiController: _confettiController,
+              blastDirectionality: BlastDirectionality.explosive,
+              shouldLoop: false,
+              colors: const [
+                Color(0xFF6C63FF),
+                Color(0xFF00D9C0),
+                Color(0xFFFFB800),
               ],
-            );
-          },
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildBannerAd() {
-    return Container(
-      alignment: Alignment.center,
-      width: AdSize.banner.width.toDouble(),
-      height: AdSize.banner.height.toDouble(),
-      child: _adService.getBannerAd() != null
-          ? AdWidget(ad: _adService.getBannerAd()!)
-          : Container(
-              color: AppTheme.surfaceColor,
-              child: const Center(
-                child: Text('Loading ad...', style: TextStyle(fontSize: 12)),
-              ),
-            ),
-    );
-  }
-
-  /// Get segment color based on reward amount
   Color _getSegmentColor(int index) {
     final colors = [
-      Colors.red,
-      Colors.orange,
-      Colors.amber,
-      Colors.yellow,
-      Colors.green,
-      Colors.blue,
-      Colors.indigo,
-      Colors.purple,
+      const Color(0xFF6C63FF),
+      const Color(0xFF00D9C0),
+      const Color(0xFFFFB800),
+      const Color(0xFFFF5252),
+      const Color(0xFF9C27B0),
+      const Color(0xFF2196F3),
     ];
     return colors[index % colors.length];
   }

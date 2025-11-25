@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/user_provider.dart';
 import '../../services/auth_service.dart';
+import '../../widgets/zen_card.dart';
+import '../../widgets/scale_button.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -41,13 +43,22 @@ class ProfileScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
-        backgroundColor: AppTheme.backgroundColor,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         title: const Text('My Profile'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () => _logout(context),
+          ScaleButton(
+            onTap: () => _logout(context),
+            child: Container(
+              margin: const EdgeInsets.only(right: AppTheme.space16),
+              padding: const EdgeInsets.all(AppTheme.space8),
+              decoration: BoxDecoration(
+                color: AppTheme.surfaceColor,
+                shape: BoxShape.circle,
+                boxShadow: AppTheme.softShadow,
+              ),
+              child: Icon(Icons.logout, color: AppTheme.errorColor, size: 20),
+            ),
           ),
         ],
       ),
@@ -64,30 +75,38 @@ class ProfileScreen extends StatelessWidget {
               : user.email.isNotEmpty
               ? user.email[0].toUpperCase()
               : '?';
+
           return SingleChildScrollView(
             padding: const EdgeInsets.all(AppTheme.space16),
             child: Column(
               children: [
                 // Profile Header Card
-                Container(
-                  padding: const EdgeInsets.all(AppTheme.space24),
-                  decoration: BoxDecoration(
-                    color: AppTheme.surfaceColor,
-                    borderRadius: BorderRadius.circular(AppTheme.radiusM),
-                    boxShadow: AppTheme.cardShadow,
-                  ),
+                ZenCard(
                   child: Column(
                     children: [
-                      CircleAvatar(
-                        radius: 48,
-                        backgroundColor: AppTheme.primaryColor.withValues(
-                          alpha: 0.2,
+                      Container(
+                        width: 96,
+                        height: 96,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            colors: [
+                              AppTheme.primaryColor,
+                              AppTheme.secondaryColor,
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          boxShadow: AppTheme.elevatedShadow,
                         ),
-                        child: Text(
-                          initials,
-                          style: const TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
+                        child: Center(
+                          child: Text(
+                            initials,
+                            style: const TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ),
@@ -98,7 +117,7 @@ class ProfileScreen extends StatelessWidget {
                             ?.copyWith(fontWeight: FontWeight.bold),
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: AppTheme.space8),
+                      const SizedBox(height: AppTheme.space4),
                       Text(
                         user.email,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -108,15 +127,28 @@ class ProfileScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: AppTheme.space12),
                       if (currentUser?.metadata.creationTime != null)
-                        Text(
-                          'Member since ${_formatDate(currentUser!.metadata.creationTime)}',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: AppTheme.textSecondary),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppTheme.space12,
+                            vertical: AppTheme.space4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppTheme.surfaceVariant,
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radiusS,
+                            ),
+                          ),
+                          child: Text(
+                            'Member since ${_formatDate(currentUser!.metadata.creationTime)}',
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(color: AppTheme.textSecondary),
+                          ),
                         ),
                     ],
                   ),
                 ),
-                const SizedBox(height: AppTheme.space32),
+                const SizedBox(height: AppTheme.space24),
+
                 // Stats Grid
                 GridView.count(
                   crossAxisCount: 2,
@@ -124,42 +156,46 @@ class ProfileScreen extends StatelessWidget {
                   physics: const NeverScrollableScrollPhysics(),
                   mainAxisSpacing: AppTheme.space16,
                   crossAxisSpacing: AppTheme.space16,
+                  childAspectRatio: 1.1,
                   children: [
                     _buildStatCard(
                       context,
                       '₹${user.totalEarnings.toStringAsFixed(2)}',
                       'Total Earned',
-                      '💰',
+                      Icons.account_balance_wallet,
+                      AppTheme.primaryColor,
                     ),
                     _buildStatCard(
                       context,
                       '${user.currentStreak}',
                       'Day Streak',
-                      '🔥',
+                      Icons.local_fire_department,
+                      const Color(0xFFFF5252),
                     ),
                     _buildStatCard(
                       context,
                       '₹${user.monthlyEarnings.toStringAsFixed(2)}',
                       'This Month',
-                      '📊',
+                      Icons.calendar_today,
+                      AppTheme.secondaryColor,
                     ),
                     _buildStatCard(
                       context,
                       '₹${user.availableBalance.toStringAsFixed(2)}',
                       'Available',
-                      '💳',
+                      Icons.savings,
+                      AppTheme.successColor,
                     ),
                   ],
                 ),
                 const SizedBox(height: AppTheme.space32),
+
                 // Achievements Section
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
                     'Achievements',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: Theme.of(context).textTheme.headlineSmall,
                   ),
                 ),
                 const SizedBox(height: AppTheme.space16),
@@ -175,12 +211,42 @@ class ProfileScreen extends StatelessWidget {
   Widget _buildAchievementsGrid(BuildContext context) {
     // Mock achievements data
     final achievements = [
-      {'icon': '🎮', 'name': 'Game Starter', 'earned': true},
-      {'icon': '🏆', 'name': 'Victory!', 'earned': true},
-      {'icon': '🧠', 'name': 'Quiz Master', 'earned': false},
-      {'icon': '🎴', 'name': 'Memory Genius', 'earned': true},
-      {'icon': '🔥', 'name': '7 Day Streak', 'earned': false},
-      {'icon': '💰', 'name': 'First 100', 'earned': false},
+      {
+        'icon': Icons.games,
+        'name': 'Game Starter',
+        'earned': true,
+        'color': Colors.blue,
+      },
+      {
+        'icon': Icons.emoji_events,
+        'name': 'Victory!',
+        'earned': true,
+        'color': Colors.amber,
+      },
+      {
+        'icon': Icons.psychology,
+        'name': 'Quiz Master',
+        'earned': false,
+        'color': Colors.purple,
+      },
+      {
+        'icon': Icons.grid_view,
+        'name': 'Memory Genius',
+        'earned': true,
+        'color': Colors.teal,
+      },
+      {
+        'icon': Icons.local_fire_department,
+        'name': '7 Day Streak',
+        'earned': false,
+        'color': Colors.red,
+      },
+      {
+        'icon': Icons.monetization_on,
+        'name': 'First 100',
+        'earned': false,
+        'color': Colors.green,
+      },
     ];
 
     return GridView.count(
@@ -191,47 +257,33 @@ class ProfileScreen extends StatelessWidget {
       crossAxisSpacing: AppTheme.space12,
       children: achievements.map((achievement) {
         final earned = achievement['earned'] as bool;
-        return Container(
+        final color = achievement['color'] as Color;
+
+        return ZenCard(
           padding: const EdgeInsets.all(AppTheme.space12),
-          decoration: BoxDecoration(
-            color: earned
-                ? AppTheme.primaryColor.withValues(alpha: 0.1)
-                : AppTheme.surfaceColor,
-            borderRadius: BorderRadius.circular(AppTheme.radiusM),
-            border: Border.all(
-              color: earned ? AppTheme.primaryColor : AppTheme.textTertiary,
-              width: 1,
-            ),
-          ),
+          color: earned ? color.withValues(alpha: 0.1) : AppTheme.surfaceColor,
+          border: earned
+              ? Border.all(color: color.withValues(alpha: 0.3))
+              : null,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                achievement['icon'] as String,
-                style: const TextStyle(fontSize: 28),
+              Icon(
+                achievement['icon'] as IconData,
+                size: 32,
+                color: earned ? color : AppTheme.textTertiary,
               ),
               const SizedBox(height: AppTheme.space8),
               Text(
                 achievement['name'] as String,
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: earned
-                      ? AppTheme.primaryColor
-                      : AppTheme.textSecondary,
-                  fontWeight: FontWeight.bold,
+                  color: earned ? color : AppTheme.textSecondary,
+                  fontWeight: earned ? FontWeight.bold : FontWeight.normal,
                 ),
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
-              if (earned)
-                Padding(
-                  padding: const EdgeInsets.only(top: AppTheme.space4),
-                  child: Icon(
-                    Icons.check_circle,
-                    size: 12,
-                    color: AppTheme.successColor,
-                  ),
-                ),
             ],
           ),
         );
@@ -243,33 +295,36 @@ class ProfileScreen extends StatelessWidget {
     BuildContext context,
     String value,
     String label,
-    String icon,
+    IconData icon,
+    Color color,
   ) {
-    return Container(
+    return ZenCard(
       padding: const EdgeInsets.all(AppTheme.space16),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceColor,
-        borderRadius: BorderRadius.circular(AppTheme.radiusM),
-        boxShadow: AppTheme.cardShadow,
-      ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(icon, style: const TextStyle(fontSize: 32)),
+          Container(
+            padding: const EdgeInsets.all(AppTheme.space12),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 24),
+          ),
           const SizedBox(height: AppTheme.space12),
           Text(
             value,
             style: Theme.of(
               context,
-            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: AppTheme.space8),
+          const SizedBox(height: AppTheme.space4),
           Text(
             label,
             style: Theme.of(
               context,
-            ).textTheme.labelSmall?.copyWith(color: AppTheme.textSecondary),
+            ).textTheme.bodySmall?.copyWith(color: AppTheme.textSecondary),
             textAlign: TextAlign.center,
           ),
         ],

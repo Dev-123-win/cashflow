@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:provider/provider.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'dart:math' as math;
 import '../../core/theme/app_theme.dart';
 import '../../services/game_service.dart';
@@ -12,6 +11,7 @@ import '../../services/firestore_service.dart';
 import '../../services/ad_service.dart';
 import '../../providers/user_provider.dart';
 import '../../widgets/error_states.dart';
+import '../../widgets/banner_ad_widget.dart';
 
 class TicTacToeScreen extends StatefulWidget {
   const TicTacToeScreen({super.key});
@@ -593,18 +593,6 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
 
   // Build banner ad widget
   Widget _buildBannerAd() {
-    return Container(
-      alignment: Alignment.center,
-      width: AdSize.banner.width.toDouble(),
-      height: AdSize.banner.height.toDouble(),
-      child: _adService.getBannerAd() != null
-          ? AdWidget(ad: _adService.getBannerAd()!)
-          : Container(
-              color: AppTheme.surfaceColor,
-              child: const Center(
-                child: Text('Loading ad...', style: TextStyle(fontSize: 12)),
-              ),
-            ),
-    );
+    return const BannerAdWidget();
   }
 }

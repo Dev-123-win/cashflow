@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
+import '../../widgets/zen_card.dart';
+import '../../widgets/scale_button.dart';
 
 class OnboardingScreen extends StatefulWidget {
   final VoidCallback onComplete;
@@ -117,29 +119,52 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(
                       _pages.length,
-                      (index) => Container(
+                      (index) => AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
                         margin: const EdgeInsets.symmetric(horizontal: 4),
                         width: _currentPage == index ? 24 : 8,
                         height: 8,
                         decoration: BoxDecoration(
                           color: _currentPage == index
-                              ? AppTheme.primaryColor
-                              : AppTheme.primaryColor.withValues(alpha: 0.3),
+                              ? _pages[_currentPage].color
+                              : AppTheme.textTertiary.withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
                     ),
                   ),
                   const SizedBox(height: AppTheme.space32),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: ElevatedButton(
-                      onPressed: _goToNextPage,
-                      child: Text(
-                        _currentPage == _pages.length - 1
-                            ? 'Get Started'
-                            : 'Next',
+                  ScaleButton(
+                    onTap: _goToNextPage,
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AppTheme.space16,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _pages[_currentPage].color,
+                        borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                        boxShadow: [
+                          BoxShadow(
+                            color: _pages[_currentPage].color.withValues(
+                              alpha: 0.4,
+                            ),
+                            blurRadius: 16,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Text(
+                          _currentPage == _pages.length - 1
+                              ? 'Get Started'
+                              : 'Next',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -148,7 +173,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       padding: const EdgeInsets.only(top: AppTheme.space16),
                       child: TextButton(
                         onPressed: widget.onComplete,
-                        child: const Text('Skip'),
+                        child: Text(
+                          'Skip',
+                          style: TextStyle(
+                            color: AppTheme.textSecondary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
                     ),
                 ],
@@ -161,70 +192,92 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Widget _buildPageContent(OnboardingPage page) {
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.space24),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 120,
-            height: 120,
-            decoration: BoxDecoration(
-              color: page.color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(60),
-            ),
-            child: Center(
-              child: Text(page.icon, style: const TextStyle(fontSize: 60)),
-            ),
-          ),
-          const SizedBox(height: AppTheme.space40),
-          Text(
-            page.title,
-            style: Theme.of(
-              context,
-            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: AppTheme.space16),
-          Text(
-            page.description,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyLarge?.copyWith(color: AppTheme.textSecondary),
-            textAlign: TextAlign.center,
-          ),
-          // Show details list if available
-          if (page.details != null && page.details!.isNotEmpty) ...[
+    return SingleChildScrollView(
+      child: Container(
+        padding: const EdgeInsets.all(AppTheme.space24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
             const SizedBox(height: AppTheme.space24),
             Container(
-              padding: const EdgeInsets.all(AppTheme.space16),
+              width: 160,
+              height: 160,
               decoration: BoxDecoration(
+                color: page.color.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: page.color.withValues(alpha: 0.2),
+                    blurRadius: 32,
+                    spreadRadius: 8,
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Text(page.icon, style: const TextStyle(fontSize: 80)),
+              ),
+            ),
+            const SizedBox(height: AppTheme.space48),
+            Text(
+              page.title,
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppTheme.textPrimary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppTheme.space16),
+            Text(
+              page.description,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: AppTheme.textSecondary,
+                height: 1.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            // Show details list if available
+            if (page.details != null && page.details!.isNotEmpty) ...[
+              const SizedBox(height: AppTheme.space32),
+              ZenCard(
+                padding: const EdgeInsets.all(AppTheme.space16),
                 color: page.color.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(AppTheme.radiusM),
                 border: Border.all(
                   color: page.color.withValues(alpha: 0.2),
                   width: 1,
                 ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ...page.details!.map(
-                    (detail) => Padding(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: AppTheme.space8,
-                      ),
-                      child: Text(
-                        detail,
-                        style: Theme.of(context).textTheme.bodyMedium,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ...page.details!.map(
+                      (detail) => Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: AppTheme.space8,
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.check_circle,
+                              color: page.color,
+                              size: 20,
+                            ),
+                            const SizedBox(width: AppTheme.space12),
+                            Expanded(
+                              child: Text(
+                                detail,
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

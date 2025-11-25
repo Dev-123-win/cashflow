@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  // Primary Colors
+  // Seed Color
+  static const Color seedColor = Color(0xFF6C63FF);
+
+  // Primary Colors (Restored for backward compatibility)
   static const Color primaryColor = Color(0xFF6C63FF);
   static const Color secondaryColor = Color(0xFF00D9C0);
   static const Color tertiaryColor = Color(0xFFFFB800);
@@ -30,6 +33,7 @@ class AppTheme {
   static const Color darkTextTertiary = Color(0xFF808080);
 
   // Spacing
+  static const double space2 = 2.0;
   static const double space4 = 4.0;
   static const double space8 = 8.0;
   static const double space12 = 12.0;
@@ -47,157 +51,63 @@ class AppTheme {
   static const double radiusL = 16.0;
   static const double radiusXL = 24.0;
 
-  // Light Theme Only
+  // Light Theme
   static ThemeData get lightTheme {
-    return ThemeData(
-      useMaterial3: true,
-      brightness: Brightness.light,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: primaryColor,
-        brightness: Brightness.light,
-      ),
-      scaffoldBackgroundColor: backgroundColor,
-      appBarTheme: AppBarTheme(
-        backgroundColor: surfaceColor,
-        elevation: 1,
-        centerTitle: false,
-        shadowColor: const Color(0x1F000000),
-        titleTextStyle: const TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-          color: textPrimary,
-          fontFamily: 'Manrope',
-        ),
-      ),
-      cardTheme: CardThemeData(
-        color: surfaceColor,
-        elevation: 1,
-        shadowColor: const Color(0x1F000000),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(radiusM),
-        ),
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: surfaceVariant,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(radiusM),
-          borderSide: const BorderSide(color: Color(0xFFE0E0E0), width: 1),
-        ),
-        contentPadding: const EdgeInsets.all(space16),
-        hintStyle: const TextStyle(color: textSecondary, fontFamily: 'Manrope'),
-      ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: primaryColor,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(
-            horizontal: space24,
-            vertical: space12,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(radiusM),
-          ),
-          textStyle: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            fontFamily: 'Manrope',
-          ),
-        ),
-      ),
-      textTheme: const TextTheme(
-        headlineLarge: TextStyle(
-          fontSize: 32,
-          fontWeight: FontWeight.w700,
-          color: textPrimary,
-          fontFamily: 'Manrope',
-          height: 1.2,
-        ),
-        headlineMedium: TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.w700,
-          color: textPrimary,
-          fontFamily: 'Manrope',
-          height: 1.3,
-        ),
-        headlineSmall: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-          color: textPrimary,
-          fontFamily: 'Manrope',
-          height: 1.3,
-        ),
-        titleLarge: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: textPrimary,
-          fontFamily: 'Manrope',
-        ),
-        bodyLarge: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w400,
-          color: textPrimary,
-          fontFamily: 'Manrope',
-          height: 1.5,
-        ),
-        bodyMedium: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w400,
-          color: textSecondary,
-          fontFamily: 'Manrope',
-          height: 1.5,
-        ),
-        labelLarge: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: textPrimary,
-          fontFamily: 'Manrope',
-          letterSpacing: 0.5,
-        ),
-      ),
-    );
+    return _buildTheme(Brightness.light);
   }
 
   // Dark Theme
   static ThemeData get darkTheme {
+    return _buildTheme(Brightness.dark);
+  }
+
+  static ThemeData _buildTheme(Brightness brightness) {
+    final colorScheme = ColorScheme.fromSeed(
+      seedColor: seedColor,
+      brightness: brightness,
+      surface: brightness == Brightness.light
+          ? backgroundColor
+          : darkBackgroundColor,
+    );
+
     return ThemeData(
       useMaterial3: true,
-      brightness: Brightness.dark,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: primaryColor,
-        brightness: Brightness.dark,
-      ),
-      scaffoldBackgroundColor: darkBackgroundColor,
+      brightness: brightness,
+      colorScheme: colorScheme,
+      scaffoldBackgroundColor: colorScheme.surface,
+      fontFamily: 'Manrope',
       appBarTheme: AppBarTheme(
-        backgroundColor: darkSurfaceColor,
-        elevation: 1,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         centerTitle: false,
-        shadowColor: const Color(0x3F000000),
-        titleTextStyle: const TextStyle(
+        titleTextStyle: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.w600,
-          color: darkTextPrimary,
+          color: colorScheme.onSurface,
           fontFamily: 'Manrope',
         ),
       ),
       cardTheme: CardThemeData(
-        color: darkSurfaceColor,
-        elevation: 1,
-        shadowColor: const Color(0x3F000000),
+        color: brightness == Brightness.light ? surfaceColor : darkSurfaceColor,
+        elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radiusM),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: darkSurfaceVariant,
+        fillColor: brightness == Brightness.light
+            ? surfaceVariant
+            : darkSurfaceVariant,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusM),
-          borderSide: const BorderSide(color: Color(0xFF404040), width: 1),
+          borderSide: BorderSide.none,
         ),
         contentPadding: const EdgeInsets.all(space16),
-        hintStyle: const TextStyle(
-          color: darkTextSecondary,
+        hintStyle: TextStyle(
+          color: brightness == Brightness.light
+              ? textSecondary
+              : darkTextSecondary,
           fontFamily: 'Manrope',
         ),
       ),
@@ -219,70 +129,99 @@ class AppTheme {
           ),
         ),
       ),
-      textTheme: const TextTheme(
-        headlineLarge: TextStyle(
-          fontSize: 32,
-          fontWeight: FontWeight.w700,
-          color: darkTextPrimary,
-          fontFamily: 'Manrope',
-          height: 1.2,
-        ),
-        headlineMedium: TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.w700,
-          color: darkTextPrimary,
-          fontFamily: 'Manrope',
-          height: 1.3,
-        ),
-        headlineSmall: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-          color: darkTextPrimary,
-          fontFamily: 'Manrope',
-          height: 1.3,
-        ),
-        titleLarge: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: darkTextPrimary,
-          fontFamily: 'Manrope',
-        ),
-        bodyLarge: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w400,
-          color: darkTextPrimary,
-          fontFamily: 'Manrope',
-          height: 1.5,
-        ),
-        bodyMedium: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w400,
-          color: darkTextSecondary,
-          fontFamily: 'Manrope',
-          height: 1.5,
-        ),
-        labelLarge: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: darkTextPrimary,
-          fontFamily: 'Manrope',
-          letterSpacing: 0.5,
-        ),
+      textTheme: _buildTextTheme(colorScheme),
+    );
+  }
+
+  static TextTheme _buildTextTheme(ColorScheme colorScheme) {
+    return TextTheme(
+      headlineLarge: TextStyle(
+        fontSize: 32,
+        fontWeight: FontWeight.w800,
+        color: colorScheme.onSurface,
+        fontFamily: 'Manrope',
+        letterSpacing: -1.0, // Tight tracking for Balance
+        height: 1.2,
       ),
-      checkboxTheme: CheckboxThemeData(
-        fillColor: WidgetStateProperty.all(primaryColor),
+      headlineMedium: TextStyle(
+        fontSize: 24,
+        fontWeight: FontWeight.w700,
+        color: colorScheme.onSurface,
+        fontFamily: 'Manrope',
+        height: 1.3,
       ),
-      switchTheme: SwitchThemeData(
-        thumbColor: WidgetStateProperty.resolveWith(
-          (states) => states.contains(WidgetState.selected)
-              ? primaryColor
-              : Colors.grey,
-        ),
+      headlineSmall: TextStyle(
+        fontSize: 20,
+        fontWeight: FontWeight.w600,
+        color: colorScheme.onSurface,
+        fontFamily: 'Manrope',
+        height: 1.3,
+      ),
+      titleLarge: TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.w600,
+        color: colorScheme.onSurface,
+        fontFamily: 'Manrope',
+      ),
+      bodyLarge: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w400,
+        color: colorScheme.onSurface,
+        fontFamily: 'Manrope',
+        height: 1.5,
+      ),
+      bodyMedium: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w400,
+        color: colorScheme.onSurfaceVariant,
+        fontFamily: 'Manrope',
+        height: 1.5,
+      ),
+      labelLarge: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+        color: colorScheme.onSurface,
+        fontFamily: 'Manrope',
+        letterSpacing: 1.5, // Wide tracking for Labels
+      ),
+    ).apply(
+      fontFamily: 'Manrope',
+      displayColor: colorScheme.onSurface,
+      bodyColor: colorScheme.onSurface,
+    );
+  }
+
+  // Helper for tabular figures
+  static TextStyle get currencyStyle => const TextStyle(
+    fontFamily: 'Manrope',
+    fontFeatures: [FontFeature.tabularFigures()],
+  );
+
+  // Glass Morphism
+  static BoxDecoration glassMorphism(
+    BuildContext context, {
+    double opacity = 0.1,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return BoxDecoration(
+      color: (isDark ? Colors.white : Colors.black).withValues(alpha: opacity),
+      borderRadius: BorderRadius.circular(radiusM),
+      border: Border.all(
+        color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.1),
+        width: 1.0,
       ),
     );
   }
 
-  // Shadows - Light theme appropriate
+  // Shadows
+  static List<BoxShadow> get softShadow => [
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.05),
+      blurRadius: 10,
+      offset: const Offset(0, 4),
+    ),
+  ];
+
   static const List<BoxShadow> cardShadow = [
     BoxShadow(color: Color(0x1F000000), blurRadius: 8, offset: Offset(0, 2)),
   ];
@@ -290,20 +229,4 @@ class AppTheme {
   static const List<BoxShadow> elevatedShadow = [
     BoxShadow(color: Color(0x2F000000), blurRadius: 16, offset: Offset(0, 4)),
   ];
-
-  // Glass Morphism - Light theme
-  static BoxDecoration glassMorphism({Color color = const Color(0xF0FFFFFF)}) {
-    return BoxDecoration(
-      color: color,
-      borderRadius: BorderRadius.circular(radiusM),
-      border: Border.all(color: const Color(0x1F000000), width: 1.5),
-      boxShadow: const [
-        BoxShadow(
-          color: Color(0x1F000000),
-          blurRadius: 12,
-          offset: Offset(0, 4),
-        ),
-      ],
-    );
-  }
 }

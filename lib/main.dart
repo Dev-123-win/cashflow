@@ -10,11 +10,8 @@ import 'screens/auth/login_screen.dart';
 import 'screens/auth/signup_screen.dart';
 import 'screens/auth/onboarding_screen.dart';
 import 'screens/auth/splash_screen.dart';
-import 'screens/home/home_screen.dart';
-import 'screens/tasks/tasks_screen.dart';
-import 'screens/games/games_screen.dart';
-import 'screens/games/spin_screen.dart';
 import 'screens/withdrawal/withdrawal_screen.dart';
+import 'screens/main_navigation_screen.dart';
 import 'services/auth_service.dart';
 import 'services/notification_service.dart';
 import 'services/cooldown_service.dart';
@@ -102,13 +99,11 @@ class MyApp extends StatelessWidget {
         darkTheme: AppTheme.darkTheme,
         themeMode: ThemeMode.system,
         debugShowCheckedModeBanner: false,
+        scrollBehavior: const BouncingScrollBehavior(),
         home: const AuthenticationWrapper(),
         routes: {
           '/login': (context) => const AuthenticationScreen(),
           '/home': (context) => const MainNavigationScreen(),
-          '/tasks': (context) => const TasksScreen(),
-          '/games': (context) => const GamesScreen(),
-          '/spin': (context) => const SpinScreen(),
           '/withdrawal': (context) => const WithdrawalScreen(),
         },
       ),
@@ -171,22 +166,10 @@ class _AuthenticationWrapperState extends State<AuthenticationWrapper> {
           );
         }
 
-        // User is logged in
-        if (snapshot.hasData && snapshot.data != null) {
-          // Initialize user provider with persistent session
-          // Using context.read synchronously within build method is safe
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (context.mounted) {
-              final userProvider = context.read<UserProvider>();
-              if (userProvider.user.userId.isEmpty) {
-                userProvider.initializeUser(snapshot.data!.uid);
-              }
-            }
-          });
+        if (snapshot.hasData) {
           return const MainNavigationScreen();
         }
 
-        // User is not logged in - show auth screen
         return const AuthenticationScreen();
       },
     );
@@ -238,59 +221,12 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
   }
 }
 
-class MainNavigationScreen extends StatefulWidget {
-  const MainNavigationScreen({super.key});
+/// Custom scroll behavior for iOS-style bouncing on all platforms
+class BouncingScrollBehavior extends ScrollBehavior {
+  const BouncingScrollBehavior();
 
   @override
-  State<MainNavigationScreen> createState() => _MainNavigationScreenState();
-}
-
-class _MainNavigationScreenState extends State<MainNavigationScreen> {
-  int _currentIndex = 0;
-
-  final List<Widget> _screens = [
-    const HomeScreen(),
-    const TasksScreen(),
-    const GamesScreen(),
-    const SpinScreen(),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
-      body: _screens[_currentIndex],
-      bottomNavigationBar: NavigationBar(
-        onDestinationSelected: (int index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        indicatorColor: AppTheme.primaryColor.withValues(alpha: 0.1),
-        selectedIndex: _currentIndex,
-        destinations: const <Widget>[
-          NavigationDestination(
-            selectedIcon: Icon(Icons.home),
-            icon: Icon(Icons.home_outlined),
-            label: 'Home',
-          ),
-          NavigationDestination(
-            selectedIcon: Icon(Icons.assignment),
-            icon: Icon(Icons.assignment_outlined),
-            label: 'Tasks',
-          ),
-          NavigationDestination(
-            selectedIcon: Icon(Icons.sports_esports),
-            icon: Icon(Icons.sports_esports_outlined),
-            label: 'Games',
-          ),
-          NavigationDestination(
-            selectedIcon: Icon(Icons.casino),
-            icon: Icon(Icons.casino_outlined),
-            label: 'Spin',
-          ),
-        ],
-      ),
-    );
+  ScrollPhysics getScrollPhysics(BuildContext context) {
+    return const BouncingScrollPhysics();
   }
 }

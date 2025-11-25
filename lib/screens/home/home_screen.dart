@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
-import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:confetti/confetti.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/task_provider.dart';
-import '../../widgets/balance_card.dart';
-import '../../widgets/earning_card.dart';
-import '../../widgets/progress_bar.dart';
+import '../../widgets/parallax_balance_card.dart';
+import '../../widgets/zen_card.dart';
+import '../../widgets/scale_button.dart';
+import '../../widgets/banner_ad_widget.dart';
 import '../../services/ad_service.dart';
-import '../leaderboard_screen.dart';
+import '../leaderboard/leaderboard_screen.dart';
 import '../transaction_history_screen.dart';
 import '../tasks/tasks_screen.dart';
 import '../games/games_screen.dart';
@@ -17,7 +20,6 @@ import '../games/spin_screen.dart';
 import '../ads/watch_ads_screen.dart';
 import '../withdrawal/withdrawal_screen.dart';
 import '../referral/referral_screen.dart';
-import '../profile/profile_screen.dart';
 import '../notifications/notifications_screen.dart';
 import '../settings/settings_screen.dart';
 
@@ -30,11 +32,15 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   late final AdService _adService;
+  late ConfettiController _confettiController;
 
   @override
   void initState() {
     super.initState();
     _adService = AdService();
+    _confettiController = ConfettiController(
+      duration: const Duration(seconds: 2),
+    );
     _loadData();
   }
 
@@ -50,6 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    _confettiController.dispose();
     super.dispose();
   }
 
@@ -57,336 +64,415 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
-      appBar: AppBar(
-        title: const Text('EarnQuest'),
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const NotificationsScreen(),
+      body: Stack(
+        children: [
+          CustomScrollView(
+            slivers: [
+              // Custom App Bar
+              SliverAppBar(
+                floating: true,
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                title: Text(
+                  'EarnQuest',
+                  style: Theme.of(context).textTheme.headlineSmall,
                 ),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SettingsScreen()),
-              );
-            },
-          ),
-        ],
-      ),
-      body: Consumer2<UserProvider, TaskProvider>(
-        builder: (context, userProvider, taskProvider, _) {
-          if (userProvider.isLoading) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-
-          if (userProvider.user.userId.isEmpty) {
-            return const Center(
-              child: Text('Please sign in to continue'),
-            );
-          }
-
-          return Column(
-            children: [
-              Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(AppTheme.space16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Balance Card
-                        BalanceCard(
-                          balance: userProvider.user.availableBalance,
-                          onWithdraw: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const WithdrawalScreen(),
-                              ),
-                            );
-                          },
-                          canWithdraw: userProvider.user.availableBalance >= 50,
+                actions: [
+                  ScaleButton(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const NotificationsScreen(),
                         ),
-                        const SizedBox(height: AppTheme.space24),
-
-                        // Streak Badge
-                        Container(
-                          padding: const EdgeInsets.all(AppTheme.space12),
-                          decoration: BoxDecoration(
-                            color: AppTheme.surfaceColor,
-                            borderRadius: BorderRadius.circular(
-                              AppTheme.radiusM,
-                            ),
-                            border: Border.all(
-                              color: AppTheme.tertiaryColor,
-                              width: 1,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              const Text('🔥', style: TextStyle(fontSize: 24)),
-                              const SizedBox(width: AppTheme.space12),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    '${userProvider.user.streak} Day Streak',
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.titleLarge,
-                                  ),
-                                  Text(
-                                    'Keep earning daily!',
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.bodyMedium,
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(AppTheme.space8),
+                      decoration: BoxDecoration(
+                        color: AppTheme.surfaceColor,
+                        shape: BoxShape.circle,
+                        boxShadow: AppTheme.softShadow,
+                      ),
+                      child: const Icon(Icons.notifications_outlined),
+                    ),
+                  ),
+                  const SizedBox(width: AppTheme.space12),
+                  ScaleButton(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SettingsScreen(),
                         ),
-                        const SizedBox(height: AppTheme.space24),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(AppTheme.space8),
+                      decoration: BoxDecoration(
+                        color: AppTheme.surfaceColor,
+                        shape: BoxShape.circle,
+                        boxShadow: AppTheme.softShadow,
+                      ),
+                      child: const Icon(Icons.settings_outlined),
+                    ),
+                  ),
+                  const SizedBox(width: AppTheme.space16),
+                ],
+              ),
 
-                        // Daily Progress
-                        ProgressBar(
-                          current: taskProvider.dailyEarnings,
-                          max: taskProvider.dailyCap,
-                          label: "Today's Progress",
-                        ),
-                        const SizedBox(height: AppTheme.space24),
+              // Main Content
+              SliverPadding(
+                padding: const EdgeInsets.all(AppTheme.space16),
+                sliver: SliverToBoxAdapter(
+                  child: Consumer2<UserProvider, TaskProvider>(
+                    builder: (context, userProvider, taskProvider, _) {
+                      if (userProvider.isLoading) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
 
-                        // Earning Categories
-                        Text(
-                          'Earn More',
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ),
-                        const SizedBox(height: AppTheme.space16),
-
-                        // 2x2 Grid of Earning Cards
-                        GridView.count(
-                          crossAxisCount: 2,
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          crossAxisSpacing: AppTheme.space12,
-                          mainAxisSpacing: AppTheme.space12,
-                          childAspectRatio: 0.95,
-                          children: [
-                            EarningCard(
-                              title: 'Tasks',
-                              subtitle: '3 tasks left',
-                              reward: 0.30,
-                              icon: '📋',
-                              onTap: () {
-                                _showInterstitialThenNavigate(
-                                  () => Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => const TasksScreen(),
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                            EarningCard(
-                              title: 'Games',
-                              subtitle: '6 plays left',
-                              reward: 0.48,
-                              icon: '🎮',
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const GamesScreen(),
-                                  ),
-                                );
-                              },
-                            ),
-                            EarningCard(
-                              title: 'Spin Wheel',
-                              subtitle: 'Ready to spin',
-                              reward: 0.50,
-                              icon: '🎰',
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const SpinScreen(),
-                                  ),
-                                );
-                              },
-                            ),
-                            EarningCard(
-                              title: 'Watch Ads',
-                              subtitle: '5 ads available',
-                              reward: 0.15,
-                              icon: '📺',
-                              onTap: () {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Parallax Balance Card with Confetti
+                          GestureDetector(
+                            onTap: () {
+                              HapticFeedback.mediumImpact();
+                              _confettiController.play();
+                            },
+                            child: ParallaxBalanceCard(
+                              balance: userProvider.user.availableBalance,
+                              onWithdraw: () {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) =>
-                                        const WatchAdsScreen(),
+                                        const WithdrawalScreen(),
                                   ),
                                 );
                               },
+                              canWithdraw:
+                                  userProvider.user.availableBalance >= 50,
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: AppTheme.space24),
-
-                        // Quick Links Section
-                        Text(
-                          'Quick Links',
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ),
-                        const SizedBox(height: AppTheme.space12),
-
-                        Container(
-                          decoration: BoxDecoration(
-                            color: AppTheme.surfaceColor,
-                            borderRadius: BorderRadius.circular(
-                              AppTheme.radiusM,
-                            ),
-                            boxShadow: AppTheme.cardShadow,
                           ),
-                          child: Column(
+                          const SizedBox(height: AppTheme.space24),
+
+                          // Stats Row
+                          Row(
                             children: [
-                              ListTile(
-                                leading: const Text(
-                                  '🏆',
-                                  style: TextStyle(fontSize: 24),
+                              Expanded(
+                                child: ZenCard(
+                                  onTap: () {},
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text('🔥 Streak'),
+                                      const SizedBox(height: AppTheme.space4),
+                                      Text(
+                                        '${userProvider.user.streak} Days',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleLarge
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                                title: const Text('Leaderboard'),
-                                trailing: const Icon(Icons.arrow_forward),
-                                onTap: () {
-                                  Navigator.push(
+                              ),
+                              const SizedBox(width: AppTheme.space12),
+                              Expanded(
+                                child: ZenCard(
+                                  onTap: () {},
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text('🎯 Daily Goal'),
+                                      const SizedBox(height: AppTheme.space4),
+                                      Text(
+                                        '${(taskProvider.dailyEarnings / taskProvider.dailyCap * 100).toInt()}%',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleLarge
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: AppTheme.space24),
+
+                          // Bento Grid for Earning Options
+                          Text(
+                            'Start Earning',
+                            style: Theme.of(context).textTheme.headlineSmall,
+                          ),
+                          const SizedBox(height: AppTheme.space16),
+                          StaggeredGrid.count(
+                            crossAxisCount: 2,
+                            mainAxisSpacing: AppTheme.space12,
+                            crossAxisSpacing: AppTheme.space12,
+                            children: [
+                              StaggeredGridTile.count(
+                                crossAxisCellCount: 2,
+                                mainAxisCellCount: 1,
+                                child: _buildBentoTile(
+                                  context,
+                                  title: 'Daily Tasks',
+                                  subtitle: 'Complete tasks to earn',
+                                  icon: Icons.assignment_outlined,
+                                  color: const Color(0xFF6C63FF),
+                                  onTap: () {
+                                    _showInterstitialThenNavigate(
+                                      () => Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const TasksScreen(),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                              StaggeredGridTile.count(
+                                crossAxisCellCount: 1,
+                                mainAxisCellCount: 1,
+                                child: _buildBentoTile(
+                                  context,
+                                  title: 'Play Games',
+                                  subtitle: 'Fun & Earn',
+                                  icon: Icons.sports_esports_outlined,
+                                  color: const Color(0xFF00D9C0),
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const GamesScreen(),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                              StaggeredGridTile.count(
+                                crossAxisCellCount: 1,
+                                mainAxisCellCount: 1,
+                                child: _buildBentoTile(
+                                  context,
+                                  title: 'Spin Wheel',
+                                  subtitle: 'Try Luck',
+                                  icon: Icons.casino_outlined,
+                                  color: const Color(0xFFFFB800),
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const SpinScreen(),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                              StaggeredGridTile.count(
+                                crossAxisCellCount: 2,
+                                mainAxisCellCount: 0.8,
+                                child: _buildBentoTile(
+                                  context,
+                                  title: 'Watch Ads',
+                                  subtitle: 'Quick earnings',
+                                  icon: Icons.play_circle_outline,
+                                  color: const Color(0xFFFF5252),
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const WatchAdsScreen(),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: AppTheme.space24),
+
+                          // Quick Links
+                          Text(
+                            'Quick Links',
+                            style: Theme.of(context).textTheme.headlineSmall,
+                          ),
+                          const SizedBox(height: AppTheme.space16),
+                          ZenCard(
+                            child: Column(
+                              children: [
+                                _buildQuickLink(
+                                  context,
+                                  icon: Icons.emoji_events_outlined,
+                                  title: 'Leaderboard',
+                                  onTap: () => Navigator.push(
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) =>
                                           const LeaderboardScreen(),
                                     ),
-                                  );
-                                },
-                              ),
-                              Divider(
-                                color: AppTheme.surfaceVariant,
-                                height: 1,
-                                indent: AppTheme.space56,
-                              ),
-                              ListTile(
-                                leading: const Text(
-                                  '👥',
-                                  style: TextStyle(fontSize: 24),
+                                  ),
                                 ),
-                                title: const Text('Invite Friends'),
-                                trailing: const Icon(Icons.arrow_forward),
-                                onTap: () {
-                                  Navigator.push(
+                                const Divider(),
+                                _buildQuickLink(
+                                  context,
+                                  icon: Icons.people_outline,
+                                  title: 'Refer Friends',
+                                  onTap: () => Navigator.push(
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) =>
                                           const ReferralScreen(),
                                     ),
-                                  );
-                                },
-                              ),
-                              Divider(
-                                color: AppTheme.surfaceVariant,
-                                height: 1,
-                                indent: AppTheme.space56,
-                              ),
-                              ListTile(
-                                leading: const Text(
-                                  '📊',
-                                  style: TextStyle(fontSize: 24),
+                                  ),
                                 ),
-                                title: const Text('My Stats'),
-                                trailing: const Icon(Icons.arrow_forward),
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const ProfileScreen(),
-                                    ),
-                                  );
-                                },
-                              ),
-                              Divider(
-                                color: AppTheme.surfaceVariant,
-                                height: 1,
-                                indent: AppTheme.space56,
-                              ),
-                              ListTile(
-                                leading: const Text(
-                                  '💳',
-                                  style: TextStyle(fontSize: 24),
-                                ),
-                                title: const Text('Transaction History'),
-                                trailing: const Icon(Icons.arrow_forward),
-                                onTap: () {
-                                  Navigator.push(
+                                const Divider(),
+                                _buildQuickLink(
+                                  context,
+                                  icon: Icons.history,
+                                  title: 'History',
+                                  onTap: () => Navigator.push(
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) =>
                                           const TransactionHistoryScreen(),
                                     ),
-                                  );
-                                },
-                              ),
-                            ],
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: AppTheme.space32),
-                      ],
-                    ),
+                          const SizedBox(
+                            height: 100,
+                          ), // Space for Floating Dock
+                        ],
+                      );
+                    },
                   ),
                 ),
-                // Banner Ad at the bottom
-                _buildBannerAd(),
-              ],
-            );
-          },
-        ),
-    );
-  }
-
-  // Build banner ad widget using Google's native BannerAd
-  Widget _buildBannerAd() {
-    return Container(
-      alignment: Alignment.center,
-      width: AdSize.banner.width.toDouble(),
-      height: AdSize.banner.height.toDouble(),
-      child: _adService.getBannerAd() != null
-          ? AdWidget(ad: _adService.getBannerAd()!)
-          : Container(
-              color: AppTheme.surfaceColor,
-              child: const Center(
-                child: Text('Loading ad...', style: TextStyle(fontSize: 12)),
               ),
+            ],
+          ),
+
+          // Confetti Overlay
+          Align(
+            alignment: Alignment.topCenter,
+            child: ConfettiWidget(
+              confettiController: _confettiController,
+              blastDirectionality: BlastDirectionality.explosive,
+              shouldLoop: false,
+              colors: const [
+                Color(0xFF6C63FF),
+                Color(0xFF00D9C0),
+                Color(0xFFFFB800),
+              ],
             ),
+          ),
+
+          // Banner Ad
+          const Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: BannerAdWidget(),
+          ),
+        ],
+      ),
     );
   }
 
-  // Show interstitial ad then navigate
+  Widget _buildBentoTile(
+    BuildContext context, {
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return ScaleButton(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(AppTheme.space16),
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceColor,
+          borderRadius: BorderRadius.circular(AppTheme.radiusM),
+          boxShadow: AppTheme.softShadow,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppTheme.space8),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppTheme.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickLink(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      leading: Container(
+        padding: const EdgeInsets.all(AppTheme.space8),
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceVariant,
+          borderRadius: BorderRadius.circular(AppTheme.radiusS),
+        ),
+        child: Icon(icon, color: AppTheme.primaryColor),
+      ),
+      title: Text(title, style: Theme.of(context).textTheme.titleMedium),
+      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+      onTap: onTap,
+      contentPadding: EdgeInsets.zero,
+    );
+  }
+
   void _showInterstitialThenNavigate(VoidCallback onNavigate) async {
-    // Show interstitial ad with 40% probability to avoid ad fatigue
     if (DateTime.now().millisecondsSinceEpoch % 10 < 4) {
       await _adService.showInterstitialAd();
     }
-    // Always navigate
     onNavigate();
   }
 }
