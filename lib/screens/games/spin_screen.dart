@@ -7,9 +7,8 @@ import 'dart:math' as math;
 import '../../core/theme/app_theme.dart';
 import '../../core/constants/app_constants.dart';
 import '../../services/cooldown_service.dart';
-import '../../services/request_deduplication_service.dart';
 import '../../services/device_fingerprint_service.dart';
-import '../../services/firestore_service.dart';
+import '../../services/cloudflare_workers_service.dart';
 import '../../services/ad_service.dart';
 import '../../providers/user_provider.dart';
 import '../../widgets/error_states.dart';
@@ -27,7 +26,7 @@ class SpinScreen extends StatefulWidget {
 class _SpinScreenState extends State<SpinScreen> {
   late final CooldownService _cooldownService;
   late final AdService _adService;
-  late final FirestoreService _firestoreService;
+  late final CloudflareWorkersService _cloudflareService;
   late final List<double> _rewards = AppConstants.spinRewards;
   late ConfettiController _confettiController;
 
@@ -41,7 +40,7 @@ class _SpinScreenState extends State<SpinScreen> {
     super.initState();
     _cooldownService = CooldownService();
     _adService = AdService();
-    _firestoreService = FirestoreService();
+    _cloudflareService = CloudflareWorkersService();
     _confettiController = ConfettiController(
       duration: const Duration(seconds: 2),
     );
@@ -120,23 +119,30 @@ class _SpinScreenState extends State<SpinScreen> {
     if (user == null) return;
 
     try {
-      final reward = _rewards[_selected];
-      final actualReward = math.min(
-        reward,
-        AppConstants.maxDailyEarnings - userProvider.user.availableBalance,
+      final fingerprint = Provider.of<DeviceFingerprintService>(
+        context,
+        listen: false,
+      );
+      final deviceFingerprint = await fingerprint.getDeviceFingerprint();
+
+      // ✅ Execute spin via backend - backend determines the reward
+      final result = await _cloudflareService.executeSpin(
+        userId: user.uid,
+        deviceId: deviceFingerprint,
       );
 
-      await _recordSpinReward(userProvider, user.uid, actualReward);
+      // Get reward from backend response
+      final reward = (result['reward'] as num?)?.toDouble() ?? 0.0;
 
-      _lastSpinReward = actualReward;
+      _lastSpinReward = reward;
       _confettiController.play();
 
       if (mounted) {
-        await _showSpinResult(actualReward);
+        await _showSpinResult(reward);
         _cooldownService.startCooldown(user.uid, 'spin_daily', 86400);
-        await userProvider.updateBalance(
-          userProvider.user.availableBalance + actualReward,
-        );
+
+        // Refresh user data from backend
+        await userProvider.refreshUser();
       }
     } catch (e) {
       debugPrint('Spin error: $e');
@@ -147,45 +153,6 @@ class _SpinScreenState extends State<SpinScreen> {
       if (mounted) {
         setState(() => _isSpinning = false);
       }
-    }
-  }
-
-  Future<void> _recordSpinReward(
-    UserProvider userProvider,
-    String userId,
-    double reward,
-  ) async {
-    try {
-      final dedup = Provider.of<RequestDeduplicationService>(
-        context,
-        listen: false,
-      );
-      final fingerprint = Provider.of<DeviceFingerprintService>(
-        context,
-        listen: false,
-      );
-      final deviceFingerprint = await fingerprint.getDeviceFingerprint();
-
-      final requestId = dedup.generateRequestId(userId, 'spin_result', {
-        'reward': reward,
-        'timestamp': DateTime.now().toIso8601String(),
-        'deviceFingerprint': deviceFingerprint,
-      });
-
-      final cachedRecord = dedup.getFromLocalCache(requestId);
-      if (cachedRecord != null && cachedRecord.success) return;
-
-      await _firestoreService.recordSpinResult(userId, reward);
-
-      await dedup.recordRequest(
-        requestId: requestId,
-        requestHash: requestId.hashCode.toString(),
-        success: true,
-        transactionId: 'spin:${DateTime.now().millisecondsSinceEpoch}',
-      );
-    } catch (e) {
-      debugPrint('Error recording spin: $e');
-      rethrow;
     }
   }
 

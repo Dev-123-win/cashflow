@@ -1,0 +1,537 @@
+Connected devices:
+sdk gphone64 x86 64 (mobile) • emulator-5554  • android-x64 • Android 16 (API 36) (emulator)
+sdk gphone64 x86 64 (mobile) • localhost:5555 • android-x64 • Android 16 (API 36) (emulator)
+[1]: sdk gphone64 x86 64 (emulator-5554)
+[2]: sdk gphone64 x86 64 (localhost:5555)
+Please choose one (or "q" to quit): 
+Please choose one (or "q" to quit): 1
+Launching lib/main.dart on sdk gphone64 x86 64 in debug mode...
+Running Gradle task 'assembleDebug'...                          
+e: Daemon compilation failed: null
+java.lang.Exception
+	at org.jetbrains.kotlin.daemon.common.CompileService$CallResult$Error.get(CompileService.kt:69)
+	at org.jetbrains.kotlin.daemon.common.CompileService$CallResult$Error.get(CompileService.kt:65)
+	at org.jetbrains.kotlin.compilerRunner.GradleKotlinCompilerWork.compileWithDaemon(GradleKotlinCompilerWork.kt:240)
+	at org.jetbrains.kotlin.compilerRunner.GradleKotlinCompilerWork.compileWithDaemonOrFallbackImpl(GradleKotlinCompilerWork.kt:159)
+	at org.jetbrains.kotlin.compilerRunner.GradleKotlinCompilerWork.run(GradleKotlinCompilerWork.kt:111)
+	at org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction.execute(GradleCompilerRunnerWithWorkers.kt:76)
+	at org.gradle.workers.internal.DefaultWorkerServer.execute(DefaultWorkerServer.java:63)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1$1.create(NoIsolationWorkerFactory.java:66)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1$1.create(NoIsolationWorkerFactory.java:62)
+	at org.gradle.internal.classloader.ClassLoaderUtils.executeInClassloader(ClassLoaderUtils.java:100)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1.lambda$execute$0(NoIsolationWorkerFactory.java:62)
+	at org.gradle.workers.internal.AbstractWorker$1.call(AbstractWorker.java:44)
+	at org.gradle.workers.internal.AbstractWorker$1.call(AbstractWorker.java:41)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:209)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:166)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
+	at org.gradle.workers.internal.AbstractWorker.executeWrappedInBuildOperation(AbstractWorker.java:41)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1.execute(NoIsolationWorkerFactory.java:59)
+	at org.gradle.workers.internal.DefaultWorkerExecutor.lambda$submitWork$0(DefaultWorkerExecutor.java:174)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.runExecution(DefaultConditionalExecutionQueue.java:194)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.access$700(DefaultConditionalExecutionQueue.java:127)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner$1.run(DefaultConditionalExecutionQueue.java:169)
+	at org.gradle.internal.Factories$1.create(Factories.java:31)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withLocks(DefaultWorkerLeaseService.java:263)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:127)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:132)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.runBatch(DefaultConditionalExecutionQueue.java:164)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.run(DefaultConditionalExecutionQueue.java:133)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
+	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:48)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: java.io.IOException: Could not delete '/home/user/myapp/build/webview_flutter_android/kotlin/compileDebugKotlin/cacheable/caches-jvm'
+	at org.jetbrains.kotlin.incremental.FileUtilsKt.deleteRecursivelyOrThrow(fileUtils.kt:47)
+	at org.jetbrains.kotlin.incremental.FileUtilsKt.deleteDirectoryContents(fileUtils.kt:38)
+	at org.jetbrains.kotlin.incremental.IncrementalCompilerRunner.cleanOrCreateDirectories(IncrementalCompilerRunner.kt:321)
+	at org.jetbrains.kotlin.incremental.IncrementalCompilerRunner.compileNonIncrementally(IncrementalCompilerRunner.kt:290)
+	at org.jetbrains.kotlin.incremental.IncrementalCompilerRunner.compile(IncrementalCompilerRunner.kt:129)
+	at org.jetbrains.kotlin.daemon.CompileServiceImplBase.execIncrementalCompiler(CompileServiceImpl.kt:674)
+	at org.jetbrains.kotlin.daemon.CompileServiceImplBase.access$execIncrementalCompiler(CompileServiceImpl.kt:91)
+	at org.jetbrains.kotlin.daemon.CompileServiceImpl.compile(CompileServiceImpl.kt:1659)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:714)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:598)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:844)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:721)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:400)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:720)
+	... 3 more
+
+warning: [options] source value 8 is obsolete and will be removed in a future release
+warning: [options] target value 8 is obsolete and will be removed in a future release
+warning: [options] To suppress warnings about obsolete options, use -Xlint:-options.
+Note: /home/user/.pub-cache/hosted/pub.dev/google_mobile_ads-5.3.1/android/src/main/java/io/flutter/plugins/googlemobileads/AdMessageCodec.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+3 warnings
+Running Gradle task 'assembleDebug'...                            145.3s
+✓ Built build/app/outputs/flutter-apk/app-debug.apk
+Installing build/app/outputs/flutter-apk/app-debug.apk...        1,210ms
+D/FlutterJNI( 6507): Beginning load of flutter...
+D/FlutterJNI( 6507): flutter (null) was loaded normally!
+I/flutter ( 6507): [IMPORTANT:flutter/shell/platform/android/android_context_gl_impeller.cc(104)] Using the Impeller rendering backend (OpenGLES).
+Syncing files to device sdk gphone64 x86 64...                     255ms
+
+Flutter run key commands.
+r Hot reload. 🔥🔥🔥
+R Hot restart.
+h List all available interactive commands.
+d Detach (terminate "flutter run" but leave application running).
+c Clear the screen
+q Quit (terminate the application on the device).
+
+A Dart VM Service on sdk gphone64 x86 64 is available at: http://127.0.0.1:44589/xqKTNtg_cD0=/
+The Flutter DevTools debugger and profiler on sdk gphone64 x86 64 is available at: http://127.0.0.1:44589/xqKTNtg_cD0=/devtools/?uri=ws://127.0.0.1:44589/xqKTNtg_cD0=/ws
+I/Choreographer( 6507): Skipped 70 frames!  The application may be doing too much work on its main thread.
+D/WindowLayoutComponentImpl( 6507): Register WindowLayoutInfoListener on Context=com.supreet.rewardly.MainActivity@d61dd74, of which baseContext=android.app.ContextImpl@bfb1b3b
+I/FirebaseApp( 6507): Device unlocked: initializing all Firebase APIs for app [DEFAULT]
+D/ProfileInstaller( 6507): Installing profile for com.supreet.rewardly
+I/flutter ( 6507): Firebase initialized successfully
+I/flutter ( 6507): Firestore offline persistence enabled
+I/flutter ( 6507): AuthService initialized successfully
+I/upreet.rewardly( 6507): AssetManager2(0x71eaf44a7a38) locale list changing from [] to [en-US]
+D/ApplicationLoaders( 6507): Returning zygote-cached class loader: /system/framework/org.apache.http.legacy.jar
+D/ApplicationLoaders( 6507): Returning zygote-cached class loader: /system/framework/com.android.media.remotedisplay.jar
+D/ApplicationLoaders( 6507): Returning zygote-cached class loader: /system/framework/com.android.location.provider.jar
+D/ApplicationLoaders( 6507): Returning zygote-cached class loader: /system_ext/framework/androidx.window.extensions.jar
+D/ApplicationLoaders( 6507): Returning zygote-cached class loader: /system_ext/framework/androidx.window.sidecar.jar
+D/nativeloader( 6507): InitLlndkLibrariesProduct: libEGL.so:libGLESv1_CM.so:libGLESv2.so:libGLESv3.so:libRS.so:libandroid_net.so:libapexsupport.so:libavf.so:libbinder_ndk.so:libc.so:libcgrouprc.so:libclang_rt.asan-x86_64-android.so:libcom.android.tethering.connectivity_native.so:libdl.so:libft2.so:liblog.so:libm.so:libmediandk.so:libnativewindow.so:libneuralnetworks.so:libselinux.so:libsync.so:libvendorsupport.so:libvndksupport.so:libvulkan.so
+D/nativeloader( 6507): Configuring product-clns-10 for unbundled product apk /product/priv-app/PrebuiltGmsCore/PrebuiltGmsCore.apk. target_sdk_version=35, uses_libraries=, library_path=/product/priv-app/PrebuiltGmsCore/lib/x86_64:/product/priv-app/PrebuiltGmsCore/PrebuiltGmsCore.apk!/lib/x86_64:/product/lib64:/system/product/lib64, permitted_path=/data:/mnt/expand:/data/user/0/com.google.android.gms:/product/lib64:/system/product/lib64
+D/nativeloader( 6507): InitVndkspLibrariesProduct: VNDK is deprecated with product
+I/DynamiteModule( 6507): Considering local module com.google.android.gms.ads.dynamite:0 and remote module com.google.android.gms.ads.dynamite:244410203
+I/DynamiteModule( 6507): Selected remote version of com.google.android.gms.ads.dynamite, version >= 244410203
+D/DynamitePackage( 6507): Instantiated singleton DynamitePackage.
+D/DynamitePackage( 6507): Instantiating com.google.android.gms.ads.ChimeraMobileAdsSettingManagerCreatorImpl
+I/upreet.rewardly( 6507): AssetManager2(0x71eaf44a9658) locale list changing from [] to [en-US]
+I/WebViewFactory( 6507): Loading com.google.android.webview version 133.0.6943.137 (code 694313738)
+I/upreet.rewardly( 6507): AssetManager2(0x71eaf44ac858) locale list changing from [] to [en-US]
+I/upreet.rewardly( 6507): AssetManager2(0x71eaf44a9338) locale list changing from [] to [en-US]
+I/upreet.rewardly( 6507): AssetManager2(0x71eaf44acb78) locale list changing from [] to [en-US]
+I/upreet.rewardly( 6507): AssetManager2(0x71eaf44ac538) locale list changing from [] to [en-US]
+I/upreet.rewardly( 6507): AssetManager2(0x71eaf44aa5f8) locale list changing from [] to [en-US]
+I/upreet.rewardly( 6507): AssetManager2(0x71eaf44ace98) locale list changing from [] to [en-US]
+I/upreet.rewardly( 6507): AssetManager2(0x71eaf44ab278) locale list changing from [] to [en-US]
+V/ResourcesManager( 6507): The following library key has been added: ResourcesKey{ mHash=6ae2c715 mResDir=null mSplitDirs=[] mOverlayDirs=[] mLibDirs=[/data/app/~~r0XZIe20n_j1buFP8PclEQ==/com.google.android.webview-FKA8Zm_aTuGo6ObhjH0Q2A==/WebViewGoogle.apk,/data/app/~~hGYhTPqg-Ko0lbY3lJ2nBA==/com.google.android.trichromelibrary_694313738-XyJv4hNtGevMZQVLiiWHVA==/TrichromeLibrary.apk] mDisplayId=0 mOverrideConfig=v36 mCompatInfo={440dpi always-compat} mLoaders=[]}
+W/upreet.rewardly( 6507): Failed to find entry 'classes.dex': Entry not found
+D/nativeloader( 6507): Configuring clns-11 for other apk /data/app/~~hGYhTPqg-Ko0lbY3lJ2nBA==/com.google.android.trichromelibrary_694313738-XyJv4hNtGevMZQVLiiWHVA==/TrichromeLibrary.apk. target_sdk_version=34, uses_libraries=ALL, library_path=/data/app/~~r0XZIe20n_j1buFP8PclEQ==/com.google.android.webview-FKA8Zm_aTuGo6ObhjH0Q2A==/lib/x86_64:/data/app/~~r0XZIe20n_j1buFP8PclEQ==/com.google.android.webview-FKA8Zm_aTuGo6ObhjH0Q2A==/WebViewGoogle.apk!/lib/x86_64:/data/app/~~hGYhTPqg-Ko0lbY3lJ2nBA==/com.google.android.trichromelibrary_694313738-XyJv4hNtGevMZQVLiiWHVA==/TrichromeLibrary.apk!/lib/x86_64, permitted_path=/data:/mnt/expand
+D/ApplicationLoaders( 6507): Returning zygote-cached class loader: /system_ext/framework/androidx.window.extensions.jar
+D/nativeloader( 6507): Configuring clns-12 for other apk /data/app/~~r0XZIe20n_j1buFP8PclEQ==/com.google.android.webview-FKA8Zm_aTuGo6ObhjH0Q2A==/WebViewGoogle.apk. target_sdk_version=34, uses_libraries=, library_path=/data/app/~~r0XZIe20n_j1buFP8PclEQ==/com.google.android.webview-FKA8Zm_aTuGo6ObhjH0Q2A==/lib/x86_64:/data/app/~~r0XZIe20n_j1buFP8PclEQ==/com.google.android.webview-FKA8Zm_aTuGo6ObhjH0Q2A==/WebViewGoogle.apk!/lib/x86_64:/data/app/~~hGYhTPqg-Ko0lbY3lJ2nBA==/com.google.android.trichromelibrary_694313738-XyJv4hNtGevMZQVLiiWHVA==/TrichromeLibrary.apk!/lib/x86_64, permitted_path=/data:/mnt/expand
+I/cr_WVCFactoryProvider( 6507): version=133.0.6943.137 (694313738) minSdkVersion=29 isBundle=false multiprocess=true packageId=2
+D/nativeloader( 6507): Load /data/app/~~hGYhTPqg-Ko0lbY3lJ2nBA==/com.google.android.trichromelibrary_694313738-XyJv4hNtGevMZQVLiiWHVA==/TrichromeLibrary.apk!/lib/x86_64/libmonochrome_64.so using class loader ns clns-12 (caller=/data/app/~~r0XZIe20n_j1buFP8PclEQ==/com.google.android.webview-FKA8Zm_aTuGo6ObhjH0Q2A==/WebViewGoogle.apk): ok
+D/nativeloader( 6507): Load /system/lib64/libwebviewchromium_plat_support.so using class loader ns clns-12 (caller=/data/app/~~r0XZIe20n_j1buFP8PclEQ==/com.google.android.webview-FKA8Zm_aTuGo6ObhjH0Q2A==/WebViewGoogle.apk): ok
+I/chromium( 6507): [1125/140415.202909:INFO:variations_seed_loader.cc(67)] Failed to open file for reading.: No such file or directory (2)
+I/chromium( 6507): [1125/140415.205834:INFO:variations_seed_loader.cc(67)] Failed to open file for reading.: No such file or directory (2)
+I/cr_LibraryLoader( 6507): Successfully loaded native library
+I/cr_CachingUmaRecorder( 6507): Flushed 6 samples from 6 histograms, 0 samples were dropped.
+I/cr_CombinedPProvider( 6507): #registerProvider() provider:WV.C8@ca72ae9 isPolicyCacheEnabled:false policyProvidersSize:0
+I/cr_PolicyProvider( 6507): #setManagerAndSource() 0
+I/cr_CombinedPProvider( 6507): #linkNativeInternal() 1
+I/cr_AppResProvider( 6507): #getApplicationRestrictionsFromUserManager() Bundle[EMPTY_PARCEL]
+I/cr_PolicyProvider( 6507): #notifySettingsAvailable() 0
+I/cr_CombinedPProvider( 6507): #onSettingsAvailable() 0
+I/cr_CombinedPProvider( 6507): #flushPolicies()
+I/upreet.rewardly( 6507): AssetManager2(0x71eaf44a9c98) locale list changing from [] to [en-US]
+I/upreet.rewardly( 6507): AssetManager2(0x71eaf44ae798) locale list changing from [] to [en-US]
+I/Choreographer( 6507): Skipped 42 frames!  The application may be doing too much work on its main thread.
+I/CameraManagerGlobal( 6507): Connecting to camera service
+D/CompatChangeReporter( 6507): Compat change id reported: 288912692; UID 10217; state: ENABLED
+W/cr_media( 6507): BLUETOOTH_CONNECT permission is missing.
+W/cr_media( 6507): getBluetoothAdapter() requires BLUETOOTH permission
+W/cr_media( 6507): registerBluetoothIntentsIfNeeded: Requires BLUETOOTH permission
+W/libc    ( 6507): Access denied finding property "vendor.mesa.log"
+W/libc    ( 6507): Access denied finding property "vendor.mesa.log.file"
+E/MESA    ( 6507): Failed to open rendernode: No such file or directory
+D/vulkan  ( 6507): searching for layers in '/data/app/~~G4aTnoV7OAaz7_xasm_jIA==/com.supreet.rewardly-ibFaS0fmDrqgigIXot3m8A==/lib/x86_64'
+D/vulkan  ( 6507): searching for layers in '/data/app/~~G4aTnoV7OAaz7_xasm_jIA==/com.supreet.rewardly-ibFaS0fmDrqgigIXot3m8A==/base.apk!/lib/x86_64'
+W/libc    ( 6507): Access denied finding property "vendor.mesa.vk.trace.per.submit"
+W/libc    ( 6507): Access denied finding property "vendor.mesa.gallium.print.optio"
+W/libc    ( 6507): Access denied finding property "vendor.mesa.vk.trace.frame"
+W/libc    ( 6507): Access denied finding property "vendor.mesa.vk.wsi.headless.swa"
+I/upreet.rewardly( 6507): Background concurrent mark compact GC freed 6594KB AllocSpace bytes, 28(1116KB) LOS objects, 49% free, 5502KB/10MB, paused 773us,21.646ms total 188.674ms
+W/chromium( 6507): [WARNING:viz_main_impl.cc(85)] VizNullHypothesis is disabled (not a warning)
+I/Ads     ( 6507): JS: The jsLoaded GMSG has been sent (https://googleads.g.doubleclick.net/mads/static/mad/sdk/native/production/sdk-core-v40-impl.html:1008)
+I/chromium( 6507): [INFO:CONSOLE(1008)] "The jsLoaded GMSG has been sent", source: https://googleads.g.doubleclick.net/mads/static/mad/sdk/native/production/sdk-core-v40-impl.html (1008)
+I/flutter ( 6507): ✅ Google Mobile Ads initialized successfully
+I/flutter ( 6507): 🔄 All ads preloading in background
+I/flutter ( 6507): Google Mobile Ads initialized successfully
+I/upreet.rewardly( 6507): AssetManager2(0x71eaf44ad7f8) locale list changing from [] to [en-US]
+D/ApplicationLoaders( 6507): Returning zygote-cached class loader: /system/framework/org.apache.http.legacy.jar
+D/ApplicationLoaders( 6507): Returning zygote-cached class loader: /system/framework/com.android.media.remotedisplay.jar
+D/ApplicationLoaders( 6507): Returning zygote-cached class loader: /system/framework/com.android.location.provider.jar
+D/ApplicationLoaders( 6507): Returning zygote-cached class loader: /system_ext/framework/androidx.window.extensions.jar
+D/ApplicationLoaders( 6507): Returning zygote-cached class loader: /system_ext/framework/androidx.window.sidecar.jar
+D/DynamitePackage( 6507): Instantiating com.google.android.gms.ads.ChimeraAdManagerCreatorImpl
+I/Ads     ( 6507): This request is sent from a test device.
+I/DynamiteModule( 6507): Considering local module com.google.android.gms.ads.dynamite:0 and remote module com.google.android.gms.ads.dynamite:244410203
+I/DynamiteModule( 6507): Selected remote version of com.google.android.gms.ads.dynamite, version >= 244410203
+V/DynamiteModule( 6507): Dynamite loader version >= 2, using loadModule2NoCrashUtils
+I/upreet.rewardly( 6507): AssetManager2(0x71eaf44a86b8) locale list changing from [] to [en-US]
+I/upreet.rewardly( 6507): AssetManager2(0x71eaf44a9fb8) locale list changing from [] to [en-US]
+I/upreet.rewardly( 6507): AssetManager2(0x71eaf44af0f8) locale list changing from [] to [en-US]
+I/Ads     ( 6507): This request is sent from a test device.
+I/DynamiteModule( 6507): Considering local module com.google.android.gms.ads.dynamite:0 and remote module com.google.android.gms.ads.dynamite:244410203
+I/DynamiteModule( 6507): Selected remote version of com.google.android.gms.ads.dynamite, version >= 244410203
+V/DynamiteModule( 6507): Dynamite loader version >= 2, using loadModule2NoCrashUtils
+I/Ads     ( 6507): This request is sent from a test device.
+I/upreet.rewardly( 6507): Background concurrent mark compact GC freed 3915KB AllocSpace bytes, 13(640KB) LOS objects, 49% free, 6717KB/13MB, paused 1.381ms,20.704ms total 93.276ms
+D/DynamitePackage( 6507): Instantiating com.google.android.gms.ads.ChimeraAdManagerCreatorImpl
+I/Ads     ( 6507): This request is sent from a test device.
+D/DynamitePackage( 6507): Instantiating com.google.android.gms.ads.ChimeraAdManagerCreatorImpl
+I/Ads     ( 6507): This request is sent from a test device.
+E/FA      ( 6507): Missing google_app_id. Firebase Analytics disabled. See https://goo.gl/NAOOOI
+W/Ads     ( 6507): Not retrying to fetch app settings
+W/Ads     ( 6507): Not retrying to fetch app settings
+W/ConnectionStatusConfig( 6507): Dynamic lookup for intent failed for action: com.google.android.gms.ads.service.START
+W/Ads     ( 6507): Not retrying to fetch app settings
+W/Ads     ( 6507): Not retrying to fetch app settings
+W/Ads     ( 6507): Not retrying to fetch app settings
+I/FA      ( 6507): Application backgrounded at: timestamp_millis: 1764079458887
+E/FA      ( 6507): Missing google_app_id. Firebase Analytics disabled. See https://goo.gl/NAOOOI
+I/Ads     ( 6507): Ad failed to load : 3
+I/flutter ( 6507): ❌ App Open Ad failed to load: Publisher data not found. <https://support.google.com/admob/answer/9905175#9>
+I/Ads     ( 6507): Ad failed to load : 3
+E/FA      ( 6507): Missing google_app_id. Firebase Analytics disabled. See https://goo.gl/NAOOOI
+I/flutter ( 6507): ❌ Rewarded Ad failed to load: No fill.
+I/Ads     ( 6507): JS: The jsLoaded GMSG has been sent (https://googleads.g.doubleclick.net/mads/static/mad/sdk/native/production/sdk-core-v40-impl.html:1008)
+I/chromium( 6507): [INFO:CONSOLE(1008)] "The jsLoaded GMSG has been sent", source: https://googleads.g.doubleclick.net/mads/static/mad/sdk/native/production/sdk-core-v40-impl.html (1008)
+I/upreet.rewardly( 6507): Background concurrent mark compact GC freed 4094KB AllocSpace bytes, 41(4740KB) LOS objects, 49% free, 8485KB/16MB, paused 1.512ms,6.290ms total 638.579ms
+I/Ads     ( 6507): Ad failed to load : 3
+I/flutter ( 6507): ❌ Rewarded Interstitial Ad failed to load: No fill.
+I/DynamiteModule( 6507): Considering local module com.google.android.gms.ads.dynamite:0 and remote module com.google.android.gms.ads.dynamite:244410203
+I/DynamiteModule( 6507): Selected remote version of com.google.android.gms.ads.dynamite, version >= 244410203
+I/upreet.rewardly( 6507): AssetManager2(0x71eaf44af418) locale list changing from [] to [en-US]
+I/upreet.rewardly( 6507): AssetManager2(0x71eaf44ae158) locale list changing from [] to [en-US]
+I/upreet.rewardly( 6507): AssetManager2(0x71eaf44a8cf8) locale list changing from [] to [en-US]
+I/Ads     ( 6507): Ad failed to load : 3
+I/flutter ( 6507): ✅ Banner Ad loaded
+I/flutter ( 6507): ❌ Interstitial Ad failed to load: No fill.
+I/flutter ( 6507): User granted notification permission
+I/flutter ( 6507): FCM Token: cOWRixbJTByOH12oT4scTD:APA91bHIUgPlpNfGMIxz2zkqb3Huf7iKW05RPkDEviwxEM3re-IuCanRHUNm3twUDC7iprlt3OsQ6RA2CqPZQS6soMm9_bBNY9b3PsiICH6XrcLVmkD1NGg
+I/flutter ( 6507): Notification Service initialized successfully
+I/flutter ( 6507): ✅ CooldownService initialized
+I/flutter ( 6507): CooldownService initialized successfully
+I/Choreographer( 6507): Skipped 93 frames!  The application may be doing too much work on its main thread.
+W/FlutterJNI( 6507): FlutterJNI.loadLibrary called more than once
+D/FlutterJNI( 6507): Beginning load of flutter...
+D/FlutterJNI( 6507): flutter (null) was loaded normally!
+I/ResourceExtractor( 6507): Found extracted resources res_timestamp-1-1764079444831
+W/FlutterJNI( 6507): FlutterJNI.prefetchDefaultFontManager called more than once
+W/FlutterJNI( 6507): FlutterJNI.init called more than once
+I/FLTFireBGExecutor( 6507): Creating background FlutterEngine instance, with args: [--enable-dart-profiling]
+I/upreet.rewardly( 6507): AssetManager2(0x71eaf44be7d8) locale list changing from [] to [en-US]
+I/flutter ( 6507): [IMPORTANT:flutter/shell/platform/android/android_context_gl_impeller.cc(104)] Using the Impeller rendering backend (OpenGLES).
+I/Choreographer( 6507): Skipped 82 frames!  The application may be doing too much work on its main thread.
+I/HWUI    ( 6507): Davey! duration=1620ms; Flags=1, FrameTimelineVsyncId=18976, IntendedVsync=567149635760, Vsync=568516302372, InputEventId=0, HandleInputStart=568527486710, AnimationStart=568527488066, PerformTraversalsStart=568527488823, DrawStart=568541932741, FrameDeadline=567166302426, FrameStartTime=568527058879, FrameInterval=16666666, WorkloadTarget=16666666, SyncQueued=568553037637, SyncStart=568566539168, IssueDrawCommandsStart=568567305234, SwapBuffers=568592949217, FrameCompleted=568783188934, DequeueBufferDuration=2902838, QueueBufferDuration=817227, GpuCompleted=568783188934, SwapBuffersCompleted=568774640463, DisplayPresentTime=0, CommandSubmissionCompleted=568592949217, 
+I/FLTFireMsgService( 6507): FlutterFirebaseMessagingBackgroundService started!
+W/WindowOnBackDispatcher( 6507): sendCancelIfRunning: isInProgress=false callback=io.flutter.embedding.android.FlutterActivity$1@1c80bd6
+D/InsetsController( 6507): hide(ime(), fromIme=false)
+I/ImeTracker( 6507): com.supreet.rewardly:e11c612b: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+I/upreet.rewardly( 6507): AssetManager2(0x71eaf44c48b8) locale list changing from [] to [en-US]
+I/ImeTracker( 6507): com.supreet.rewardly:ef86cd43: onRequestShow at ORIGIN_CLIENT reason SHOW_SOFT_INPUT fromUser false
+D/InsetsController( 6507): show(ime(), fromIme=false)
+D/InsetsController( 6507): Setting requestedVisibleTypes to -1 (was -9)
+D/InputConnectionAdaptor( 6507): The input method toggled cursor monitoring on
+I/AssistStructure( 6507): Flattened final assist data: 500 bytes, containing 1 windows, 3 views
+W/InteractionJankMonitor( 6507): Initializing without READ_DEVICE_CONFIG permission. enabled=false, interval=1, missedFrameThreshold=3, frameTimeThreshold=64, package=com.supreet.rewardly
+I/ImeTracker( 6507): com.supreet.rewardly:ef86cd43: onShown
+I/ImeTracker( 6507): com.supreet.rewardly:ec29ba85: onRequestShow at ORIGIN_CLIENT reason SHOW_SOFT_INPUT fromUser false
+D/InsetsController( 6507): show(ime(), fromIme=false)
+I/ImeTracker( 6507): com.supreet.rewardly:ec29ba85: onCancelled at PHASE_CLIENT_APPLY_ANIMATION
+I/ImeTracker( 6507): com.supreet.rewardly:fcdd20a4: onRequestShow at ORIGIN_CLIENT reason SHOW_SOFT_INPUT fromUser false
+D/InsetsController( 6507): show(ime(), fromIme=false)
+I/ImeTracker( 6507): com.supreet.rewardly:fcdd20a4: onCancelled at PHASE_CLIENT_APPLY_ANIMATION
+I/ImeTracker( 6507): com.supreet.rewardly:c00b031c: onRequestShow at ORIGIN_CLIENT reason SHOW_SOFT_INPUT fromUser false
+D/InsetsController( 6507): show(ime(), fromIme=false)
+I/ImeTracker( 6507): com.supreet.rewardly:c00b031c: onCancelled at PHASE_CLIENT_APPLY_ANIMATION
+I/AssistStructure( 6507): Flattened final assist data: 504 bytes, containing 1 windows, 3 views
+D/InputConnectionAdaptor( 6507): The input method toggled cursor monitoring on
+I/FirebaseAuth( 6507): Logging in as supreetdalawai112@gmail.com with empty reCAPTCHA token
+W/System  ( 6507): Ignoring header X-Firebase-Locale because its value was null.
+I/ImeTracker( 6507): com.supreet.rewardly:22bd79d8: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser false
+D/InsetsController( 6507): hide(ime(), fromIme=false)
+W/WindowOnBackDispatcher( 6507): sendCancelIfRunning: isInProgress=false callback=android.view.ImeBackAnimationController@da08b61
+D/InsetsController( 6507): Setting requestedVisibleTypes to -9 (was -1)
+D/CompatChangeReporter( 6507): Compat change id reported: 395521150; UID 10217; state: ENABLED
+W/System  ( 6507): Ignoring header X-Firebase-Locale because its value was null.
+I/ImeTracker( 6507): system_server:e1511449: onCancelled at PHASE_CLIENT_ON_CONTROLS_CHANGED
+D/SharedPreferencesImpl( 6507): Time required to fsync /data/user/0/com.supreet.rewardly/shared_prefs/FirebaseHeartBeatW0RFRkFVTFRd+MToxMDA2NDU0ODEyMTg4OmFuZHJvaWQ6M2U1ZDc5MDhiMzc3MzU5MTk0ZjlkOQ.xml: [<1: 0, <2: 0, <4: 1, <8: 1, <16: 1, <32: 0, <64: 0, <128: 0, <256: 0, <512: 1, <1024: 0, <2048: 0, <4096: 0, <8192: 0, <16384: 0, >=16384: 0]
+D/FirebaseAuth( 6507): Notifying id token listeners about user ( yCxe646Sx2SvmlHa6EuAqxLaWEt1 ).
+D/FirebaseAuth( 6507): Notifying auth state listeners about user ( yCxe646Sx2SvmlHa6EuAqxLaWEt1 ).
+W/DynamiteModule( 6507): Local module descriptor class for com.google.android.gms.providerinstaller.dynamite not found.
+I/DynamiteModule( 6507): Considering local module com.google.android.gms.providerinstaller.dynamite:0 and remote module com.google.android.gms.providerinstaller.dynamite:0
+W/ProviderInstaller( 6507): Failed to load providerinstaller module: No acceptable module com.google.android.gms.providerinstaller.dynamite found. Local version is 0 and remote version is 0.
+I/upreet.rewardly( 6507): AssetManager2(0x71eaf44dacf8) locale list changing from [] to [en-US]
+D/ApplicationLoaders( 6507): Returning zygote-cached class loader: /system/framework/org.apache.http.legacy.jar
+D/ApplicationLoaders( 6507): Returning zygote-cached class loader: /system/framework/com.android.media.remotedisplay.jar
+D/ApplicationLoaders( 6507): Returning zygote-cached class loader: /system/framework/com.android.location.provider.jar
+D/ApplicationLoaders( 6507): Returning zygote-cached class loader: /system_ext/framework/androidx.window.extensions.jar
+D/ApplicationLoaders( 6507): Returning zygote-cached class loader: /system_ext/framework/androidx.window.sidecar.jar
+W/ProviderInstaller( 6507): Failed to report request stats: com.google.android.gms.common.security.ProviderInstallerImpl.reportRequestStats [class android.content.Context, long, long]
+D/nativeloader( 6507): Load /product/priv-app/PrebuiltGmsCore/PrebuiltGmsCore.apk!/lib/x86_64/libconscrypt_gmscore_jni.so using class loader ns product-clns-10 (caller=/product/priv-app/PrebuiltGmsCore/PrebuiltGmsCore.apk!classes3.dex): ok
+V/NativeCrypto( 6507): Registering com/google/android/gms/org/conscrypt/NativeCrypto's 308 native methods...
+I/upreet.rewardly( 6507): hiddenapi: Accessing hidden method Ldalvik/system/VMStack;->getStackClass2()Ljava/lang/Class; (runtime_flags=0, domain=core-platform, api=unsupported) from Lfjlv; (domain=app) using reflection: allowed
+I/euco    ( 6507): Unable to retrieve flag snapshot for com.google.android.gms.providerinstaller#com.google.android.gms, using defaults.
+I/upreet.rewardly( 6507): hiddenapi: Accessing hidden method Ljava/security/spec/ECParameterSpec;->getCurveName()Ljava/lang/String; (runtime_flags=0, domain=core-platform, api=unsupported) from Lcom/google/android/gms/org/conscrypt/Platform; (domain=app) using reflection: allowed
+I/ProviderInstaller( 6507): Installed default security provider GmsCore_OpenSSL
+E/GoogleApiManager( 6507): Failed to get service from broker. 
+E/GoogleApiManager( 6507): java.lang.SecurityException: Unknown calling package name 'com.google.android.gms'.
+E/GoogleApiManager( 6507): 	at android.os.Parcel.createExceptionOrNull(Parcel.java:3340)
+E/GoogleApiManager( 6507): 	at android.os.Parcel.createException(Parcel.java:3324)
+E/GoogleApiManager( 6507): 	at android.os.Parcel.readException(Parcel.java:3307)
+E/GoogleApiManager( 6507): 	at android.os.Parcel.readException(Parcel.java:3249)
+E/GoogleApiManager( 6507): 	at asrs.a(:com.google.android.gms@250834038@25.08.34 (260800-739221510):36)
+E/GoogleApiManager( 6507): 	at aspz.z(:com.google.android.gms@250834038@25.08.34 (260800-739221510):143)
+E/GoogleApiManager( 6507): 	at arxi.run(:com.google.android.gms@250834038@25.08.34 (260800-739221510):54)
+E/GoogleApiManager( 6507): 	at android.os.Handler.handleCallback(Handler.java:995)
+E/GoogleApiManager( 6507): 	at android.os.Handler.dispatchMessage(Handler.java:103)
+E/GoogleApiManager( 6507): 	at bzmg.my(:com.google.android.gms@250834038@25.08.34 (260800-739221510):1)
+E/GoogleApiManager( 6507): 	at bzmg.dispatchMessage(:com.google.android.gms@250834038@25.08.34 (260800-739221510):5)
+E/GoogleApiManager( 6507): 	at android.os.Looper.loopOnce(Looper.java:248)
+E/GoogleApiManager( 6507): 	at android.os.Looper.loop(Looper.java:338)
+E/GoogleApiManager( 6507): 	at android.os.HandlerThread.run(HandlerThread.java:85)
+W/CondFlagRegistrar( 6507): Failed to register com.google.android.gms.providerinstaller#com.google.android.gms
+W/CondFlagRegistrar( 6507): eudb: 17: 17: API: Phenotype.API is not available on this device. Connection failed with: ConnectionResult{statusCode=DEVELOPER_ERROR, resolution=null, message=null}
+W/CondFlagRegistrar( 6507): 	at eudd.a(:com.google.android.gms@250834038@25.08.34 (260800-739221510):13)
+W/CondFlagRegistrar( 6507): 	at fodf.d(:com.google.android.gms@250834038@25.08.34 (260800-739221510):3)
+W/CondFlagRegistrar( 6507): 	at fodh.run(:com.google.android.gms@250834038@25.08.34 (260800-739221510):130)
+W/CondFlagRegistrar( 6507): 	at fofn.execute(:com.google.android.gms@250834038@25.08.34 (260800-739221510):1)
+W/CondFlagRegistrar( 6507): 	at fodx.h(:com.google.android.gms@250834038@25.08.34 (260800-739221510):1)
+W/CondFlagRegistrar( 6507): 	at fodx.l(:com.google.android.gms@250834038@25.08.34 (260800-739221510):101)
+W/CondFlagRegistrar( 6507): 	at fodx.p(:com.google.android.gms@250834038@25.08.34 (260800-739221510):19)
+W/CondFlagRegistrar( 6507): 	at emtb.hJ(:com.google.android.gms@250834038@25.08.34 (260800-739221510):35)
+W/CondFlagRegistrar( 6507): 	at ebcn.run(:com.google.android.gms@250834038@25.08.34 (260800-739221510):14)
+W/CondFlagRegistrar( 6507): 	at fofn.execute(:com.google.android.gms@250834038@25.08.34 (260800-739221510):1)
+W/CondFlagRegistrar( 6507): 	at ebco.b(:com.google.android.gms@250834038@25.08.34 (260800-739221510):18)
+W/CondFlagRegistrar( 6507): 	at ebdd.b(:com.google.android.gms@250834038@25.08.34 (260800-739221510):36)
+W/CondFlagRegistrar( 6507): 	at ebdf.d(:com.google.android.gms@250834038@25.08.34 (260800-739221510):25)
+W/CondFlagRegistrar( 6507): 	at aruq.c(:com.google.android.gms@250834038@25.08.34 (260800-739221510):9)
+W/CondFlagRegistrar( 6507): 	at arxg.q(:com.google.android.gms@250834038@25.08.34 (260800-739221510):48)
+W/CondFlagRegistrar( 6507): 	at arxg.d(:com.google.android.gms@250834038@25.08.34 (260800-739221510):10)
+W/CondFlagRegistrar( 6507): 	at arxg.g(:com.google.android.gms@250834038@25.08.34 (260800-739221510):211)
+W/CondFlagRegistrar( 6507): 	at arxg.onConnectionFailed(:com.google.android.gms@250834038@25.08.34 (260800-739221510):2)
+W/CondFlagRegistrar( 6507): 	at arxi.run(:com.google.android.gms@250834038@25.08.34 (260800-739221510):82)
+W/CondFlagRegistrar( 6507): 	at android.os.Handler.handleCallback(Handler.java:995)
+W/CondFlagRegistrar( 6507): 	at android.os.Handler.dispatchMessage(Handler.java:103)
+W/CondFlagRegistrar( 6507): 	at bzmg.my(:com.google.android.gms@250834038@25.08.34 (260800-739221510):1)
+W/CondFlagRegistrar( 6507): 	at bzmg.dispatchMessage(:com.google.android.gms@250834038@25.08.34 (260800-739221510):5)
+W/CondFlagRegistrar( 6507): 	at android.os.Looper.loopOnce(Looper.java:248)
+W/CondFlagRegistrar( 6507): 	at android.os.Looper.loop(Looper.java:338)
+W/CondFlagRegistrar( 6507): 	at android.os.HandlerThread.run(HandlerThread.java:85)
+W/CondFlagRegistrar( 6507): Caused by: arti: 17: API: Phenotype.API is not available on this device. Connection failed with: ConnectionResult{statusCode=DEVELOPER_ERROR, resolution=null, message=null}
+W/CondFlagRegistrar( 6507): 	at aspl.a(:com.google.android.gms@250834038@25.08.34 (260800-739221510):15)
+W/CondFlagRegistrar( 6507): 	at arut.a(:com.google.android.gms@250834038@25.08.34 (260800-739221510):1)
+W/CondFlagRegistrar( 6507): 	at aruq.c(:com.google.android.gms@250834038@25.08.34 (260800-739221510):5)
+W/CondFlagRegistrar( 6507): 	... 12 more
+D/DynamitePackage( 6507): Instantiating com.google.android.gms.ads.ChimeraAdManagerCreatorImpl
+I/Ads     ( 6507): This request is sent from a test device.
+W/ConnectionStatusConfig( 6507): Dynamic lookup for intent failed for action: com.google.android.gms.ads.service.START
+I/upreet.rewardly( 6507): hiddenapi: Accessing hidden field Ljava/net/Socket;->impl:Ljava/net/SocketImpl; (runtime_flags=0, domain=core-platform, api=unsupported) from Lcom/google/android/gms/org/conscrypt/Platform; (domain=app) using reflection: allowed
+I/upreet.rewardly( 6507): hiddenapi: Accessing hidden method Ljava/security/spec/ECParameterSpec;->setCurveName(Ljava/lang/String;)V (runtime_flags=0, domain=core-platform, api=unsupported) from Lcom/google/android/gms/org/conscrypt/Platform; (domain=app) using reflection: allowed
+D/DynamitePackage( 6507): Instantiating com.google.android.gms.ads.ChimeraAdManagerCreatorImpl
+I/Ads     ( 6507): This request is sent from a test device.
+D/DynamitePackage( 6507): Instantiating com.google.android.gms.ads.ChimeraAdManagerCreatorImpl
+I/Ads     ( 6507): This request is sent from a test device.
+W/Ads     ( 6507): Not retrying to fetch app settings
+W/Ads     ( 6507): Not retrying to fetch app settings
+I/flutter ( 6507): ⚠️ Interstitial Ad not ready
+W/WindowOnBackDispatcher( 6507): sendCancelIfRunning: isInProgress=false callback=io.flutter.embedding.android.FlutterActivity$1@1c80bd6
+D/DynamitePackage( 6507): Instantiating com.google.android.gms.ads.ChimeraAdManagerCreatorImpl
+I/Ads     ( 6507): This request is sent from a test device.
+W/Ads     ( 6507): Not retrying to fetch app settings
+E/FA      ( 6507): Missing google_app_id. Firebase Analytics disabled. See https://goo.gl/NAOOOI
+I/upreet.rewardly( 6507): Background concurrent mark compact GC freed 3340KB AllocSpace bytes, 68(6408KB) LOS objects, 49% free, 11MB/22MB, paused 669us,5.209ms total 126.653ms
+I/DynamiteModule( 6507): Considering local module com.google.android.gms.ads.dynamite:0 and remote module com.google.android.gms.ads.dynamite:244410203
+I/DynamiteModule( 6507): Selected remote version of com.google.android.gms.ads.dynamite, version >= 244410203
+I/upreet.rewardly( 6507): AssetManager2(0x71eaf44ddbd8) locale list changing from [] to [en-US]
+I/upreet.rewardly( 6507): AssetManager2(0x71eaf44d7e18) locale list changing from [] to [en-US]
+E/FA      ( 6507): Missing google_app_id. Firebase Analytics disabled. See https://goo.gl/NAOOOI
+I/flutter ( 6507): ✅ Banner Ad loaded
+I/Ads     ( 6507): Ad failed to load : 3
+I/DynamiteModule( 6507): Considering local module com.google.android.gms.ads.dynamite:0 and remote module com.google.android.gms.ads.dynamite:244410203
+I/DynamiteModule( 6507): Selected remote version of com.google.android.gms.ads.dynamite, version >= 244410203
+I/flutter ( 6507): ❌ Interstitial Ad failed to load: No fill.
+I/PlatformViewsController( 6507): Hosting view in view hierarchy for platform view: 0
+I/PlatformViewsController( 6507): PlatformView is using SurfaceProducer backend
+I/DynamiteModule( 6507): Considering local module com.google.android.gms.ads.dynamite:0 and remote module com.google.android.gms.ads.dynamite:244410203
+I/DynamiteModule( 6507): Selected remote version of com.google.android.gms.ads.dynamite, version >= 244410203
+I/flutter ( 6507): ✅ Banner Ad loaded
+I/flutter ( 6507): ✅ Banner Ad loaded
+I/PlatformViewsController( 6507): Hosting view in view hierarchy for platform view: 1
+I/PlatformViewsController( 6507): PlatformView is using SurfaceProducer backend
+I/HWUI    ( 6507): Davey! duration=1153ms; Flags=0, FrameTimelineVsyncId=23604, IntendedVsync=617132967094, Vsync=617299633754, InputEventId=0, HandleInputStart=617317535905, AnimationStart=617317537377, PerformTraversalsStart=617328389622, DrawStart=617342603479, FrameDeadline=617232967090, FrameStartTime=617308082997, FrameInterval=16666666, WorkloadTarget=16666666, SyncQueued=618267328726, SyncStart=618280705304, IssueDrawCommandsStart=618280760210, SwapBuffers=618281060277, FrameCompleted=618299956201, DequeueBufferDuration=5225, QueueBufferDuration=166789, GpuCompleted=618299956201, SwapBuffersCompleted=618290717992, DisplayPresentTime=0, CommandSubmissionCompleted=618281060277, 
+I/PlatformViewsController( 6507): Hosting view in view hierarchy for platform view: 2
+I/PlatformViewsController( 6507): PlatformView is using SurfaceProducer backend
+I/Choreographer( 6507): Skipped 65 frames!  The application may be doing too much work on its main thread.
+I/HWUI    ( 6507): Davey! duration=1286ms; Flags=0, FrameTimelineVsyncId=23634, IntendedVsync=617332967086, Vsync=618416300376, InputEventId=193516861, HandleInputStart=618431122510, AnimationStart=618431156772, PerformTraversalsStart=618460464720, DrawStart=618472307885, FrameDeadline=618332967046, FrameStartTime=618427604030, FrameInterval=16666666, WorkloadTarget=16666666, SyncQueued=618606371329, SyncStart=618619892473, IssueDrawCommandsStart=618619964641, SwapBuffers=618620424589, FrameCompleted=618633209967, DequeueBufferDuration=3849, QueueBufferDuration=196332, GpuCompleted=618633209967, SwapBuffersCompleted=618626878102, DisplayPresentTime=0, CommandSubmissionCompleted=618620424589, 
+W/Firestore( 6507): (24.11.0) [WriteStream]: (ce1f99f) Stream closed with status: Status{code=PERMISSION_DENIED, description=Missing or insufficient permissions., cause=null}.
+W/Firestore( 6507): (24.11.0) [Firestore]: Write failed at users/yCxe646Sx2SvmlHa6EuAqxLaWEt1: Status{code=PERMISSION_DENIED, description=Missing or insufficient permissions., cause=null}
+I/flutter ( 6507): ❌ Error recording spin result: [cloud_firestore/permission-denied] The caller does not have permission to execute the specified operation.
+I/flutter ( 6507): Error recording spin: [cloud_firestore/permission-denied] The caller does not have permission to execute the specified operation.
+I/flutter ( 6507): Spin error: [cloud_firestore/permission-denied] The caller does not have permission to execute the specified operation.
+E/GoogleApiManager( 6507): Failed to get service from broker. 
+E/GoogleApiManager( 6507): java.lang.SecurityException: Unknown calling package name 'com.google.android.gms'.
+E/GoogleApiManager( 6507): 	at android.os.Parcel.createExceptionOrNull(Parcel.java:3340)
+E/GoogleApiManager( 6507): 	at android.os.Parcel.createException(Parcel.java:3324)
+E/GoogleApiManager( 6507): 	at android.os.Parcel.readException(Parcel.java:3307)
+E/GoogleApiManager( 6507): 	at android.os.Parcel.readException(Parcel.java:3249)
+E/GoogleApiManager( 6507): 	at asrs.a(:com.google.android.gms@250834038@25.08.34 (260800-739221510):36)
+E/GoogleApiManager( 6507): 	at aspz.z(:com.google.android.gms@250834038@25.08.34 (260800-739221510):143)
+E/GoogleApiManager( 6507): 	at arxi.run(:com.google.android.gms@250834038@25.08.34 (260800-739221510):54)
+E/GoogleApiManager( 6507): 	at android.os.Handler.handleCallback(Handler.java:995)
+E/GoogleApiManager( 6507): 	at android.os.Handler.dispatchMessage(Handler.java:103)
+E/GoogleApiManager( 6507): 	at bzmg.my(:com.google.android.gms@250834038@25.08.34 (260800-739221510):1)
+E/GoogleApiManager( 6507): 	at bzmg.dispatchMessage(:com.google.android.gms@250834038@25.08.34 (260800-739221510):5)
+E/GoogleApiManager( 6507): 	at android.os.Looper.loopOnce(Looper.java:248)
+E/GoogleApiManager( 6507): 	at android.os.Looper.loop(Looper.java:338)
+E/GoogleApiManager( 6507): 	at android.os.HandlerThread.run(HandlerThread.java:85)
+I/upreet.rewardly( 6507): Background concurrent mark compact GC freed 7979KB AllocSpace bytes, 21(2572KB) LOS objects, 49% free, 12MB/24MB, paused 563us,7.094ms total 95.626ms
+D/DynamitePackage( 6507): Instantiating com.google.android.gms.ads.ChimeraAdManagerCreatorImpl
+I/Ads     ( 6507): This request is sent from a test device.
+W/ConnectionStatusConfig( 6507): Dynamic lookup for intent failed for action: com.google.android.gms.ads.service.START
+I/flutter ( 6507): ⚠️ Interstitial Ad not ready
+D/DynamitePackage( 6507): Instantiating com.google.android.gms.ads.ChimeraAdManagerCreatorImpl
+I/Ads     ( 6507): This request is sent from a test device.
+W/Ads     ( 6507): Not retrying to fetch app settings
+E/FA      ( 6507): Missing google_app_id. Firebase Analytics disabled. See https://goo.gl/NAOOOI
+I/DynamiteModule( 6507): Considering local module com.google.android.gms.ads.dynamite:0 and remote module com.google.android.gms.ads.dynamite:244410203
+I/DynamiteModule( 6507): Selected remote version of com.google.android.gms.ads.dynamite, version >= 244410203
+I/upreet.rewardly( 6507): AssetManager2(0x71eaf4502758) locale list changing from [] to [en-US]
+I/upreet.rewardly( 6507): AssetManager2(0x71eaf45049b8) locale list changing from [] to [en-US]
+I/flutter ( 6507): ✅ Banner Ad loaded
+I/Ads     ( 6507): Ad failed to load : 3
+I/flutter ( 6507): ❌ Interstitial Ad failed to load: No fill.
+I/PlatformViewsController( 6507): Hosting view in view hierarchy for platform view: 3
+I/PlatformViewsController( 6507): PlatformView is using SurfaceProducer backend
+I/upreet.rewardly( 6507): Background concurrent mark compact GC freed 8962KB AllocSpace bytes, 31(2824KB) LOS objects, 49% free, 13MB/26MB, paused 1.025ms,5.467ms total 165.066ms
+I/flutter ( 6507): ✅ Game result recorded (BATCH): tictactoe for yCxe646Sx2SvmlHa6EuAqxLaWEt1 - WIN (+₹0.08)
+I/Ads     ( 6507): This request is sent from a test device.
+W/ConnectionStatusConfig( 6507): Dynamic lookup for intent failed for action: com.google.android.gms.ads.service.START
+I/Ads     ( 6507): This request is sent from a test device.
+I/Ads     ( 6507): This request is sent from a test device.
+W/Ads     ( 6507): Not retrying to fetch app settings
+W/Firestore( 6507): (24.11.0) [WriteStream]: (ce1f99f) Stream closed with status: Status{code=PERMISSION_DENIED, description=Missing or insufficient permissions., cause=null}.
+W/Ads     ( 6507): Not retrying to fetch app settings
+W/Firestore( 6507): (24.11.0) [Firestore]: Write failed at users/yCxe646Sx2SvmlHa6EuAqxLaWEt1: Status{code=PERMISSION_DENIED, description=Missing or insufficient permissions., cause=null}
+I/flutter ( 6507): ❌ Error recording game result: [cloud_firestore/permission-denied] The caller does not have permission to execute the specified operation.
+I/flutter ( 6507): Error recording game: [cloud_firestore/permission-denied] The caller does not have permission to execute the specified operation.
+E/FA      ( 6507): Missing google_app_id. Firebase Analytics disabled. See https://goo.gl/NAOOOI
+I/DynamiteModule( 6507): Considering local module com.google.android.gms.ads.dynamite:0 and remote module com.google.android.gms.ads.dynamite:244410203
+I/DynamiteModule( 6507): Selected remote version of com.google.android.gms.ads.dynamite, version >= 244410203
+I/upreet.rewardly( 6507): AssetManager2(0x71eaf45004f8) locale list changing from [] to [en-US]
+I/upreet.rewardly( 6507): AssetManager2(0x71eaf45030b8) locale list changing from [] to [en-US]
+I/flutter ( 6507): ✅ Banner Ad loaded
+I/upreet.rewardly( 6507): Background concurrent mark compact GC freed 6309KB AllocSpace bytes, 49(5688KB) LOS objects, 49% free, 16MB/32MB, paused 1.308ms,6.075ms total 175.092ms
+I/DynamiteModule( 6507): Considering local module com.google.android.gms.ads.dynamite:0 and remote module com.google.android.gms.ads.dynamite:244410203
+I/DynamiteModule( 6507): Selected remote version of com.google.android.gms.ads.dynamite, version >= 244410203
+I/upreet.rewardly( 6507): AssetManager2(0x71eaf45030b8) locale list changing from [] to [en-US]
+I/upreet.rewardly( 6507): AssetManager2(0x71eaf450adb8) locale list changing from [] to [en-US]
+I/DynamiteModule( 6507): Considering local module com.google.android.gms.ads.dynamite:0 and remote module com.google.android.gms.ads.dynamite:244410203
+I/DynamiteModule( 6507): Selected remote version of com.google.android.gms.ads.dynamite, version >= 244410203
+I/flutter ( 6507): ✅ Banner Ad loaded
+I/flutter ( 6507): ✅ Banner Ad loaded
+I/Ads     ( 6507): JS: type=omidSupported&time=2025-11-25T14%3A06%3A34.673Z&message=Found%20OMID%20JS%20environment&event=undefined (https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js:6)
+I/chromium( 6507): [INFO:CONSOLE(6)] "type=omidSupported&time=2025-11-25T14%3A06%3A34.673Z&message=Found%20OMID%20JS%20environment&event=undefined", source: https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js (6)
+I/Ads     ( 6507): JS: type=omidSessionStarted&time=2025-11-25T14%3A06%3A34.448Z&message=Session%20started&event=%7B%22adSessionId%22%3A%221389e541-f0b2-409e-b867-b7488c36197a%22%2C%22timestamp%22%3A1764079594448%2C%22type%22%3A%22sessionStart%22%2C%22data%22%3A%7B%22context%22%3A%7B%22apiVersion%22%3A%221.0%22%2C%22accessMode%22%3A%22limited%22%2C%22environment%22%3A%22app%22%2C%22omidJsInfo%22%3A%7B%22omidImplementer%22%3A%22omsdk%22%2C%22serviceVersion%22%3A%221.5.2-google26%22%2C%22sessionClientVersion%22%3A%221.4.10-google_20240110%22%2C%22partnerName%22%3A%22Google%22%2C%22partnerVersion%22%3A%220.8%22%7D%2C%22sessionOwner%22%3A%22native%22%2C%22adSessionType%22%3A%22html%22%2C%22deviceInfo%22%3A%7B%22deviceType%22%3A%22Google%3B%20sdk_gphone64_x86_64%22%2C%22osVersion%22%3A%2236%22%2C%22os%22%3A%22Android%22%7D%2C%22deviceCategory%22%3A%22mobile%22%2C%22supports%22%3A%5B%22clid%22%2C%22vlid%22%5D%2C%22omidNativeInfo%22%3A%7B%22partnerName%22%3A%22Google%22%2C%22partnerVersion%22%3A%22244410999.244410000%22%7D%2C%22app%22%3A%7B%22libraryVersion%22%3A%221.5.2-google_20241009%22%2C%22appId%22%3A%22com.supreet.rewardly%22%7D%2C%22customReferenceData%22%3A%22%22%2C%22canMeasureVisibility%22%3Atrue%7D%2C%22impressionType%22%3A%22onePixel%22%2C%22mediaType%22%3A%22display%22%2C%22creativeType%22%3A%22htmlDisplay%22%2C%22supportsLoadedEvent%22%3Atrue%2C%22pageUrl%22%3Anull%2C%22contentUrl%22%3Anull%2C%22verificationParameters%22%3A%22%22%7D%7D (https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js:6)
+I/chromium( 6507): [INFO:CONSOLE(6)] "type=omidSessionStarted&time=2025-11-25T14%3A06%3A34.448Z&message=Session%20started&event=%7B%22adSessionId%22%3A%221389e541-f0b2-409e-b867-b7488c36197a%22%2C%22timestamp%22%3A1764079594448%2C%22type%22%3A%22sessionStart%22%2C%22data%22%3A%7B%22context%22%3A%7B%22apiVersion%22%3A%221.0%22%2C%22accessMode%22%3A%22limited%22%2C%22environment%22%3A%22app%22%2C%22omidJsInfo%22%3A%7B%22omidImplementer%22%3A%22omsdk%22%2C%22serviceVersion%22%3A%221.5.2-google26%22%2C%22sessionClientVersion%22%3A%221.4.10-google_20240110%22%2C%22partnerName%22%3A%22Google%22%2C%22partnerVersion%22%3A%220.8%22%7D%2C%22sessionOwner%22%3A%22native%22%2C%22adSessionType%22%3A%22html%22%2C%22deviceInfo%22%3A%7B%22deviceType%22%3A%22Google%3B%20sdk_gphone64_x86_64%22%2C%22osVersion%22%3A%2236%22%2C%22os%22%3A%22Android%22%7D%2C%22deviceCategory%22%3A%22mobile%22%2C%22supports%22%3A%5B%22clid%22%2C%22vlid%22%5D%2C%22omidNativeInfo%22%3A%7B%22partnerName%22%3A%22Google%22%2C%22partnerVersion%22%3A%22244410999.244410000%22%7D%2C%22app%22%3A%7B%22libraryVersion%22%3A%221.5.2-google_20241009%22%2C%22appId%22%3A%22com.supreet.rewardly%22%7D%2C%22customReferenceData%22%3A%22%22%2C%22canMeasureVisibility%22%3Atrue%7D%2C%22impressionType%22%3A%22onePixel%22%2C%22mediaType%22%3A%22display%22%2C%22creativeType%22%3A%22htmlDisplay%22%2C%22supportsLoadedEvent%22%3Atrue%2C%22pageUrl%22%3Anull%2C%22contentUrl%22%3Anull%2C%22verificationParameters%22%3A%22%22%7D%7D", source: https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js (6)
+I/Ads     ( 6507): JS: type=omidImpression&time=2025-11-25T14%3A06%3A34.488Z&message=Impression%20event%20occurred&event=%7B%22adSessionId%22%3A%221389e541-f0b2-409e-b867-b7488c36197a%22%2C%22timestamp%22%3A1764079594488%2C%22type%22%3A%22impression%22%2C%22data%22%3A%7B%22impressionType%22%3A%22onePixel%22%2C%22mediaType%22%3A%22display%22%2C%22creativeType%22%3A%22htmlDisplay%22%7D%7D (https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js:6)
+I/chromium( 6507): [INFO:CONSOLE(6)] "type=omidImpression&time=2025-11-25T14%3A06%3A34.488Z&message=Impression%20event%20occurred&event=%7B%22adSessionId%22%3A%221389e541-f0b2-409e-b867-b7488c36197a%22%2C%22timestamp%22%3A1764079594488%2C%22type%22%3A%22impression%22%2C%22data%22%3A%7B%22impressionType%22%3A%22onePixel%22%2C%22mediaType%22%3A%22display%22%2C%22creativeType%22%3A%22htmlDisplay%22%7D%7D", source: https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js (6)
+I/Ads     ( 6507): JS: type=omidLoaded&time=2025-11-25T14%3A06%3A34.476Z&message=Loaded%20event%20occurred&event=%7B%22adSessionId%22%3A%221389e541-f0b2-409e-b867-b7488c36197a%22%2C%22timestamp%22%3A1764079594476%2C%22type%22%3A%22loaded%22%2C%22data%22%3A%7B%22impressionType%22%3A%22onePixel%22%2C%22mediaType%22%3A%22display%22%2C%22creativeType%22%3A%22htmlDisplay%22%7D%7D (https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js:6)
+I/chromium( 6507): [INFO:CONSOLE(6)] "type=omidLoaded&time=2025-11-25T14%3A06%3A34.476Z&message=Loaded%20event%20occurred&event=%7B%22adSessionId%22%3A%221389e541-f0b2-409e-b867-b7488c36197a%22%2C%22timestamp%22%3A1764079594476%2C%22type%22%3A%22loaded%22%2C%22data%22%3A%7B%22impressionType%22%3A%22onePixel%22%2C%22mediaType%22%3A%22display%22%2C%22creativeType%22%3A%22htmlDisplay%22%7D%7D", source: https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js (6)
+I/flutter ( 6507): ⚠️ Rewarded Ad not ready
+I/Ads     ( 6507): JS: type=omidMeasurementBelow&time=2025-11-25T14%3A06%3A35.348Z&message=Geometry%20change%20event%20occurred&event=%7B%22adSessionId%22%3A%221389e541-f0b2-409e-b867-b7488c36197a%22%2C%22timestamp%22%3A1764079595348%2C%22type%22%3A%22geometryChange%22%2C%22data%22%3A%7B%22viewport%22%3A%7B%22width%22%3A392.7272644042969%2C%22height%22%3A698.1818237304688%7D%2C%22adView%22%3A%7B%22percentageInView%22%3A0%2C%22pixelsInView%22%3A0%2C%22reasons%22%3A%5B%22clipped%22%2C%22obstructed%22%5D%2C%22geometry%22%3A%7B%22width%22%3A320%2C%22height%22%3A49.818180084228516%2C%22x%22%3A-61.818180084228516%2C%22y%22%3A648%2C%22pixels%22%3A15941.817626953125%7D%2C%22onScreenGeometry%22%3A%7B%22width%22%3A258.1818199157715%2C%22height%22%3A49.818180084228516%2C%22x%22%3A0%2C%22y%22%3A648%2C%22pixels%22%3A0%2C%22obstructions%22%3A%5B%7B%22width%22%3A392.7272644042969%2C%22height%22%3A50.181819915771484%2C%22x%22%3A0%2C%22y%22%3A648%7D%5D%2C%22friendlyObstructions%22%3A%5B%5D%7D%7D%2C%22declaredFriendlyObstructions%22%3A0%7D%7D (https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js:6)
+I/chromium( 6507): [INFO:CONSOLE(6)] "type=omidMeasurementBelow&time=2025-11-25T14%3A06%3A35.348Z&message=Geometry%20change%20event%20occurred&event=%7B%22adSessionId%22%3A%221389e541-f0b2-409e-b867-b7488c36197a%22%2C%22timestamp%22%3A1764079595348%2C%22type%22%3A%22geometryChange%22%2C%22data%22%3A%7B%22viewport%22%3A%7B%22width%22%3A392.7272644042969%2C%22height%22%3A698.1818237304688%7D%2C%22adView%22%3A%7B%22percentageInView%22%3A0%2C%22pixelsInView%22%3A0%2C%22reasons%22%3A%5B%22clipped%22%2C%22obstructed%22%5D%2C%22geometry%22%3A%7B%22width%22%3A320%2C%22height%22%3A49.818180084228516%2C%22x%22%3A-61.818180084228516%2C%22y%22%3A648%2C%22pixels%22%3A15941.817626953125%7D%2C%22onScreenGeometry%22%3A%7B%22width%22%3A258.1818199157715%2C%22height%22%3A49.818180084228516%2C%22x%22%3A0%2C%22y%22%3A648%2C%22pixels%22%3A0%2C%22obstructions%22%3A%5B%7B%22width%22%3A392.7272644042969%2C%22height%22%3A50.181819915771484%2C%22x%22%3A0%2C%22y%22%3A648%7D%5D%2C%22friendlyObstructions%22%3A%5B%5D%7D%7D%2C%22declaredFriendlyObstructions%22%3A0%7D%7D", source: https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js (6)
+I/DynamiteModule( 6507): Considering local module com.google.android.gms.ads.dynamite:0 and remote module com.google.android.gms.ads.dynamite:244410203
+I/DynamiteModule( 6507): Selected remote version of com.google.android.gms.ads.dynamite, version >= 244410203
+V/DynamiteModule( 6507): Dynamite loader version >= 2, using loadModule2NoCrashUtils
+I/Ads     ( 6507): This request is sent from a test device.
+W/Ads     ( 6507): Not retrying to fetch app settings
+I/Ads     ( 6507): JS: type=omidLegacyViewable&time=2025-11-25T14%3A06%3A36.777Z&message=A%20viewable%20event%20occurred.&event=undefined (https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js:6)
+I/chromium( 6507): [INFO:CONSOLE(6)] "type=omidLegacyViewable&time=2025-11-25T14%3A06%3A36.777Z&message=A%20viewable%20event%20occurred.&event=undefined", source: https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js (6)
+E/FA      ( 6507): Missing google_app_id. Firebase Analytics disabled. See https://goo.gl/NAOOOI
+I/Ads     ( 6507): Ad failed to load : 3
+I/flutter ( 6507): ❌ Rewarded Ad failed to load: No fill.
+W/WindowOnBackDispatcher( 6507): sendCancelIfRunning: isInProgress=false callback=io.flutter.embedding.android.FlutterActivity$1@1c80bd6
+I/Ads     ( 6507): JS: type=omidMeasurementBelow&time=2025-11-25T14%3A06%3A39.770Z&message=Geometry%20change%20event%20occurred&event=%7B%22adSessionId%22%3A%221389e541-f0b2-409e-b867-b7488c36197a%22%2C%22timestamp%22%3A1764079599770%2C%22type%22%3A%22geometryChange%22%2C%22data%22%3A%7B%22viewport%22%3A%7B%22width%22%3A392.7272644042969%2C%22height%22%3A698.1818237304688%7D%2C%22adView%22%3A%7B%22percentageInView%22%3A8%2C%22pixelsInView%22%3A1248.3631439208984%2C%22reasons%22%3A%5B%22clipped%22%2C%22obstructed%22%5D%2C%22geometry%22%3A%7B%22width%22%3A320%2C%22height%22%3A49.818180084228516%2C%22x%22%3A-36%2C%22y%22%3A648%2C%22pixels%22%3A15941.817626953125%7D%2C%22onScreenGeometry%22%3A%7B%22width%22%3A284%2C%22height%22%3A49.818180084228516%2C%22x%22%3A0%2C%22y%22%3A648%2C%22pixels%22%3A1248.3631439208984%2C%22obstructions%22%3A%5B%7B%22width%22%3A392.7272644042969%2C%22height%22%3A50.181819915771484%2C%22x%22%3A25.81818199157715%2C%22y%22%3A648%7D%5D%2C%22friendlyObstructions%22%3A%5B%5D%7D%7D%2C%22declaredFriendlyObstructions%22%3A0%7D%7D (https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js:6)
+I/chromium( 6507): [INFO:CONSOLE(6)] "type=omidMeasurementBelow&time=2025-11-25T14%3A06%3A39.770Z&message=Geometry%20change%20event%20occurred&event=%7B%22adSessionId%22%3A%221389e541-f0b2-409e-b867-b7488c36197a%22%2C%22timestamp%22%3A1764079599770%2C%22type%22%3A%22geometryChange%22%2C%22data%22%3A%7B%22viewport%22%3A%7B%22width%22%3A392.7272644042969%2C%22height%22%3A698.1818237304688%7D%2C%22adView%22%3A%7B%22percentageInView%22%3A8%2C%22pixelsInView%22%3A1248.3631439208984%2C%22reasons%22%3A%5B%22clipped%22%2C%22obstructed%22%5D%2C%22geometry%22%3A%7B%22width%22%3A320%2C%22height%22%3A49.818180084228516%2C%22x%22%3A-36%2C%22y%22%3A648%2C%22pixels%22%3A15941.817626953125%7D%2C%22onScreenGeometry%22%3A%7B%22width%22%3A284%2C%22height%22%3A49.818180084228516%2C%22x%22%3A0%2C%22y%22%3A648%2C%22pixels%22%3A1248.3631439208984%2C%22obstructions%22%3A%5B%7B%22width%22%3A392.7272644042969%2C%22height%22%3A50.181819915771484%2C%22x%22%3A25.81818199157715%2C%22y%22%3A648%7D%5D%2C%22friendlyObstructions%22%3A%5B%5D%7D%7D%2C%22declaredFriendlyObstructions%22%3A0%7D%7D", source: https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js (6)
+W/Ads     ( 6507): #004 The webview is destroyed. Ignoring action.
+W/Ads     ( 6507): #004 The webview is destroyed. Ignoring action.
+W/Ads     ( 6507): #004 The webview is destroyed. Ignoring action.
+I/Ads     ( 6507): JS: type=omidMeasurementAbove&time=2025-11-25T14%3A06%3A40.526Z&message=Geometry%20change%20event%20occurred&event=%7B%22adSessionId%22%3A%221389e541-f0b2-409e-b867-b7488c36197a%22%2C%22timestamp%22%3A1764079600526%2C%22type%22%3A%22geometryChange%22%2C%22data%22%3A%7B%22viewport%22%3A%7B%22width%22%3A392.7272644042969%2C%22height%22%3A698.1818237304688%7D%2C%22adView%22%3A%7B%22percentageInView%22%3A100%2C%22pixelsInView%22%3A15941.817626953125%2C%22reasons%22%3A%5B%5D%2C%22geometry%22%3A%7B%22width%22%3A320%2C%22height%22%3A49.818180084228516%2C%22x%22%3A36.3636360168457%2C%22y%22%3A648%2C%22pixels%22%3A15941.817626953125%7D%2C%22onScreenGeometry%22%3A%7B%22width%22%3A320%2C%22height%22%3A49.818180084228516%2C%22x%22%3A36.3636360168457%2C%22y%22%3A648%2C%22pixels%22%3A15941.817626953125%2C%22obstructions%22%3A%5B%5D%2C%22friendlyObstructions%22%3A%5B%5D%7D%7D%2C%22declaredFriendlyObstructions%22%3A0%7D%7D (https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js:6)
+I/chromium( 6507): [INFO:CONSOLE(6)] "type=omidMeasurementAbove&time=2025-11-25T14%3A06%3A40.526Z&message=Geometry%20change%20event%20occurred&event=%7B%22adSessionId%22%3A%221389e541-f0b2-409e-b867-b7488c36197a%22%2C%22timestamp%22%3A1764079600526%2C%22type%22%3A%22geometryChange%22%2C%22data%22%3A%7B%22viewport%22%3A%7B%22width%22%3A392.7272644042969%2C%22height%22%3A698.1818237304688%7D%2C%22adView%22%3A%7B%22percentageInView%22%3A100%2C%22pixelsInView%22%3A15941.817626953125%2C%22reasons%22%3A%5B%5D%2C%22geometry%22%3A%7B%22width%22%3A320%2C%22height%22%3A49.818180084228516%2C%22x%22%3A36.3636360168457%2C%22y%22%3A648%2C%22pixels%22%3A15941.817626953125%7D%2C%22onScreenGeometry%22%3A%7B%22width%22%3A320%2C%22height%22%3A49.818180084228516%2C%22x%22%3A36.3636360168457%2C%22y%22%3A648%2C%22pixels%22%3A15941.817626953125%2C%22obstructions%22%3A%5B%5D%2C%22friendlyObstructions%22%3A%5B%5D%7D%7D%2C%22declaredFriendlyObstructions%22%3A0%7D%7D", source: https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js (6)
+I/Ads     ( 6507): JS: type=omidViewable&time=2025-11-25T14%3A06%3A41.716Z&message=A%20viewable%20event%20occurred.&event=undefined (https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js:6)
+I/chromium( 6507): [INFO:CONSOLE(6)] "type=omidViewable&time=2025-11-25T14%3A06%3A41.716Z&message=A%20viewable%20event%20occurred.&event=undefined", source: https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js (6)
+I/Ads     ( 6507): JS: type=omidMeasurementAboveViewable&time=2025-11-25T14%3A06%3A44.800Z&message=Geometry%20change%20event%20occurred&event=%7B%22adSessionId%22%3A%221389e541-f0b2-409e-b867-b7488c36197a%22%2C%22timestamp%22%3A1764079604800%2C%22type%22%3A%22geometryChange%22%2C%22data%22%3A%7B%22viewport%22%3A%7B%22width%22%3A392.7272644042969%2C%22height%22%3A698.1818237304688%7D%2C%22adView%22%3A%7B%22percentageInView%22%3A87%2C%22pixelsInView%22%3A13894.743369866992%2C%22reasons%22%3A%5B%22clipped%22%5D%2C%22geometry%22%3A%7B%22width%22%3A320%2C%22height%22%3A49.818180084228516%2C%22x%22%3A-41.09090805053711%2C%22y%22%3A648%2C%22pixels%22%3A15941.817626953125%7D%2C%22onScreenGeometry%22%3A%7B%22width%22%3A278.9090919494629%2C%22height%22%3A49.818180084228516%2C%22x%22%3A0%2C%22y%22%3A648%2C%22pixels%22%3A13894.743369866992%2C%22obstructions%22%3A%5B%5D%2C%22friendlyObstructions%22%3A%5B%5D%7D%7D%2C%22declaredFriendlyObstructions%22%3A0%7D%7D (https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js:6)
+I/chromium( 6507): [INFO:CONSOLE(6)] "type=omidMeasurementAboveViewable&time=2025-11-25T14%3A06%3A44.800Z&message=Geometry%20change%20event%20occurred&event=%7B%22adSessionId%22%3A%221389e541-f0b2-409e-b867-b7488c36197a%22%2C%22timestamp%22%3A1764079604800%2C%22type%22%3A%22geometryChange%22%2C%22data%22%3A%7B%22viewport%22%3A%7B%22width%22%3A392.7272644042969%2C%22height%22%3A698.1818237304688%7D%2C%22adView%22%3A%7B%22percentageInView%22%3A87%2C%22pixelsInView%22%3A13894.743369866992%2C%22reasons%22%3A%5B%22clipped%22%5D%2C%22geometry%22%3A%7B%22width%22%3A320%2C%22height%22%3A49.818180084228516%2C%22x%22%3A-41.09090805053711%2C%22y%22%3A648%2C%22pixels%22%3A15941.817626953125%7D%2C%22onScreenGeometry%22%3A%7B%22width%22%3A278.9090919494629%2C%22height%22%3A49.818180084228516%2C%22x%22%3A0%2C%22y%22%3A648%2C%22pixels%22%3A13894.743369866992%2C%22obstructions%22%3A%5B%5D%2C%22friendlyObstructions%22%3A%5B%5D%7D%7D%2C%22declaredFriendlyObstructions%22%3A0%7D%7D", source: https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js (6)
+I/Ads     ( 6507): JS: type=omidMeasurementAboveViewable&time=2025-11-25T14%3A06%3A45.071Z&message=Geometry%20change%20event%20occurred&event=%7B%22adSessionId%22%3A%221389e541-f0b2-409e-b867-b7488c36197a%22%2C%22timestamp%22%3A1764079605071%2C%22type%22%3A%22geometryChange%22%2C%22data%22%3A%7B%22viewport%22%3A%7B%22width%22%3A392.7272644042969%2C%22height%22%3A698.1818237304688%7D%2C%22adView%22%3A%7B%22percentageInView%22%3A81%2C%22pixelsInView%22%3A12862.14839903776%2C%22reasons%22%3A%5B%22clipped%22%5D%2C%22geometry%22%3A%7B%22width%22%3A320%2C%22height%22%3A49.818180084228516%2C%22x%22%3A-61.818180084228516%2C%22y%22%3A648%2C%22pixels%22%3A15941.817626953125%7D%2C%22onScreenGeometry%22%3A%7B%22width%22%3A258.1818199157715%2C%22height%22%3A49.818180084228516%2C%22x%22%3A0%2C%22y%22%3A648%2C%22pixels%22%3A12862.14839903776%2C%22obstructions%22%3A%5B%5D%2C%22friendlyObstructions%22%3A%5B%5D%7D%7D%2C%22declaredFriendlyObstructions%22%3A0%7D%7D (https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js:6)
+I/chromium( 6507): [INFO:CONSOLE(6)] "type=omidMeasurementAboveViewable&time=2025-11-25T14%3A06%3A45.071Z&message=Geometry%20change%20event%20occurred&event=%7B%22adSessionId%22%3A%221389e541-f0b2-409e-b867-b7488c36197a%22%2C%22timestamp%22%3A1764079605071%2C%22type%22%3A%22geometryChange%22%2C%22data%22%3A%7B%22viewport%22%3A%7B%22width%22%3A392.7272644042969%2C%22height%22%3A698.1818237304688%7D%2C%22adView%22%3A%7B%22percentageInView%22%3A81%2C%22pixelsInView%22%3A12862.14839903776%2C%22reasons%22%3A%5B%22clipped%22%5D%2C%22geometry%22%3A%7B%22width%22%3A320%2C%22height%22%3A49.818180084228516%2C%22x%22%3A-61.818180084228516%2C%22y%22%3A648%2C%22pixels%22%3A15941.817626953125%7D%2C%22onScreenGeometry%22%3A%7B%22width%22%3A258.1818199157715%2C%22height%22%3A49.818180084228516%2C%22x%22%3A0%2C%22y%22%3A648%2C%22pixels%22%3A12862.14839903776%2C%22obstructions%22%3A%5B%5D%2C%22friendlyObstructions%22%3A%5B%5D%7D%7D%2C%22declaredFriendlyObstructions%22%3A0%7D%7D", source: https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js (6)
+W/WindowOnBackDispatcher( 6507): sendCancelIfRunning: isInProgress=false callback=io.flutter.embedding.android.FlutterActivity$1@1c80bd6
+I/Ads     ( 6507): JS: type=omidMeasurementAboveViewable&time=2025-11-25T14%3A06%3A46.884Z&message=Geometry%20change%20event%20occurred&event=%7B%22adSessionId%22%3A%221389e541-f0b2-409e-b867-b7488c36197a%22%2C%22timestamp%22%3A1764079606884%2C%22type%22%3A%22geometryChange%22%2C%22data%22%3A%7B%22viewport%22%3A%7B%22width%22%3A392.7272644042969%2C%22height%22%3A698.1818237304688%7D%2C%22adView%22%3A%7B%22percentageInView%22%3A100%2C%22pixelsInView%22%3A15941.817626953125%2C%22reasons%22%3A%5B%5D%2C%22geometry%22%3A%7B%22width%22%3A320%2C%22height%22%3A49.818180084228516%2C%22x%22%3A15.636363983154297%2C%22y%22%3A648%2C%22pixels%22%3A15941.817626953125%7D%2C%22onScreenGeometry%22%3A%7B%22width%22%3A320%2C%22height%22%3A49.818180084228516%2C%22x%22%3A15.636363983154297%2C%22y%22%3A648%2C%22pixels%22%3A15941.817626953125%2C%22obstructions%22%3A%5B%5D%2C%22friendlyObstructions%22%3A%5B%5D%7D%7D%2C%22declaredFriendlyObstructions%22%3A0%7D%7D (https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js:6)
+I/chromium( 6507): [INFO:CONSOLE(6)] "type=omidMeasurementAboveViewable&time=2025-11-25T14%3A06%3A46.884Z&message=Geometry%20change%20event%20occurred&event=%7B%22adSessionId%22%3A%221389e541-f0b2-409e-b867-b7488c36197a%22%2C%22timestamp%22%3A1764079606884%2C%22type%22%3A%22geometryChange%22%2C%22data%22%3A%7B%22viewport%22%3A%7B%22width%22%3A392.7272644042969%2C%22height%22%3A698.1818237304688%7D%2C%22adView%22%3A%7B%22percentageInView%22%3A100%2C%22pixelsInView%22%3A15941.817626953125%2C%22reasons%22%3A%5B%5D%2C%22geometry%22%3A%7B%22width%22%3A320%2C%22height%22%3A49.818180084228516%2C%22x%22%3A15.636363983154297%2C%22y%22%3A648%2C%22pixels%22%3A15941.817626953125%7D%2C%22onScreenGeometry%22%3A%7B%22width%22%3A320%2C%22height%22%3A49.818180084228516%2C%22x%22%3A15.636363983154297%2C%22y%22%3A648%2C%22pixels%22%3A15941.817626953125%2C%22obstructions%22%3A%5B%5D%2C%22friendlyObstructions%22%3A%5B%5D%7D%7D%2C%22declaredFriendlyObstructions%22%3A0%7D%7D", source: https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js (6)
+I/Ads     ( 6507): JS: type=omidMeasurementAboveViewable&time=2025-11-25T14%3A06%3A47.424Z&message=Geometry%20change%20event%20occurred&event=%7B%22adSessionId%22%3A%221389e541-f0b2-409e-b867-b7488c36197a%22%2C%22timestamp%22%3A1764079607424%2C%22type%22%3A%22geometryChange%22%2C%22data%22%3A%7B%22viewport%22%3A%7B%22width%22%3A392.7272644042969%2C%22height%22%3A698.1818237304688%7D%2C%22adView%22%3A%7B%22percentageInView%22%3A100%2C%22pixelsInView%22%3A15941.817626953125%2C%22reasons%22%3A%5B%5D%2C%22geometry%22%3A%7B%22width%22%3A320%2C%22height%22%3A49.818180084228516%2C%22x%22%3A36.3636360168457%2C%22y%22%3A648%2C%22pixels%22%3A15941.817626953125%7D%2C%22onScreenGeometry%22%3A%7B%22width%22%3A320%2C%22height%22%3A49.818180084228516%2C%22x%22%3A36.3636360168457%2C%22y%22%3A648%2C%22pixels%22%3A15941.817626953125%2C%22obstructions%22%3A%5B%5D%2C%22friendlyObstructions%22%3A%5B%5D%7D%7D%2C%22declaredFriendlyObstructions%22%3A0%7D%7D (https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js:6)
+I/chromium( 6507): [INFO:CONSOLE(6)] "type=omidMeasurementAboveViewable&time=2025-11-25T14%3A06%3A47.424Z&message=Geometry%20change%20event%20occurred&event=%7B%22adSessionId%22%3A%221389e541-f0b2-409e-b867-b7488c36197a%22%2C%22timestamp%22%3A1764079607424%2C%22type%22%3A%22geometryChange%22%2C%22data%22%3A%7B%22viewport%22%3A%7B%22width%22%3A392.7272644042969%2C%22height%22%3A698.1818237304688%7D%2C%22adView%22%3A%7B%22percentageInView%22%3A100%2C%22pixelsInView%22%3A15941.817626953125%2C%22reasons%22%3A%5B%5D%2C%22geometry%22%3A%7B%22width%22%3A320%2C%22height%22%3A49.818180084228516%2C%22x%22%3A36.3636360168457%2C%22y%22%3A648%2C%22pixels%22%3A15941.817626953125%7D%2C%22onScreenGeometry%22%3A%7B%22width%22%3A320%2C%22height%22%3A49.818180084228516%2C%22x%22%3A36.3636360168457%2C%22y%22%3A648%2C%22pixels%22%3A15941.817626953125%2C%22obstructions%22%3A%5B%5D%2C%22friendlyObstructions%22%3A%5B%5D%7D%7D%2C%22declaredFriendlyObstructions%22%3A0%7D%7D", source: https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js (6)
+I/Ads     ( 6507): JS: type=omidMeasurementAboveViewable&time=2025-11-25T14%3A06%3A49.450Z&message=Geometry%20change%20event%20occurred&event=%7B%22adSessionId%22%3A%221389e541-f0b2-409e-b867-b7488c36197a%22%2C%22timestamp%22%3A1764079609450%2C%22type%22%3A%22geometryChange%22%2C%22data%22%3A%7B%22viewport%22%3A%7B%22width%22%3A392.7272644042969%2C%22height%22%3A698.1818237304688%7D%2C%22adView%22%3A%7B%22percentageInView%22%3A84%2C%22pixelsInView%22%3A13369.387947145573%2C%22reasons%22%3A%5B%22clipped%22%5D%2C%22geometry%22%3A%7B%22width%22%3A320%2C%22height%22%3A49.818180084228516%2C%22x%22%3A-51.6363639831543%2C%22y%22%3A648%2C%22pixels%22%3A15941.817626953125%7D%2C%22onScreenGeometry%22%3A%7B%22width%22%3A268.3636360168457%2C%22height%22%3A49.818180084228516%2C%22x%22%3A0%2C%22y%22%3A648%2C%22pixels%22%3A13369.387947145573%2C%22obstructions%22%3A%5B%5D%2C%22friendlyObstructions%22%3A%5B%5D%7D%7D%2C%22declaredFriendlyObstructions%22%3A0%7D%7D (https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js:6)
+I/chromium( 6507): [INFO:CONSOLE(6)] "type=omidMeasurementAboveViewable&time=2025-11-25T14%3A06%3A49.450Z&message=Geometry%20change%20event%20occurred&event=%7B%22adSessionId%22%3A%221389e541-f0b2-409e-b867-b7488c36197a%22%2C%22timestamp%22%3A1764079609450%2C%22type%22%3A%22geometryChange%22%2C%22data%22%3A%7B%22viewport%22%3A%7B%22width%22%3A392.7272644042969%2C%22height%22%3A698.1818237304688%7D%2C%22adView%22%3A%7B%22percentageInView%22%3A84%2C%22pixelsInView%22%3A13369.387947145573%2C%22reasons%22%3A%5B%22clipped%22%5D%2C%22geometry%22%3A%7B%22width%22%3A320%2C%22height%22%3A49.818180084228516%2C%22x%22%3A-51.6363639831543%2C%22y%22%3A648%2C%22pixels%22%3A15941.817626953125%7D%2C%22onScreenGeometry%22%3A%7B%22width%22%3A268.3636360168457%2C%22height%22%3A49.818180084228516%2C%22x%22%3A0%2C%22y%22%3A648%2C%22pixels%22%3A13369.387947145573%2C%22obstructions%22%3A%5B%5D%2C%22friendlyObstructions%22%3A%5B%5D%7D%7D%2C%22declaredFriendlyObstructions%22%3A0%7D%7D", source: https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js (6)
+I/Ads     ( 6507): JS: type=omidMeasurementAboveViewable&time=2025-11-25T14%3A06%3A49.568Z&message=Geometry%20change%20event%20occurred&event=%7B%22adSessionId%22%3A%221389e541-f0b2-409e-b867-b7488c36197a%22%2C%22timestamp%22%3A1764079609568%2C%22type%22%3A%22geometryChange%22%2C%22data%22%3A%7B%22viewport%22%3A%7B%22width%22%3A392.7272644042969%2C%22height%22%3A698.1818237304688%7D%2C%22adView%22%3A%7B%22percentageInView%22%3A83%2C%22pixelsInView%22%3A13188.23091138099%2C%22reasons%22%3A%5B%22clipped%22%5D%2C%22geometry%22%3A%7B%22width%22%3A320%2C%22height%22%3A49.818180084228516%2C%22x%22%3A-55.272727966308594%2C%22y%22%3A648%2C%22pixels%22%3A15941.817626953125%7D%2C%22onScreenGeometry%22%3A%7B%22width%22%3A264.7272720336914%2C%22height%22%3A49.818180084228516%2C%22x%22%3A0%2C%22y%22%3A648%2C%22pixels%22%3A13188.23091138099%2C%22obstructions%22%3A%5B%5D%2C%22friendlyObstructions%22%3A%5B%5D%7D%7D%2C%22declaredFriendlyObstructions%22%3A0%7D%7D (https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js:6)
+I/chromium( 6507): [INFO:CONSOLE(6)] "type=omidMeasurementAboveViewable&time=2025-11-25T14%3A06%3A49.568Z&message=Geometry%20change%20event%20occurred&event=%7B%22adSessionId%22%3A%221389e541-f0b2-409e-b867-b7488c36197a%22%2C%22timestamp%22%3A1764079609568%2C%22type%22%3A%22geometryChange%22%2C%22data%22%3A%7B%22viewport%22%3A%7B%22width%22%3A392.7272644042969%2C%22height%22%3A698.1818237304688%7D%2C%22adView%22%3A%7B%22percentageInView%22%3A83%2C%22pixelsInView%22%3A13188.23091138099%2C%22reasons%22%3A%5B%22clipped%22%5D%2C%22geometry%22%3A%7B%22width%22%3A320%2C%22height%22%3A49.818180084228516%2C%22x%22%3A-55.272727966308594%2C%22y%22%3A648%2C%22pixels%22%3A15941.817626953125%7D%2C%22onScreenGeometry%22%3A%7B%22width%22%3A264.7272720336914%2C%22height%22%3A49.818180084228516%2C%22x%22%3A0%2C%22y%22%3A648%2C%22pixels%22%3A13188.23091138099%2C%22obstructions%22%3A%5B%5D%2C%22friendlyObstructions%22%3A%5B%5D%7D%7D%2C%22declaredFriendlyObstructions%22%3A0%7D%7D", source: https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js (6)
+I/Ads     ( 6507): JS: type=omidMeasurementAboveViewable&time=2025-11-25T14%3A06%3A49.587Z&message=Geometry%20change%20event%20occurred&event=%7B%22adSessionId%22%3A%221389e541-f0b2-409e-b867-b7488c36197a%22%2C%22timestamp%22%3A1764079609587%2C%22type%22%3A%22geometryChange%22%2C%22data%22%3A%7B%22viewport%22%3A%7B%22width%22%3A392.7272644042969%2C%22height%22%3A698.1818237304688%7D%2C%22adView%22%3A%7B%22percentageInView%22%3A81%2C%22pixelsInView%22%3A12862.14839903776%2C%22reasons%22%3A%5B%22clipped%22%5D%2C%22geometry%22%3A%7B%22width%22%3A320%2C%22height%22%3A49.818180084228516%2C%22x%22%3A-61.818180084228516%2C%22y%22%3A648%2C%22pixels%22%3A15941.817626953125%7D%2C%22onScreenGeometry%22%3A%7B%22width%22%3A258.1818199157715%2C%22height%22%3A49.818180084228516%2C%22x%22%3A0%2C%22y%22%3A648%2C%22pixels%22%3A12862.14839903776%2C%22obstructions%22%3A%5B%5D%2C%22friendlyObstructions%22%3A%5B%5D%7D%7D%2C%22declaredFriendlyObstructions%22%3A0%7D%7D (https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js:6)
+I/chromium( 6507): [INFO:CONSOLE(6)] "type=omidMeasurementAboveViewable&time=2025-11-25T14%3A06%3A49.587Z&message=Geometry%20change%20event%20occurred&event=%7B%22adSessionId%22%3A%221389e541-f0b2-409e-b867-b7488c36197a%22%2C%22timestamp%22%3A1764079609587%2C%22type%22%3A%22geometryChange%22%2C%22data%22%3A%7B%22viewport%22%3A%7B%22width%22%3A392.7272644042969%2C%22height%22%3A698.1818237304688%7D%2C%22adView%22%3A%7B%22percentageInView%22%3A81%2C%22pixelsInView%22%3A12862.14839903776%2C%22reasons%22%3A%5B%22clipped%22%5D%2C%22geometry%22%3A%7B%22width%22%3A320%2C%22height%22%3A49.818180084228516%2C%22x%22%3A-61.818180084228516%2C%22y%22%3A648%2C%22pixels%22%3A15941.817626953125%7D%2C%22onScreenGeometry%22%3A%7B%22width%22%3A258.1818199157715%2C%22height%22%3A49.818180084228516%2C%22x%22%3A0%2C%22y%22%3A648%2C%22pixels%22%3A12862.14839903776%2C%22obstructions%22%3A%5B%5D%2C%22friendlyObstructions%22%3A%5B%5D%7D%7D%2C%22declaredFriendlyObstructions%22%3A0%7D%7D", source: https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js (6)
+W/WindowOnBackDispatcher( 6507): sendCancelIfRunning: isInProgress=false callback=io.flutter.embedding.android.FlutterActivity$1@1c80bd6
+I/Ads     ( 6507): JS: type=omidMeasurementAboveViewable&time=2025-11-25T14%3A06%3A52.302Z&message=Geometry%20change%20event%20occurred&event=%7B%22adSessionId%22%3A%221389e541-f0b2-409e-b867-b7488c36197a%22%2C%22timestamp%22%3A1764079612302%2C%22type%22%3A%22geometryChange%22%2C%22data%22%3A%7B%22viewport%22%3A%7B%22width%22%3A392.7272644042969%2C%22height%22%3A698.1818237304688%7D%2C%22adView%22%3A%7B%22percentageInView%22%3A100%2C%22pixelsInView%22%3A15941.817626953125%2C%22reasons%22%3A%5B%5D%2C%22geometry%22%3A%7B%22width%22%3A320%2C%22height%22%3A49.818180084228516%2C%22x%22%3A8%2C%22y%22%3A648%2C%22pixels%22%3A15941.817626953125%7D%2C%22onScreenGeometry%22%3A%7B%22width%22%3A320%2C%22height%22%3A49.818180084228516%2C%22x%22%3A8%2C%22y%22%3A648%2C%22pixels%22%3A15941.817626953125%2C%22obstructions%22%3A%5B%5D%2C%22friendlyObstructions%22%3A%5B%5D%7D%7D%2C%22declaredFriendlyObstructions%22%3A0%7D%7D (https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js:6)
+I/chromium( 6507): [INFO:CONSOLE(6)] "type=omidMeasurementAboveViewable&time=2025-11-25T14%3A06%3A52.302Z&message=Geometry%20change%20event%20occurred&event=%7B%22adSessionId%22%3A%221389e541-f0b2-409e-b867-b7488c36197a%22%2C%22timestamp%22%3A1764079612302%2C%22type%22%3A%22geometryChange%22%2C%22data%22%3A%7B%22viewport%22%3A%7B%22width%22%3A392.7272644042969%2C%22height%22%3A698.1818237304688%7D%2C%22adView%22%3A%7B%22percentageInView%22%3A100%2C%22pixelsInView%22%3A15941.817626953125%2C%22reasons%22%3A%5B%5D%2C%22geometry%22%3A%7B%22width%22%3A320%2C%22height%22%3A49.818180084228516%2C%22x%22%3A8%2C%22y%22%3A648%2C%22pixels%22%3A15941.817626953125%7D%2C%22onScreenGeometry%22%3A%7B%22width%22%3A320%2C%22height%22%3A49.818180084228516%2C%22x%22%3A8%2C%22y%22%3A648%2C%22pixels%22%3A15941.817626953125%2C%22obstructions%22%3A%5B%5D%2C%22friendlyObstructions%22%3A%5B%5D%7D%7D%2C%22declaredFriendlyObstructions%22%3A0%7D%7D", source: https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js (6)
+I/Ads     ( 6507): JS: type=omidMeasurementAboveViewable&time=2025-11-25T14%3A06%3A52.329Z&message=Geometry%20change%20event%20occurred&event=%7B%22adSessionId%22%3A%221389e541-f0b2-409e-b867-b7488c36197a%22%2C%22timestamp%22%3A1764079612329%2C%22type%22%3A%22geometryChange%22%2C%22data%22%3A%7B%22viewport%22%3A%7B%22width%22%3A392.7272644042969%2C%22height%22%3A698.1818237304688%7D%2C%22adView%22%3A%7B%22percentageInView%22%3A100%2C%22pixelsInView%22%3A15941.817626953125%2C%22reasons%22%3A%5B%5D%2C%22geometry%22%3A%7B%22width%22%3A320%2C%22height%22%3A49.818180084228516%2C%22x%22%3A36%2C%22y%22%3A648%2C%22pixels%22%3A15941.817626953125%7D%2C%22onScreenGeometry%22%3A%7B%22width%22%3A320%2C%22height%22%3A49.818180084228516%2C%22x%22%3A36%2C%22y%22%3A648%2C%22pixels%22%3A15941.817626953125%2C%22obstructions%22%3A%5B%5D%2C%22friendlyObstructions%22%3A%5B%5D%7D%7D%2C%22declaredFriendlyObstructions%22%3A0%7D%7D (https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js:6)
+I/chromium( 6507): [INFO:CONSOLE(6)] "type=omidMeasurementAboveViewable&time=2025-11-25T14%3A06%3A52.329Z&message=Geometry%20change%20event%20occurred&event=%7B%22adSessionId%22%3A%221389e541-f0b2-409e-b867-b7488c36197a%22%2C%22timestamp%22%3A1764079612329%2C%22type%22%3A%22geometryChange%22%2C%22data%22%3A%7B%22viewport%22%3A%7B%22width%22%3A392.7272644042969%2C%22height%22%3A698.1818237304688%7D%2C%22adView%22%3A%7B%22percentageInView%22%3A100%2C%22pixelsInView%22%3A15941.817626953125%2C%22reasons%22%3A%5B%5D%2C%22geometry%22%3A%7B%22width%22%3A320%2C%22height%22%3A49.818180084228516%2C%22x%22%3A36%2C%22y%22%3A648%2C%22pixels%22%3A15941.817626953125%7D%2C%22onScreenGeometry%22%3A%7B%22width%22%3A320%2C%22height%22%3A49.818180084228516%2C%22x%22%3A36%2C%22y%22%3A648%2C%22pixels%22%3A15941.817626953125%2C%22obstructions%22%3A%5B%5D%2C%22friendlyObstructions%22%3A%5B%5D%7D%7D%2C%22declaredFriendlyObstructions%22%3A0%7D%7D", source: https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js (6)
+I/Ads     ( 6507): JS: type=omidMeasurementAboveViewable&time=2025-11-25T14%3A06%3A52.336Z&message=Geometry%20change%20event%20occurred&event=%7B%22adSessionId%22%3A%221389e541-f0b2-409e-b867-b7488c36197a%22%2C%22timestamp%22%3A1764079612336%2C%22type%22%3A%22geometryChange%22%2C%22data%22%3A%7B%22viewport%22%3A%7B%22width%22%3A392.7272644042969%2C%22height%22%3A698.1818237304688%7D%2C%22adView%22%3A%7B%22percentageInView%22%3A100%2C%22pixelsInView%22%3A15941.817626953125%2C%22reasons%22%3A%5B%5D%2C%22geometry%22%3A%7B%22width%22%3A320%2C%22height%22%3A49.818180084228516%2C%22x%22%3A36.3636360168457%2C%22y%22%3A648%2C%22pixels%22%3A15941.817626953125%7D%2C%22onScreenGeometry%22%3A%7B%22width%22%3A320%2C%22height%22%3A49.818180084228516%2C%22x%22%3A36.3636360168457%2C%22y%22%3A648%2C%22pixels%22%3A15941.817626953125%2C%22obstructions%22%3A%5B%5D%2C%22friendlyObstructions%22%3A%5B%5D%7D%7D%2C%22declaredFriendlyObstructions%22%3A0%7D%7D (https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js:6)
+I/chromium( 6507): [INFO:CONSOLE(6)] "type=omidMeasurementAboveViewable&time=2025-11-25T14%3A06%3A52.336Z&message=Geometry%20change%20event%20occurred&event=%7B%22adSessionId%22%3A%221389e541-f0b2-409e-b867-b7488c36197a%22%2C%22timestamp%22%3A1764079612336%2C%22type%22%3A%22geometryChange%22%2C%22data%22%3A%7B%22viewport%22%3A%7B%22width%22%3A392.7272644042969%2C%22height%22%3A698.1818237304688%7D%2C%22adView%22%3A%7B%22percentageInView%22%3A100%2C%22pixelsInView%22%3A15941.817626953125%2C%22reasons%22%3A%5B%5D%2C%22geometry%22%3A%7B%22width%22%3A320%2C%22height%22%3A49.818180084228516%2C%22x%22%3A36.3636360168457%2C%22y%22%3A648%2C%22pixels%22%3A15941.817626953125%7D%2C%22onScreenGeometry%22%3A%7B%22width%22%3A320%2C%22height%22%3A49.818180084228516%2C%22x%22%3A36.3636360168457%2C%22y%22%3A648%2C%22pixels%22%3A15941.817626953125%2C%22obstructions%22%3A%5B%5D%2C%22friendlyObstructions%22%3A%5B%5D%7D%7D%2C%22declaredFriendlyObstructions%22%3A0%7D%7D", source: https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js (6)
+I/Ads     ( 6507): JS: type=omidMeasurementAboveViewable&time=2025-11-25T14%3A06%3A54.361Z&message=Geometry%20change%20event%20occurred&event=%7B%22adSessionId%22%3A%221389e541-f0b2-409e-b867-b7488c36197a%22%2C%22timestamp%22%3A1764079614361%2C%22type%22%3A%22geometryChange%22%2C%22data%22%3A%7B%22viewport%22%3A%7B%22width%22%3A392.7272644042969%2C%22height%22%3A698.1818237304688%7D%2C%22adView%22%3A%7B%22percentageInView%22%3A83%2C%22pixelsInView%22%3A13278.809524283919%2C%22reasons%22%3A%5B%22clipped%22%5D%2C%22geometry%22%3A%7B%22width%22%3A320%2C%22height%22%3A49.818180084228516%2C%22x%22%3A-53.45454406738281%2C%22y%22%3A648%2C%22pixels%22%3A15941.817626953125%7D%2C%22onScreenGeometry%22%3A%7B%22width%22%3A266.5454559326172%2C%22height%22%3A49.818180084228516%2C%22x%22%3A0%2C%22y%22%3A648%2C%22pixels%22%3A13278.809524283919%2C%22obstructions%22%3A%5B%5D%2C%22friendlyObstructions%22%3A%5B%5D%7D%7D%2C%22declaredFriendlyObstructions%22%3A0%7D%7D (https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js:6)
+I/chromium( 6507): [INFO:CONSOLE(6)] "type=omidMeasurementAboveViewable&time=2025-11-25T14%3A06%3A54.361Z&message=Geometry%20change%20event%20occurred&event=%7B%22adSessionId%22%3A%221389e541-f0b2-409e-b867-b7488c36197a%22%2C%22timestamp%22%3A1764079614361%2C%22type%22%3A%22geometryChange%22%2C%22data%22%3A%7B%22viewport%22%3A%7B%22width%22%3A392.7272644042969%2C%22height%22%3A698.1818237304688%7D%2C%22adView%22%3A%7B%22percentageInView%22%3A83%2C%22pixelsInView%22%3A13278.809524283919%2C%22reasons%22%3A%5B%22clipped%22%5D%2C%22geometry%22%3A%7B%22width%22%3A320%2C%22height%22%3A49.818180084228516%2C%22x%22%3A-53.45454406738281%2C%22y%22%3A648%2C%22pixels%22%3A15941.817626953125%7D%2C%22onScreenGeometry%22%3A%7B%22width%22%3A266.5454559326172%2C%22height%22%3A49.818180084228516%2C%22x%22%3A0%2C%22y%22%3A648%2C%22pixels%22%3A13278.809524283919%2C%22obstructions%22%3A%5B%5D%2C%22friendlyObstructions%22%3A%5B%5D%7D%7D%2C%22declaredFriendlyObstructions%22%3A0%7D%7D", source: https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js (6)
+I/Ads     ( 6507): JS: type=omidMeasurementAboveViewable&time=2025-11-25T14%3A06%3A54.389Z&message=Geometry%20change%20event%20occurred&event=%7B%22adSessionId%22%3A%221389e541-f0b2-409e-b867-b7488c36197a%22%2C%22timestamp%22%3A1764079614389%2C%22type%22%3A%22geometryChange%22%2C%22data%22%3A%7B%22viewport%22%3A%7B%22width%22%3A392.7272644042969%2C%22height%22%3A698.1818237304688%7D%2C%22adView%22%3A%7B%22percentageInView%22%3A81%2C%22pixelsInView%22%3A12862.14839903776%2C%22reasons%22%3A%5B%22clipped%22%5D%2C%22geometry%22%3A%7B%22width%22%3A320%2C%22height%22%3A49.818180084228516%2C%22x%22%3A-61.818180084228516%2C%22y%22%3A648%2C%22pixels%22%3A15941.817626953125%7D%2C%22onScreenGeometry%22%3A%7B%22width%22%3A258.1818199157715%2C%22height%22%3A49.818180084228516%2C%22x%22%3A0%2C%22y%22%3A648%2C%22pixels%22%3A12862.14839903776%2C%22obstructions%22%3A%5B%5D%2C%22friendlyObstructions%22%3A%5B%5D%7D%7D%2C%22declaredFriendlyObstructions%22%3A0%7D%7D (https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js:6)
+I/chromium( 6507): [INFO:CONSOLE(6)] "type=omidMeasurementAboveViewable&time=2025-11-25T14%3A06%3A54.389Z&message=Geometry%20change%20event%20occurred&event=%7B%22adSessionId%22%3A%221389e541-f0b2-409e-b867-b7488c36197a%22%2C%22timestamp%22%3A1764079614389%2C%22type%22%3A%22geometryChange%22%2C%22data%22%3A%7B%22viewport%22%3A%7B%22width%22%3A392.7272644042969%2C%22height%22%3A698.1818237304688%7D%2C%22adView%22%3A%7B%22percentageInView%22%3A81%2C%22pixelsInView%22%3A12862.14839903776%2C%22reasons%22%3A%5B%22clipped%22%5D%2C%22geometry%22%3A%7B%22width%22%3A320%2C%22height%22%3A49.818180084228516%2C%22x%22%3A-61.818180084228516%2C%22y%22%3A648%2C%22pixels%22%3A15941.817626953125%7D%2C%22onScreenGeometry%22%3A%7B%22width%22%3A258.1818199157715%2C%22height%22%3A49.818180084228516%2C%22x%22%3A0%2C%22y%22%3A648%2C%22pixels%22%3A12862.14839903776%2C%22obstructions%22%3A%5B%5D%2C%22friendlyObstructions%22%3A%5B%5D%7D%7D%2C%22declaredFriendlyObstructions%22%3A0%7D%7D", source: https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js (6)
+I/upreet.rewardly( 6507): Background concurrent mark compact GC freed 13MB AllocSpace bytes, 25(3560KB) LOS objects, 49% free, 15MB/30MB, paused 676us,5.448ms total 241.747ms
+I/flutter ( 6507): Response status: 400
+I/flutter ( 6507): Response body: {"error":"Missing required fields","status":400}
+I/flutter ( 6507): Game result error: ApiException(400): Missing required fields
+I/flutter ( 6507): ❌ Error recording game win: ApiException(400): Missing required fields
+I/flutter ( 6507): Error recording game: ApiException(400): Missing required fields
+I/Ads     ( 6507): This request is sent from a test device.
+W/ConnectionStatusConfig( 6507): Dynamic lookup for intent failed for action: com.google.android.gms.ads.service.START
+I/upreet.rewardly( 6507): Compiler allocated 4159KB to compile void m.alb.a(byte[], byte[])
+E/FA      ( 6507): Missing google_app_id. Firebase Analytics disabled. See https://goo.gl/NAOOOI
+I/Ads     ( 6507): This request is sent from a test device.
+I/Ads     ( 6507): This request is sent from a test device.
+W/Ads     ( 6507): Not retrying to fetch app settings
+W/Ads     ( 6507): Not retrying to fetch app settings
+I/DynamiteModule( 6507): Considering local module com.google.android.gms.ads.dynamite:0 and remote module com.google.android.gms.ads.dynamite:244410203
+I/DynamiteModule( 6507): Selected remote version of com.google.android.gms.ads.dynamite, version >= 244410203
+I/upreet.rewardly( 6507): AssetManager2(0x71eaf44f0af8) locale list changing from [] to [en-US]
+I/upreet.rewardly( 6507): AssetManager2(0x71eaf44e9758) locale list changing from [] to [en-US]
+I/flutter ( 6507): ✅ Banner Ad loaded
+E/FA      ( 6507): Missing google_app_id. Firebase Analytics disabled. See https://goo.gl/NAOOOI
+I/upreet.rewardly( 6507): Background concurrent mark compact GC freed 10MB AllocSpace bytes, 42(4588KB) LOS objects, 49% free, 16MB/33MB, paused 1.980ms,11.836ms total 289.583ms
+I/Choreographer( 6507): Skipped 30 frames!  The application may be doing too much work on its main thread.
+I/DynamiteModule( 6507): Considering local module com.google.android.gms.ads.dynamite:0 and remote module com.google.android.gms.ads.dynamite:244410203
+I/DynamiteModule( 6507): Selected remote version of com.google.android.gms.ads.dynamite, version >= 244410203
+I/upreet.rewardly( 6507): AssetManager2(0x71eaf4508e78) locale list changing from [] to [en-US]
+I/upreet.rewardly( 6507): AssetManager2(0x71eaf44bd518) locale list changing from [] to [en-US]
+I/DynamiteModule( 6507): Considering local module com.google.android.gms.ads.dynamite:0 and remote module com.google.android.gms.ads.dynamite:244410203
+I/DynamiteModule( 6507): Selected remote version of com.google.android.gms.ads.dynamite, version >= 244410203
+I/flutter ( 6507): ✅ Banner Ad loaded
+I/flutter ( 6507): ✅ Banner Ad loaded
+I/Ads     ( 6507): JS: type=omidSessionFinished&time=2025-11-25T14%3A07%3A47.646Z&message=Session%20finished&event=%7B%22adSessionId%22%3A%221389e541-f0b2-409e-b867-b7488c36197a%22%2C%22timestamp%22%3A1764079667646%2C%22type%22%3A%22sessionFinish%22%7D (https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js:6)
+I/chromium( 6507): [INFO:CONSOLE(6)] "type=omidSessionFinished&time=2025-11-25T14%3A07%3A47.646Z&message=Session%20finished&event=%7B%22adSessionId%22%3A%221389e541-f0b2-409e-b867-b7488c36197a%22%2C%22timestamp%22%3A1764079667646%2C%22type%22%3A%22sessionFinish%22%7D", source: https://pagead2.googlesyndication.com/omsdk/releases/live/omid_test_verification_bin.js (6)
+W/WindowOnBackDispatcher( 6507): sendCancelIfRunning: isInProgress=false callback=io.flutter.embedding.android.FlutterActivity$1@1c80bd6
+W/WindowOnBackDispatcher( 6507): sendCancelIfRunning: isInProgress=false callback=io.flutter.embedding.android.FlutterActivity$1@1c80bd6
+Lost connection to device.

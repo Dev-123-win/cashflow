@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:iconsax/iconsax.dart';
 import '../core/theme/app_theme.dart';
 import '../widgets/floating_dock.dart';
 import 'home/home_screen.dart';
@@ -24,10 +25,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   ];
 
   final List<IconData> _icons = [
-    Icons.home_rounded,
-    Icons.assignment_rounded,
-    Icons.sports_esports_rounded,
-    Icons.casino_rounded,
+    Iconsax.home_2,
+    Iconsax.task_square,
+    Iconsax.game,
+    Iconsax.medal_star,
   ];
 
   final List<String> _labels = ['Home', 'Tasks', 'Games', 'Spin'];
