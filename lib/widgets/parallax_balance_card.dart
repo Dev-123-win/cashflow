@@ -24,17 +24,24 @@ class _ParallaxBalanceCardState extends State<ParallaxBalanceCard> {
   double _y = 0;
   StreamSubscription<AccelerometerEvent>? _subscription;
 
+  int _lastUpdate = 0;
+
   @override
   void initState() {
     super.initState();
     _subscription = accelerometerEventStream().listen((
       AccelerometerEvent event,
     ) {
-      if (mounted) {
-        setState(() {
-          _x = event.x;
-          _y = event.y;
-        });
+      final now = DateTime.now().millisecondsSinceEpoch;
+      // Throttle to ~30fps (33ms)
+      if (now - _lastUpdate > 33) {
+        if (mounted) {
+          setState(() {
+            _x = event.x;
+            _y = event.y;
+          });
+          _lastUpdate = now;
+        }
       }
     });
   }

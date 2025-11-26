@@ -33,33 +33,52 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   final List<String> _labels = ['Home', 'Tasks', 'Games', 'Spin'];
 
+  DateTime? _lastPressedAt;
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
-      extendBody: true, // Important for floating dock
-      body: Stack(
-        children: [
-          // Main Content
-          IndexedStack(index: _currentIndex, children: _screens),
+    return WillPopScope(
+      onWillPop: () async {
+        final now = DateTime.now();
+        if (_lastPressedAt == null ||
+            now.difference(_lastPressedAt!) > const Duration(seconds: 2)) {
+          _lastPressedAt = now;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Press back again to exit'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+          return false;
+        }
+        return true;
+      },
+      child: Scaffold(
+        backgroundColor: AppTheme.backgroundColor,
+        extendBody: true, // Important for floating dock
+        body: Stack(
+          children: [
+            // Main Content
+            IndexedStack(index: _currentIndex, children: _screens),
 
-          // Floating Dock
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: SafeArea(
-              child: FloatingDock(
-                currentIndex: _currentIndex,
-                onTap: (index) {
-                  setState(() {
-                    _currentIndex = index;
-                  });
-                },
-                icons: _icons,
-                labels: _labels,
+            // Floating Dock
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: SafeArea(
+                child: FloatingDock(
+                  currentIndex: _currentIndex,
+                  onTap: (index) {
+                    setState(() {
+                      _currentIndex = index;
+                    });
+                  },
+                  icons: _icons,
+                  labels: _labels,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

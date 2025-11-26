@@ -3,7 +3,9 @@ import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../services/quiz_service.dart';
 import '../../services/cooldown_service.dart';
+import '../../services/cloudflare_workers_service.dart';
 import '../../providers/user_provider.dart';
+import '../../widgets/custom_dialog.dart';
 
 class QuizScreen extends StatefulWidget {
   const QuizScreen({super.key});
@@ -89,6 +91,31 @@ class _QuizScreenState extends State<QuizScreen> {
       final score = _quizService.calculateScore(_questions, _answers);
       final userProvider = context.read<UserProvider>();
 
+      // Check backend health
+      final cloudflareService = CloudflareWorkersService();
+      final isBackendHealthy = await cloudflareService.healthCheck();
+      if (!isBackendHealthy) {
+        if (mounted) {
+          showDialog(
+            context: context,
+            builder: (context) => CustomDialog(
+              title: 'Connection Error',
+              emoji: '⚠️',
+              content: const Text(
+                'Cannot connect to server. Quiz result not saved.',
+              ),
+              actions: [
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('OK'),
+                ),
+              ],
+            ),
+          );
+        }
+        return;
+      }
+
       // Record quiz result with time spent
       debugPrint('Quiz completed in ${timeSpent}s');
       await _quizService.recordQuizResult(
@@ -121,8 +148,8 @@ class _QuizScreenState extends State<QuizScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: Text(score['message']),
+      builder: (context) => CustomDialog(
+        title: score['message'],
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -152,14 +179,14 @@ class _QuizScreenState extends State<QuizScreen> {
           ],
         ),
         actions: [
-          TextButton(
+          ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
               _resetQuiz();
             },
             child: const Text('Try Again'),
           ),
-          TextButton(
+          OutlinedButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Go Back'),
           ),

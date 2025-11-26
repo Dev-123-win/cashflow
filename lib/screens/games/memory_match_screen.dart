@@ -3,7 +3,9 @@ import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../services/game_service.dart';
 import '../../services/cooldown_service.dart';
+import '../../services/cloudflare_workers_service.dart';
 import '../../providers/user_provider.dart';
+import '../../widgets/custom_dialog.dart';
 
 class MemoryMatchScreen extends StatefulWidget {
   const MemoryMatchScreen({super.key});
@@ -23,6 +25,8 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
   late AnimationController _matchAnimation;
   late AnimationController _matchPulseAnimation;
   late AnimationController _successAnimation;
+  bool _isPreviewMode = true;
+  int _previewSeconds = 3;
 
   @override
   void initState() {
@@ -45,6 +49,15 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
+
+    // Start preview timer
+    Future.delayed(Duration(seconds: _previewSeconds), () {
+      if (mounted) {
+        setState(() {
+          _isPreviewMode = false;
+        });
+      }
+    });
   }
 
   @override
@@ -107,6 +120,32 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
   Future<void> _recordGameWin() async {
     try {
       final userProvider = context.read<UserProvider>();
+
+      // Check backend health
+      final cloudflareService = CloudflareWorkersService();
+      final isBackendHealthy = await cloudflareService.healthCheck();
+      if (!isBackendHealthy) {
+        if (mounted) {
+          showDialog(
+            context: context,
+            builder: (context) => CustomDialog(
+              title: 'Connection Error',
+              emoji: '⚠️',
+              content: const Text(
+                'Cannot connect to server. Game result not saved.',
+              ),
+              actions: [
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('OK'),
+                ),
+              ],
+            ),
+          );
+        }
+        return;
+      }
+
       final accuracy = _game.getAccuracy();
 
       // Reward based on accuracy: 90%+ = ₹0.75, 70%+ = ₹0.60, else = ₹0.50
@@ -145,65 +184,83 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text('Game Complete! 🎉'),
+      builder: (context) => CustomDialog(
+        title: 'Game Complete!',
+        emoji: '🎉',
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                Column(
-                  children: [
-                    const Text('Moves'),
-                    Text(
-                      '${_game.moves}',
-                      style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
-                Column(
-                  children: [
-                    const Text('Accuracy'),
-                    Text(
-                      '${accuracy.toStringAsFixed(1)}%',
-                      style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: accuracy >= 80
-                                ? Colors.green
-                                : Colors.orange,
-                          ),
-                    ),
-                  ],
+                _buildStatBox(context, 'Moves', '${_game.moves}'),
+                _buildStatBox(
+                  context,
+                  'Accuracy',
+                  '${accuracy.toStringAsFixed(1)}%',
+                  color: accuracy >= 80 ? Colors.green : Colors.orange,
                 ),
               ],
             ),
-            const SizedBox(height: AppTheme.space16),
-            Text(
-              '₹${reward.toStringAsFixed(2)} earned!',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: Colors.green,
-                fontWeight: FontWeight.bold,
+            const SizedBox(height: AppTheme.space24),
+            Container(
+              padding: const EdgeInsets.all(AppTheme.space12),
+              decoration: BoxDecoration(
+                color: Colors.green.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(AppTheme.radiusM),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.monetization_on, color: Colors.green),
+                  const SizedBox(width: 8),
+                  Text(
+                    '₹${reward.toStringAsFixed(2)} earned!',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: Colors.green,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
         ),
         actions: [
-          TextButton(
+          OutlinedButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+          ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
               _resetGame();
             },
             child: const Text('Play Again'),
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Go Back'),
-          ),
         ],
       ),
+    );
+  }
+
+  Widget _buildStatBox(
+    BuildContext context,
+    String label,
+    String value, {
+    Color? color,
+  }) {
+    return Column(
+      children: [
+        Text(label, style: Theme.of(context).textTheme.bodySmall),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+      ],
     );
   }
 
@@ -213,6 +270,15 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
       _selectedIndex1 = null;
       _selectedIndex2 = null;
       _isProcessing = false;
+      _isPreviewMode = true;
+    });
+
+    Future.delayed(Duration(seconds: _previewSeconds), () {
+      if (mounted) {
+        setState(() {
+          _isPreviewMode = false;
+        });
+      }
     });
   }
 
@@ -248,57 +314,72 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Moves',
-                              style: Theme.of(context).textTheme.labelSmall,
+                        if (_isPreviewMode)
+                          Expanded(
+                            child: Center(
+                              child: Text(
+                                'Memorize! Cards flip in $_previewSeconds...',
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(
+                                      color: AppTheme.primaryColor,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                              ),
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${_game.moves}',
-                              style: Theme.of(context).textTheme.headlineSmall
-                                  ?.copyWith(fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Matched',
-                              style: Theme.of(context).textTheme.labelSmall,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${_game.matchedPairs}/6',
-                              style: Theme.of(context).textTheme.headlineSmall
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: AppTheme.primaryColor,
-                                  ),
-                            ),
-                          ],
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              'Reward',
-                              style: Theme.of(context).textTheme.labelSmall,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '₹0.50+',
-                              style: Theme.of(context).textTheme.headlineSmall
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.green,
-                                  ),
-                            ),
-                          ],
-                        ),
+                          )
+                        else ...[
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Moves',
+                                style: Theme.of(context).textTheme.labelSmall,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${_game.moves}',
+                                style: Theme.of(context).textTheme.headlineSmall
+                                    ?.copyWith(fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Matched',
+                                style: Theme.of(context).textTheme.labelSmall,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${_game.matchedPairs}/6',
+                                style: Theme.of(context).textTheme.headlineSmall
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: AppTheme.primaryColor,
+                                    ),
+                              ),
+                            ],
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                'Reward',
+                                style: Theme.of(context).textTheme.labelSmall,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '₹0.50+',
+                                style: Theme.of(context).textTheme.headlineSmall
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.green,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -320,7 +401,8 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
                       mainAxisSpacing: 8,
                       crossAxisSpacing: 8,
                       children: List.generate(12, (index) {
-                        final isRevealed = _game.revealed[index];
+                        final isRevealed =
+                            _game.revealed[index] || _isPreviewMode;
                         final isMatched = _game.matched[index];
                         final card = _game.cards[index];
                         final isSelected =
@@ -328,7 +410,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
                             _selectedIndex2 == index;
 
                         return GestureDetector(
-                          onTap: _isProcessing || isMatched
+                          onTap: _isProcessing || isMatched || _isPreviewMode
                               ? null
                               : () => _handleCardTap(index),
                           child: AnimatedBuilder(

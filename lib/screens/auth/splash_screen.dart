@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
+import '../../services/cloudflare_workers_service.dart';
+import '../../widgets/custom_dialog.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -12,14 +14,59 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    // Navigate to auth after 2 seconds
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        // Check if user is logged in or needs onboarding
-        // For now, just go to login which will handle redirection
-        Navigator.of(context).pushReplacementNamed('/login');
+    _checkBackendHealth();
+  }
+
+  Future<void> _checkBackendHealth() async {
+    // Wait for minimum splash duration
+    await Future.delayed(const Duration(seconds: 2));
+
+    if (!mounted) return;
+
+    try {
+      final isHealthy = await CloudflareWorkersService().healthCheck();
+      if (isHealthy) {
+        _navigateToNextScreen();
+      } else {
+        _showErrorDialog(
+          'Backend is unreachable. Please check your connection.',
+        );
       }
-    });
+    } catch (e) {
+      _showErrorDialog('Connection error: $e');
+    }
+  }
+
+  void _navigateToNextScreen() {
+    if (mounted) {
+      Navigator.of(context).pushReplacementNamed('/login');
+    }
+  }
+
+  void _showErrorDialog(String message) {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => CustomDialog(
+        title: 'Connection Error',
+        emoji: '⚠️',
+        content: Text(message),
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _checkBackendHealth();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryColor,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Retry'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override

@@ -15,6 +15,7 @@ import '../../widgets/error_states.dart';
 import '../../widgets/banner_ad_widget.dart';
 import '../../widgets/zen_card.dart';
 import '../../widgets/scale_button.dart';
+import '../../widgets/custom_dialog.dart';
 
 class SpinScreen extends StatefulWidget {
   const SpinScreen({super.key});
@@ -98,6 +99,18 @@ class _SpinScreenState extends State<SpinScreen> {
       return;
     }
 
+    // Check backend health before spinning
+    final isBackendHealthy = await _cloudflareService.healthCheck();
+    if (!isBackendHealthy) {
+      if (mounted) {
+        StateSnackbar.showError(
+          context,
+          'Cannot connect to server. Please try again later.',
+        );
+      }
+      return;
+    }
+
     setState(() {
       _isSpinning = true;
       _selected = math.Random().nextInt(_rewards.length);
@@ -160,12 +173,9 @@ class _SpinScreenState extends State<SpinScreen> {
     return showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.surfaceColor,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppTheme.radiusL),
-        ),
-        title: const Text('🎉 You Won!', textAlign: TextAlign.center),
+      builder: (context) => CustomDialog(
+        title: '🎉 You Won!',
+        emoji: '🎰',
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -192,7 +202,7 @@ class _SpinScreenState extends State<SpinScreen> {
           ],
         ),
         actions: [
-          TextButton(
+          ElevatedButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Done'),
           ),

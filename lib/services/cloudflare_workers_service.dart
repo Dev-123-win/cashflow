@@ -38,18 +38,23 @@ class CloudflareWorkersService {
     required String deviceId,
   }) async {
     try {
+      final url = '$_baseUrl/api/earn/task';
+      final body = jsonEncode({
+        'userId': userId,
+        'taskId': taskId,
+        'deviceId': deviceId,
+      });
+
+      _logRequest('POST', url, body: body);
+
       final response = await http
           .post(
-            Uri.parse('$_baseUrl/api/earn/task'),
+            Uri.parse(url),
             headers: {
               'Content-Type': 'application/json',
               'Accept': 'application/json',
             },
-            body: jsonEncode({
-              'userId': userId,
-              'taskId': taskId,
-              'deviceId': deviceId,
-            }),
+            body: body,
           )
           .timeout(_timeout);
 
@@ -78,20 +83,25 @@ class CloudflareWorkersService {
     required String deviceId,
   }) async {
     try {
+      final url = '$_baseUrl/api/earn/game';
+      final body = jsonEncode({
+        'userId': userId,
+        'gameId': gameId,
+        'won': won,
+        'score': score,
+        'deviceId': deviceId,
+      });
+
+      _logRequest('POST', url, body: body);
+
       final response = await http
           .post(
-            Uri.parse('$_baseUrl/api/earn/game'),
+            Uri.parse(url),
             headers: {
               'Content-Type': 'application/json',
               'Accept': 'application/json',
             },
-            body: jsonEncode({
-              'userId': userId,
-              'gameId': gameId,
-              'won': won,
-              'score': score,
-              'deviceId': deviceId,
-            }),
+            body: body,
           )
           .timeout(_timeout);
 
@@ -116,18 +126,23 @@ class CloudflareWorkersService {
     required String deviceId,
   }) async {
     try {
+      final url = '$_baseUrl/api/earn/ad';
+      final body = jsonEncode({
+        'userId': userId,
+        'adType': adType,
+        'deviceId': deviceId,
+      });
+
+      _logRequest('POST', url, body: body);
+
       final response = await http
           .post(
-            Uri.parse('$_baseUrl/api/earn/ad'),
+            Uri.parse(url),
             headers: {
               'Content-Type': 'application/json',
               'Accept': 'application/json',
             },
-            body: jsonEncode({
-              'userId': userId,
-              'adType': adType,
-              'deviceId': deviceId,
-            }),
+            body: body,
           )
           .timeout(_timeout);
 
@@ -150,14 +165,19 @@ class CloudflareWorkersService {
     required String deviceId,
   }) async {
     try {
+      final url = '$_baseUrl/api/spin';
+      final body = jsonEncode({'userId': userId, 'deviceId': deviceId});
+
+      _logRequest('POST', url, body: body);
+
       final response = await http
           .post(
-            Uri.parse('$_baseUrl/api/spin'),
+            Uri.parse(url),
             headers: {
               'Content-Type': 'application/json',
               'Accept': 'application/json',
             },
-            body: jsonEncode({'userId': userId, 'deviceId': deviceId}),
+            body: body,
           )
           .timeout(_timeout);
 
@@ -179,11 +199,11 @@ class CloudflareWorkersService {
       // Clamp limit
       limit = limit.clamp(1, 100);
 
+      final url = '$_baseUrl/api/leaderboard?limit=$limit';
+      _logRequest('GET', url);
+
       final response = await http
-          .get(
-            Uri.parse('$_baseUrl/api/leaderboard?limit=$limit'),
-            headers: {'Accept': 'application/json'},
-          )
+          .get(Uri.parse(url), headers: {'Accept': 'application/json'})
           .timeout(_timeout);
 
       final result = _handleResponse(response);
@@ -217,19 +237,24 @@ class CloudflareWorkersService {
         throw ArgumentError('Invalid UPI ID format');
       }
 
+      final url = '$_baseUrl/api/withdrawal/request';
+      final body = jsonEncode({
+        'userId': userId,
+        'amount': amount,
+        'upiId': upiId,
+        'deviceId': deviceId,
+      });
+
+      _logRequest('POST', url, body: body);
+
       final response = await http
           .post(
-            Uri.parse('$_baseUrl/api/withdrawal/request'),
+            Uri.parse(url),
             headers: {
               'Content-Type': 'application/json',
               'Accept': 'application/json',
             },
-            body: jsonEncode({
-              'userId': userId,
-              'amount': amount,
-              'upiId': upiId,
-              'deviceId': deviceId,
-            }),
+            body: body,
           )
           .timeout(_timeout);
 
@@ -248,11 +273,11 @@ class CloudflareWorkersService {
   /// Returns: User daily/monthly stats and earning limits
   Future<Map<String, dynamic>> getUserStats({required String userId}) async {
     try {
+      final url = '$_baseUrl/api/user/stats?userId=$userId';
+      _logRequest('GET', url);
+
       final response = await http
-          .get(
-            Uri.parse('$_baseUrl/api/user/stats?userId=$userId'),
-            headers: {'Accept': 'application/json'},
-          )
+          .get(Uri.parse(url), headers: {'Accept': 'application/json'})
           .timeout(_timeout);
 
       return _handleResponse(response);
@@ -278,19 +303,24 @@ class CloudflareWorkersService {
     String? referralCode,
   }) async {
     try {
+      final url = '$_baseUrl/api/user/create';
+      final body = jsonEncode({
+        'userId': userId,
+        'email': email,
+        'displayName': displayName,
+        'referralCode': referralCode,
+      });
+
+      _logRequest('POST', url, body: body);
+
       final response = await http
           .post(
-            Uri.parse('$_baseUrl/api/user/create'),
+            Uri.parse(url),
             headers: {
               'Content-Type': 'application/json',
               'Accept': 'application/json',
             },
-            body: jsonEncode({
-              'userId': userId,
-              'email': email,
-              'displayName': displayName,
-              'referralCode': referralCode,
-            }),
+            body: body,
           )
           .timeout(_timeout);
 
@@ -309,14 +339,19 @@ class CloudflareWorkersService {
   /// Returns: List of newly unlocked achievement IDs
   Future<List<String>> checkAchievements({required String userId}) async {
     try {
+      final url = '$_baseUrl/api/achievements/check';
+      final body = jsonEncode({'userId': userId});
+
+      _logRequest('POST', url, body: body);
+
       final response = await http
           .post(
-            Uri.parse('$_baseUrl/api/achievements/check'),
+            Uri.parse(url),
             headers: {
               'Content-Type': 'application/json',
               'Accept': 'application/json',
             },
-            body: jsonEncode({'userId': userId}),
+            body: body,
           )
           .timeout(_timeout);
 
@@ -347,20 +382,25 @@ class CloudflareWorkersService {
     String? gameType,
   }) async {
     try {
+      final url = '$_baseUrl/api/transaction/record';
+      final body = jsonEncode({
+        'userId': userId,
+        'type': type,
+        'amount': amount,
+        'description': description,
+        'gameType': gameType,
+      });
+
+      _logRequest('POST', url, body: body);
+
       final response = await http
           .post(
-            Uri.parse('$_baseUrl/api/transaction/record'),
+            Uri.parse(url),
             headers: {
               'Content-Type': 'application/json',
               'Accept': 'application/json',
             },
-            body: jsonEncode({
-              'userId': userId,
-              'type': type,
-              'amount': amount,
-              'description': description,
-              'gameType': gameType,
-            }),
+            body: body,
           )
           .timeout(_timeout);
 
@@ -391,8 +431,13 @@ class CloudflareWorkersService {
 
   /// Parse HTTP response
   Map<String, dynamic> _handleResponse(http.Response response) {
-    debugPrint('Response status: ${response.statusCode}');
-    debugPrint('Response body: ${response.body}');
+    debugPrint('--------------------------------------------------');
+    debugPrint(
+      '📥 RESPONSE: ${response.request?.method} ${response.request?.url}',
+    );
+    debugPrint('Status Code: ${response.statusCode}');
+    debugPrint('Body: ${response.body}');
+    debugPrint('--------------------------------------------------');
 
     try {
       final data = jsonDecode(response.body) as Map<String, dynamic>;
@@ -413,6 +458,16 @@ class CloudflareWorkersService {
         statusCode: response.statusCode,
       );
     }
+  }
+
+  /// Log API Request
+  void _logRequest(String method, String url, {Object? body}) {
+    debugPrint('--------------------------------------------------');
+    debugPrint('📤 REQUEST: $method $url');
+    if (body != null) {
+      debugPrint('Body: $body');
+    }
+    debugPrint('--------------------------------------------------');
   }
 
   /// Validate UPI ID format

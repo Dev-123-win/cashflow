@@ -6,6 +6,7 @@ import '../../models/task_model.dart';
 import '../../services/request_deduplication_service.dart';
 import '../../services/device_fingerprint_service.dart';
 import '../../services/firestore_service.dart';
+import '../../services/cloudflare_workers_service.dart';
 import '../../core/utils/device_utils.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/task_provider.dart';
@@ -60,6 +61,19 @@ class _TasksScreenState extends State<TasksScreen> {
     if (_deviceId == null) {
       if (mounted) {
         StateSnackbar.showWarning(context, 'Getting device info...');
+      }
+      return;
+    }
+
+    // Check backend health
+    final cloudflareService = CloudflareWorkersService();
+    final isBackendHealthy = await cloudflareService.healthCheck();
+    if (!isBackendHealthy) {
+      if (mounted) {
+        StateSnackbar.showError(
+          context,
+          'Cannot connect to server. Please try again later.',
+        );
       }
       return;
     }

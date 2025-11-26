@@ -7,6 +7,7 @@ import '../../services/cloudflare_workers_service.dart';
 import '../../services/fee_calculation_service.dart';
 import '../../providers/user_provider.dart';
 import '../../widgets/error_states.dart';
+import '../../widgets/custom_dialog.dart';
 
 class WithdrawalScreen extends StatefulWidget {
   const WithdrawalScreen({super.key});
@@ -98,6 +99,30 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
       return;
     }
 
+    // Check backend health before proceeding
+    final isBackendHealthy = await _api.healthCheck();
+    if (!isBackendHealthy) {
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => CustomDialog(
+            title: 'Connection Error',
+            emoji: '⚠️',
+            content: const Text(
+              'Cannot connect to server. Please check your internet connection and try again.',
+            ),
+            actions: [
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+      return;
+    }
+
     setState(() => _isProcessing = true);
 
     // Show loading dialog
@@ -105,7 +130,8 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => const AlertDialog(
+        builder: (context) => const CustomDialog(
+          title: 'Processing',
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -143,22 +169,12 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
       if (mounted) {
         showDialog(
           context: context,
-          builder: (context) => AlertDialog(
-            backgroundColor: AppTheme.surfaceColor,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppTheme.radiusL),
-            ),
+          builder: (context) => CustomDialog(
+            title: 'Withdrawal Requested!',
+            emoji: '✅',
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('✅', style: TextStyle(fontSize: 48)),
-                const SizedBox(height: AppTheme.space16),
-                Text(
-                  'Withdrawal Requested!',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: AppTheme.space12),
                 Text(
                   '₹${amount.toStringAsFixed(2)} will be transferred to your UPI in 24-48 hours',
                   style: Theme.of(context).textTheme.bodyMedium,
@@ -170,16 +186,14 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
                   style: Theme.of(context).textTheme.labelSmall,
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: AppTheme.space24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('Great!'),
-                  ),
-                ),
               ],
             ),
+            actions: [
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Great!'),
+              ),
+            ],
           ),
         );
       }

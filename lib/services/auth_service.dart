@@ -90,6 +90,9 @@ class AuthService {
       UserCredential userCredential = await _firebaseAuth
           .signInWithEmailAndPassword(email: email, password: password);
 
+      // Ensure user exists in Firestore (self-healing)
+      await ensureUserExists(userCredential.user!);
+
       // Store locally
       await _prefs.setString('userId', userCredential.user!.uid);
       await _prefs.setString('userEmail', email);
@@ -118,18 +121,8 @@ class AuthService {
         credential,
       );
 
-      // Create user document if new user
-      final userDoc = await _firestore
-          .collection('users')
-          .doc(userCredential.user!.uid)
-          .get();
-      if (!userDoc.exists) {
-        await _createUserInFirestore(
-          userId: userCredential.user!.uid,
-          email: userCredential.user!.email ?? '',
-          displayName: userCredential.user!.displayName ?? 'User',
-        );
-      }
+      // Ensure user exists in Firestore (self-healing)
+      await ensureUserExists(userCredential.user!);
 
       // Store locally
       await _prefs.setString('userId', userCredential.user!.uid);
@@ -186,6 +179,22 @@ class AuthService {
   /// Get saved user ID from local storage
   String? getSavedUserId() {
     return _prefs.getString('userId');
+  }
+
+  /// Ensure user exists in Firestore
+  Future<void> ensureUserExists(User user) async {
+    try {
+      final userDoc = await _firestore.collection('users').doc(user.uid).get();
+      if (!userDoc.exists) {
+        await _createUserInFirestore(
+          userId: user.uid,
+          email: user.email ?? '',
+          displayName: user.displayName ?? 'User',
+        );
+      }
+    } catch (e) {
+      debugPrint('Error ensuring user exists: $e');
+    }
   }
 
   /// Create user document in Firestore via Backend

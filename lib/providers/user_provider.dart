@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import '../models/user_model.dart';
 import '../services/firestore_service.dart';
+import '../services/auth_service.dart';
+import '../services/cloudflare_workers_service.dart';
 
 class UserProvider extends ChangeNotifier {
   User _user = User.empty();
@@ -24,6 +26,12 @@ class UserProvider extends ChangeNotifier {
     try {
       _isLoading = true;
       notifyListeners();
+
+      // Ensure user exists before listening (self-healing)
+      final currentUser = _auth.currentUser;
+      if (currentUser != null) {
+        await AuthService().ensureUserExists(currentUser);
+      }
 
       // Listen to real-time user updates from Firestore
       _userSubscription = _firestoreService
@@ -107,6 +115,18 @@ class UserProvider extends ChangeNotifier {
     if (!_isAuthenticated || _user.userId.isEmpty) return;
 
     try {
+      // Check backend health before refreshing
+      final cloudflareService = CloudflareWorkersService();
+      final isBackendHealthy = await cloudflareService.healthCheck();
+
+      if (!isBackendHealthy) {
+        // If backend is down, we can still try Firestore if offline persistence is enabled,
+        // but for now let's just log it and rely on the stream.
+        debugPrint('Backend unreachable during refreshUser');
+        // We don't throw error here to avoid disrupting UI, just return
+        return;
+      }
+
       final updatedUser = await _firestoreService.getUser(_user.userId);
       _user = updatedUser;
       _error = null;

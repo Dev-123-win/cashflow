@@ -8,10 +8,12 @@ import '../../services/cooldown_service.dart';
 import '../../services/request_deduplication_service.dart';
 import '../../services/device_fingerprint_service.dart';
 import '../../services/firestore_service.dart';
+import '../../services/cloudflare_workers_service.dart';
 import '../../services/ad_service.dart';
 import '../../providers/user_provider.dart';
 import '../../widgets/error_states.dart';
 import '../../widgets/banner_ad_widget.dart';
+import '../../widgets/custom_dialog.dart';
 
 class TicTacToeScreen extends StatefulWidget {
   const TicTacToeScreen({super.key});
@@ -118,7 +120,18 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
         return;
       }
 
-      // Get deduplication and fingerprinting services
+      // Check backend health
+      final cloudflareService = CloudflareWorkersService();
+      final isBackendHealthy = await cloudflareService.healthCheck();
+      if (!isBackendHealthy) {
+        if (mounted) {
+          StateSnackbar.showError(
+            context,
+            'Cannot connect to server. Game result not saved.',
+          );
+        }
+        return;
+      }
       final dedup = Provider.of<RequestDeduplicationService>(
         context,
         listen: false,
@@ -186,8 +199,9 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: Text(title),
+      builder: (context) => CustomDialog(
+        title: title,
+        emoji: won ? '🎉' : '🤝',
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -222,14 +236,14 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
         ),
         actions: [
           if (won)
-            TextButton(
+            ElevatedButton(
               onPressed: () {
                 Navigator.pop(context);
                 _watchBonusAd();
               },
               child: const Text('Watch Ad'),
             ),
-          TextButton(
+          OutlinedButton(
             onPressed: () {
               Navigator.pop(context);
               _resetGame();
