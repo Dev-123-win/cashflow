@@ -4,6 +4,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:async';
+import 'cloudflare_workers_service.dart';
 
 class AuthService {
   static final AuthService _instance = AuthService._internal();
@@ -11,6 +12,7 @@ class AuthService {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final CloudflareWorkersService _backend = CloudflareWorkersService();
   late SharedPreferences _prefs;
 
   factory AuthService() {
@@ -186,32 +188,23 @@ class AuthService {
     return _prefs.getString('userId');
   }
 
-  /// Create user document in Firestore
+  /// Create user document in Firestore via Backend
   Future<void> _createUserInFirestore({
     required String userId,
     required String email,
     required String displayName,
   }) async {
     try {
-      await _firestore.collection('users').doc(userId).set({
-        'userId': userId,
-        'email': email,
-        'displayName': displayName,
-        'totalEarnings': 0.0,
-        'availableBalance': 0.0,
-        'monthlyEarnings': 0.0,
-        'currentStreak': 0,
-        'referralCode': _generateReferralCode(),
-        'createdAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+      await _backend.createUser(
+        userId: userId,
+        email: email,
+        displayName: displayName,
+      );
     } catch (e) {
-      debugPrint('Error creating user in Firestore: $e');
+      debugPrint('Error creating user via backend: $e');
+      // If backend fails, we might want to retry or handle it.
+      // For now, just logging.
     }
-  }
-
-  String _generateReferralCode() {
-    return 'EARN${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
   }
 
   bool _isValidEmail(String email) {

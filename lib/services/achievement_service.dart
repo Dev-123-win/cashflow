@@ -1,9 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'cloudflare_workers_service.dart';
 
 class AchievementService {
   static final AchievementService _instance = AchievementService._internal();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final CloudflareWorkersService _backend = CloudflareWorkersService();
 
   factory AchievementService() {
     return _instance;
@@ -146,142 +148,15 @@ class AchievementService {
     Map<String, dynamic> userStats,
   ) async {
     try {
-      List<String> newAchievements = [];
-      final userDoc = await _firestore.collection('users').doc(userId).get();
-      final userData = userDoc.data() ?? {};
-      final unlockedAchievements = List<String>.from(
-        userData['unlockedAchievements'] ?? [],
-      );
-
-      for (final achievement in allAchievements) {
-        // Skip if already unlocked
-        if (unlockedAchievements.contains(achievement.id)) {
-          continue;
-        }
-
-        // Check if achievement condition is met
-        if (_checkAchievementCondition(achievement.condition, userStats)) {
-          // Unlock achievement
-          unlockedAchievements.add(achievement.id);
-          newAchievements.add(achievement.id);
-
-          // Record achievement unlock in Firestore
-          await _firestore
-              .collection('users')
-              .doc(userId)
-              .collection('achievements')
-              .doc(achievement.id)
-              .set({
-                'achievementId': achievement.id,
-                'name': achievement.name,
-                'description': achievement.description,
-                'icon': achievement.icon,
-                'reward': achievement.reward,
-                'unlockedAt': FieldValue.serverTimestamp(),
-              });
-
-          // Add reward to user balance
-          await _firestore.collection('users').doc(userId).update({
-            'availableBalance': FieldValue.increment(achievement.reward),
-            'totalEarned': FieldValue.increment(achievement.reward),
-          });
-        }
-      }
-
-      // Update user's unlocked achievements list
-      if (newAchievements.isNotEmpty) {
-        await _firestore.collection('users').doc(userId).update({
-          'unlockedAchievements': unlockedAchievements,
-          'achievementCount': unlockedAchievements.length,
-        });
-      }
-
-      return newAchievements;
+      // Logic moved to backend
+      return await _backend.checkAchievements(userId: userId);
     } catch (e) {
       debugPrint('Error checking achievements: $e');
       return [];
     }
   }
 
-  // Check if achievement condition is met
-  bool _checkAchievementCondition(
-    String condition,
-    Map<String, dynamic> stats,
-  ) {
-    try {
-      // Parse condition string and check against stats
-      // Examples: "gamesPlayed >= 1", "totalEarned >= 100", "streak >= 7"
-
-      if (condition.contains('gamesPlayed')) {
-        int games = stats['gamesPlayedTotal'] ?? 0;
-        if (condition.contains('>=')) {
-          int required = int.parse(condition.split('>=')[1].trim());
-          return games >= required;
-        }
-      }
-
-      if (condition.contains('gamesWon')) {
-        int wins = stats['gamesWonTotal'] ?? 0;
-        if (condition.contains('>=')) {
-          int required = int.parse(condition.split('>=')[1].trim());
-          return wins >= required;
-        }
-      }
-
-      if (condition.contains('totalEarned')) {
-        double earned = (stats['totalEarned'] ?? 0).toDouble();
-        if (condition.contains('>=')) {
-          double required = double.parse(condition.split('>=')[1].trim());
-          return earned >= required;
-        }
-      }
-
-      if (condition.contains('streak')) {
-        int streak = stats['streak'] ?? 0;
-        if (condition.contains('>=')) {
-          int required = int.parse(condition.split('>=')[1].trim());
-          return streak >= required;
-        }
-      }
-
-      if (condition.contains('perfectQuiz')) {
-        return stats['lastQuizScore'] == 5; // 5 out of 5
-      }
-
-      if (condition.contains('memoryPerfect')) {
-        return stats['lastMemoryAccuracy'] == 100;
-      }
-
-      if (condition.contains('ticTacWins')) {
-        int ticTacWins = stats['ticTacWinsTotal'] ?? 0;
-        if (condition.contains('>=')) {
-          int required = int.parse(condition.split('>=')[1].trim());
-          return ticTacWins >= required;
-        }
-      }
-
-      if (condition.contains('tasksCompleted')) {
-        int tasks = stats['tasksCompletedTotal'] ?? 0;
-        if (condition.contains('>=')) {
-          int required = int.parse(condition.split('>=')[1].trim());
-          return tasks >= required;
-        }
-      }
-
-      if (condition.contains('withdrawalsCompleted')) {
-        int withdrawals = stats['withdrawalsCompletedTotal'] ?? 0;
-        if (condition.contains('>=')) {
-          int required = int.parse(condition.split('>=')[1].trim());
-          return withdrawals >= required;
-        }
-      }
-
-      return false;
-    } catch (e) {
-      debugPrint('Error checking condition: $e');
-      return false;
-    }
-  }
+  // _checkAchievementCondition removed as logic is now in backend
 
   // Get user's unlocked achievements
   Stream<List<AchievementUnlock>> getUserAchievements(String userId) {

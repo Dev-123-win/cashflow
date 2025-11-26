@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/device_utils.dart';
 import '../../services/cloudflare_workers_service.dart';
 import '../../services/fee_calculation_service.dart';
-import '../../core/utils/device_utils.dart';
 import '../../providers/user_provider.dart';
 import '../../widgets/error_states.dart';
 
@@ -131,8 +131,7 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
 
       // Deduct balance from user
       if (mounted) {
-        final userProvider = context.read<UserProvider>();
-        await userProvider.updateBalance(-amount); // Deduct from balance
+        // Balance update is handled by backend and reflected via UserProvider stream
       }
 
       // Close loading dialog

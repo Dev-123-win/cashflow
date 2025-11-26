@@ -254,8 +254,7 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
           if (user == null) return;
 
           // Add bonus to user balance
-          final userProvider = context.read<UserProvider>();
-          await userProvider.updateBalance(0.10);
+          // Balance update handled by recordGameResult via backend
 
           if (mounted) {
             StateSnackbar.showSuccess(context, 'Bonus ₹0.10 added!');

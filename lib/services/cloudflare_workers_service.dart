@@ -262,6 +262,115 @@ class CloudflareWorkersService {
     }
   }
 
+  /// Create a new user
+  ///
+  /// Parameters:
+  /// - userId: User ID from Firebase Auth
+  /// - email: User email
+  /// - displayName: User display name
+  /// - referralCode: Optional referral code
+  ///
+  /// Returns: Created user data
+  Future<Map<String, dynamic>> createUser({
+    required String userId,
+    required String email,
+    required String displayName,
+    String? referralCode,
+  }) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$_baseUrl/api/user/create'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: jsonEncode({
+              'userId': userId,
+              'email': email,
+              'displayName': displayName,
+              'referralCode': referralCode,
+            }),
+          )
+          .timeout(_timeout);
+
+      return _handleResponse(response);
+    } catch (e) {
+      debugPrint('Create user error: $e');
+      rethrow;
+    }
+  }
+
+  /// Check and unlock achievements
+  ///
+  /// Parameters:
+  /// - userId: User ID from Firebase Auth
+  ///
+  /// Returns: List of newly unlocked achievement IDs
+  Future<List<String>> checkAchievements({required String userId}) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$_baseUrl/api/achievements/check'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: jsonEncode({'userId': userId}),
+          )
+          .timeout(_timeout);
+
+      final result = _handleResponse(response);
+      final newAchievements = result['newAchievements'] as List? ?? [];
+      return newAchievements.cast<String>().toList();
+    } catch (e) {
+      debugPrint('Check achievements error: $e');
+      // Return empty list on error to avoid blocking UI
+      return [];
+    }
+  }
+
+  /// Record generic transaction
+  ///
+  /// Parameters:
+  /// - userId: User ID from Firebase Auth
+  /// - type: Transaction type
+  /// - amount: Amount
+  /// - description: Description
+  ///
+  /// Returns: Transaction record
+  Future<Map<String, dynamic>> recordTransaction({
+    required String userId,
+    required String type,
+    required double amount,
+    required String description,
+    String? gameType,
+  }) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$_baseUrl/api/transaction/record'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: jsonEncode({
+              'userId': userId,
+              'type': type,
+              'amount': amount,
+              'description': description,
+              'gameType': gameType,
+            }),
+          )
+          .timeout(_timeout);
+
+      return _handleResponse(response);
+    } catch (e) {
+      debugPrint('Record transaction error: $e');
+      rethrow;
+    }
+  }
+
   /// Check API health
   ///
   /// Returns: Health status

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import 'cloudflare_workers_service.dart';
 
 class TransactionModel {
   final String id;
@@ -54,6 +55,7 @@ class TransactionModel {
 
 class TransactionService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final CloudflareWorkersService _backend = CloudflareWorkersService();
 
   // Get transaction history for a user
   Stream<List<TransactionModel>> getUserTransactions(
@@ -139,22 +141,16 @@ class TransactionService {
     required String status,
   }) async {
     try {
-      await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('transactions')
-          .add({
-            'userId': userId,
-            'type': type,
-            'amount': amount,
-            'gameType': gameType,
-            'success': success,
-            'timestamp': Timestamp.now(),
-            'description': description,
-            'status': status,
-          });
+      await _backend.recordTransaction(
+        userId: userId,
+        type: type,
+        amount: amount,
+        description: description ?? '',
+        gameType: gameType,
+      );
+      debugPrint('✅ Transaction recorded via Backend');
     } catch (e) {
-      debugPrint('Error recording transaction: $e');
+      debugPrint('❌ Error recording transaction: $e');
       rethrow;
     }
   }
