@@ -14,7 +14,7 @@ import 'screens/auth/splash_screen.dart';
 import 'screens/withdrawal/withdrawal_screen.dart';
 import 'screens/main_navigation_screen.dart';
 import 'services/auth_service.dart';
-import 'services/notification_service.dart';
+import 'services/local_notification_service.dart';
 import 'services/cooldown_service.dart';
 import 'services/request_deduplication_service.dart';
 import 'services/fee_calculation_service.dart';
@@ -62,13 +62,14 @@ void main() async {
     debugPrint('Google Mobile Ads initialization error: $e');
   }
 
-  // Initialize Notification Service
+  // Initialize Local Notification Service
   try {
-    final notificationService = NotificationService();
+    final notificationService = LocalNotificationService();
     await notificationService.initialize();
-    debugPrint('Notification Service initialized successfully');
+    await notificationService.scheduleDailyReminder();
+    debugPrint('Local Notification Service initialized and reminder scheduled');
   } catch (e) {
-    debugPrint('Notification Service initialization error: $e');
+    debugPrint('Local Notification Service initialization error: $e');
   }
 
   // Initialize CooldownService with persistent storage

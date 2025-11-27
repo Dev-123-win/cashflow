@@ -29,6 +29,7 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
   late TicTacToeGame _game;
   bool _isProcessing = false;
   bool _adShownPreGame = false;
+  bool _isGameCompleted = false;
 
   @override
   void initState() {
@@ -42,6 +43,7 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
 
   void _initializeGame() {
     _game = _gameService.createTicTacToeGame();
+    _isGameCompleted = false;
   }
 
   // Show pre-game interstitial ad with 40% probability
@@ -59,7 +61,28 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
   }
 
   Future<void> _handleTap(int index) async {
-    if (_isProcessing || _game.isGameOver || _game.board[index].isNotEmpty) {
+    final user = fb_auth.FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    // Check cooldown
+    final remaining = _cooldownService.getRemainingCooldown(
+      user.uid,
+      'game_tictactoe',
+    );
+    if (remaining > 0) {
+      if (mounted) {
+        StateSnackbar.showWarning(
+          context,
+          'Next game available in ${_cooldownService.formatCooldown(remaining)}',
+        );
+      }
+      return;
+    }
+
+    if (_isProcessing ||
+        _game.isGameOver ||
+        _game.board[index].isNotEmpty ||
+        _isGameCompleted) {
       return;
     }
 
@@ -69,6 +92,7 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
       _game.playerMove(index);
 
       if (_game.isGameOver) {
+        _isGameCompleted = true;
         // Game ended
         if (_game.playerWon()) {
           await _recordGameWin();
@@ -106,7 +130,9 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
         ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
       }
     } finally {
-      setState(() => _isProcessing = false);
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
     }
   }
 
@@ -120,6 +146,17 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
         return;
       }
 
+      // Get providers before async gap
+      final dedup = Provider.of<RequestDeduplicationService>(
+        context,
+        listen: false,
+      );
+      final fingerprint = Provider.of<DeviceFingerprintService>(
+        context,
+        listen: false,
+      );
+      final firestore = FirestoreService();
+
       // Check backend health
       final cloudflareService = CloudflareWorkersService();
       final isBackendHealthy = await cloudflareService.healthCheck();
@@ -132,15 +169,6 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
         }
         return;
       }
-      final dedup = Provider.of<RequestDeduplicationService>(
-        context,
-        listen: false,
-      );
-      final fingerprint = Provider.of<DeviceFingerprintService>(
-        context,
-        listen: false,
-      );
-      final firestore = FirestoreService();
 
       // Get device fingerprint
       final deviceFingerprint = await fingerprint.getDeviceFingerprint();

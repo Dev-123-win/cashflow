@@ -209,8 +209,17 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
 
       // Show error
       if (mounted) {
+        String errorMessage = 'An error occurred';
+        if (e.toString().contains('Please wait')) {
+          errorMessage = 'Please wait 5 minutes between withdrawal requests';
+        } else if (e.toString().contains('Insufficient balance')) {
+          errorMessage = 'Insufficient balance';
+        } else {
+          errorMessage = e.toString().replaceAll('Exception:', '').trim();
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -280,16 +289,15 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
       children: [
         Text(
           label,
-          style: TextStyle(
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
             fontWeight: bold ? FontWeight.bold : FontWeight.normal,
           ),
         ),
         Text(
           value,
-          style: TextStyle(
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
             fontWeight: bold ? FontWeight.bold : FontWeight.normal,
             color: color,
-            fontSize: 16,
           ),
         ),
       ],

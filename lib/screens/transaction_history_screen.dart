@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../core/theme/app_theme.dart';
 import '../services/transaction_service.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import '../core/constants/app_assets.dart';
 import '../providers/user_provider.dart';
 
 class TransactionHistoryScreen extends StatefulWidget {
@@ -29,18 +32,19 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     final currentUser = context.watch<UserProvider>().user;
 
     return Scaffold(
+      backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
         title: const Text('Transaction History'),
         centerTitle: true,
-        backgroundColor: AppTheme.primaryColor,
+        backgroundColor: AppTheme.backgroundColor,
         elevation: 0,
       ),
       body: Column(
         children: [
           // Filter Bar
           Container(
-            color: AppTheme.primaryColor.withValues(alpha: 0.1),
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            color: AppTheme.backgroundColor,
             child: Column(
               children: [
                 SingleChildScrollView(
@@ -76,39 +80,49 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                 Row(
                   children: [
                     Expanded(
-                      child: ElevatedButton.icon(
+                      child: OutlinedButton.icon(
                         onPressed: () =>
                             _selectDate(context, isStartDate: true),
-                        icon: const Icon(Icons.calendar_today),
+                        icon: const Icon(Icons.calendar_today, size: 16),
                         label: Text(
                           _startDate == null
                               ? 'From Date'
-                              : 'From: ${_startDate!.toString().split(' ')[0]}',
+                              : DateFormat('MMM d').format(_startDate!),
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: ElevatedButton.icon(
+                      child: OutlinedButton.icon(
                         onPressed: () =>
                             _selectDate(context, isStartDate: false),
-                        icon: const Icon(Icons.calendar_today),
+                        icon: const Icon(Icons.calendar_today, size: 16),
                         label: Text(
                           _endDate == null
                               ? 'To Date'
-                              : 'To: ${_endDate!.toString().split(' ')[0]}',
+                              : DateFormat('MMM d').format(_endDate!),
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    ElevatedButton.icon(
-                      onPressed: () => setState(() {
-                        _startDate = null;
-                        _endDate = null;
-                      }),
-                      icon: const Icon(Icons.clear),
-                      label: const Text('Clear'),
-                    ),
+                    if (_startDate != null || _endDate != null) ...[
+                      const SizedBox(width: 8),
+                      IconButton(
+                        onPressed: () => setState(() {
+                          _startDate = null;
+                          _endDate = null;
+                        }),
+                        icon: const Icon(Icons.clear, color: Colors.grey),
+                        tooltip: 'Clear dates',
+                      ),
+                    ],
                   ],
                 ),
               ],
@@ -132,14 +146,10 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(
-                          Icons.history_outlined,
-                          size: 64,
-                          color: Colors.grey,
-                        ),
+                        SvgPicture.asset(AppAssets.emptyHistory, height: 200),
                         const SizedBox(height: 16),
                         Text(
-                          'No transactions yet',
+                          'No transactions found',
                           style: Theme.of(
                             context,
                           ).textTheme.titleMedium?.copyWith(color: Colors.grey),
@@ -150,14 +160,12 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                 }
 
                 final transactions = snapshot.data!;
-                double totalAmount = 0;
-                for (var transaction in transactions) {
-                  if (transaction.type == 'earning') {
-                    totalAmount += transaction.amount;
-                  } else if (transaction.type == 'withdrawal') {
-                    totalAmount -= transaction.amount;
-                  }
-                }
+                double totalIncome = transactions
+                    .where((t) => t.type == 'earning')
+                    .fold(0, (sum, t) => sum + t.amount);
+                double totalWithdrawal = transactions
+                    .where((t) => t.type == 'withdrawal')
+                    .fold(0, (sum, t) => sum + t.amount);
 
                 return ListView(
                   padding: const EdgeInsets.symmetric(
@@ -166,111 +174,88 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                   ),
                   children: [
                     // Summary Card
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            AppTheme.primaryColor,
-                            AppTheme.primaryColor.withValues(alpha: 0.7),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppTheme.primaryColor.withValues(alpha: 0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          const Text(
-                            'Total',
-                            style: TextStyle(color: Colors.white, fontSize: 14),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '₹${totalAmount.toStringAsFixed(2)}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              Column(
-                                children: [
-                                  const Text(
-                                    'Transactions',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    '${transactions.length}',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Column(
-                                children: [
-                                  const Text(
-                                    'Earnings',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    '₹${transactions.where((t) => t.type == 'earning').fold<double>(0, (sum, t) => sum + t.amount).toStringAsFixed(2)}',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Column(
-                                children: [
-                                  const Text(
-                                    'Withdrawn',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    '₹${transactions.where((t) => t.type == 'withdrawal').fold<double>(0, (sum, t) => sum + t.amount).toStringAsFixed(2)}',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                    if (_selectedFilter == 'all')
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 20),
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              AppTheme.primaryColor,
+                              AppTheme.secondaryColor,
                             ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
                           ),
-                        ],
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppTheme.primaryColor.withValues(
+                                alpha: 0.3,
+                              ),
+                              blurRadius: 12,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Total Earnings',
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(color: Colors.white70),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '₹${totalIncome.toStringAsFixed(2)}',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .headlineSmall
+                                        ?.copyWith(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              width: 1,
+                              height: 40,
+                              color: Colors.white24,
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Total Withdrawn',
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(color: Colors.white70),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '₹${totalWithdrawal.toStringAsFixed(2)}',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .headlineSmall
+                                        ?.copyWith(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 20),
+
                     // Transaction List
                     ...transactions.map(
                       (transaction) =>
@@ -316,6 +301,18 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
           : (_endDate ?? DateTime.now()),
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: AppTheme.primaryColor,
+              onPrimary: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
 
     if (picked != null) {
@@ -346,19 +343,34 @@ class _FilterChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isSelected = value == selectedValue;
-    return FilterChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (_) => onTap(),
-      backgroundColor: Colors.transparent,
-      selectedColor: AppTheme.primaryColor.withValues(alpha: 0.3),
-      labelStyle: TextStyle(
-        color: isSelected ? AppTheme.primaryColor : Colors.grey,
-        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-      ),
-      side: BorderSide(
-        color: isSelected ? AppTheme.primaryColor : Colors.grey.shade300,
-        width: isSelected ? 2 : 1,
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? AppTheme.primaryColor : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? AppTheme.primaryColor : Colors.grey.shade300,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Text(
+          label,
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+            color: isSelected ? Colors.white : Colors.grey.shade700,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+          ),
+        ),
       ),
     );
   }
@@ -373,11 +385,17 @@ class _TransactionCard extends StatelessWidget {
     if (transaction.type == 'earning') {
       switch (transaction.gameType) {
         case 'tictactoe':
-          return '❌⭕';
+          return '❌';
         case 'memory_match':
           return '🎴';
         case 'quiz':
           return '🧠';
+        case 'spin':
+          return '🎡';
+        case 'task':
+          return '📋';
+        case 'ad':
+          return '📺';
         default:
           return '💰';
       }
@@ -389,20 +407,35 @@ class _TransactionCard extends StatelessWidget {
     return '💳';
   }
 
+  Color _getIconBgColor() {
+    if (transaction.type == 'earning') {
+      return Colors.green.shade50;
+    } else if (transaction.type == 'withdrawal') {
+      return Colors.orange.shade50;
+    }
+    return Colors.grey.shade50;
+  }
+
   String _getTransactionLabel() {
     if (transaction.type == 'earning') {
       switch (transaction.gameType) {
         case 'tictactoe':
-          return 'Tic-Tac-Toe';
+          return 'Tic-Tac-Toe Win';
         case 'memory_match':
-          return 'Memory Match';
+          return 'Memory Match Win';
         case 'quiz':
-          return 'Daily Quiz';
+          return 'Quiz Reward';
+        case 'spin':
+          return 'Daily Spin';
+        case 'task':
+          return 'Task Completed';
+        case 'ad':
+          return 'Ad Reward';
         default:
-          return 'Game Earning';
+          return 'Earning';
       }
     } else if (transaction.type == 'withdrawal') {
-      return 'Withdrawal';
+      return 'Withdrawal Request';
     } else if (transaction.type == 'refund') {
       return 'Refund';
     }
@@ -423,16 +456,15 @@ class _TransactionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border.all(color: Colors.grey.shade200),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -440,20 +472,20 @@ class _TransactionCard extends StatelessWidget {
         children: [
           // Icon
           Container(
-            width: 50,
-            height: 50,
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              shape: BoxShape.circle,
+              color: _getIconBgColor(),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Center(
               child: Text(
                 _getTransactionIcon(),
-                style: const TextStyle(fontSize: 24),
+                style: const TextStyle(fontSize: 22),
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 16),
           // Details
           Expanded(
             child: Column(
@@ -461,64 +493,47 @@ class _TransactionCard extends StatelessWidget {
               children: [
                 Text(
                   _getTransactionLabel(),
-                  style: const TextStyle(
-                    fontSize: 16,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Text(
-                      transaction.timestamp.toString().split('.')[0],
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _getStatusColor().withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        transaction.status.toUpperCase(),
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: _getStatusColor(),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
+                Text(
+                  DateFormat('MMM d, h:mm a').format(transaction.timestamp),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade500),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 12),
-          // Amount
+          // Amount & Status
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
                 '${transaction.type == 'earning' ? '+' : '-'}₹${transaction.amount.toStringAsFixed(2)}',
-                style: TextStyle(
-                  fontSize: 16,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: transaction.type == 'earning'
                       ? Colors.green
                       : Colors.red,
                 ),
               ),
-              const SizedBox(height: 2),
-              Text(
-                transaction.type == 'earning' ? 'Earned' : 'Withdrawn',
-                style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+              const SizedBox(height: 4),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: _getStatusColor().withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  transaction.status.toUpperCase(),
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: _getStatusColor(),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ],
           ),

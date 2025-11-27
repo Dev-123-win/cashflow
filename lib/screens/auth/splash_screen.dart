@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import '../../core/constants/app_assets.dart';
 import '../../core/theme/app_theme.dart';
 import '../../services/cloudflare_workers_service.dart';
 import '../../widgets/custom_dialog.dart';
@@ -97,7 +99,15 @@ class _SplashScreenState extends State<SplashScreen> {
                     ),
                   ],
                 ),
-                child: const Text('💰', style: TextStyle(fontSize: 64)),
+                child: SvgPicture.asset(
+                  AppAssets.appLogo,
+                  width: 80,
+                  height: 80,
+                  colorFilter: const ColorFilter.mode(
+                    Colors.white,
+                    BlendMode.srcIn,
+                  ),
+                ),
               ),
               const SizedBox(height: AppTheme.space32),
               Text(

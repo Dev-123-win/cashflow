@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_fortune_wheel/flutter_fortune_wheel.dart';
 import 'package:confetti/confetti.dart';
 import 'dart:math' as math;
+import 'dart:async';
 import '../../core/theme/app_theme.dart';
 import '../../core/constants/app_constants.dart';
 import '../../services/cooldown_service.dart';
@@ -30,11 +31,12 @@ class _SpinScreenState extends State<SpinScreen> {
   late final CloudflareWorkersService _cloudflareService;
   late final List<double> _rewards = AppConstants.spinRewards;
   late ConfettiController _confettiController;
+  final StreamController<int> _selectedController =
+      StreamController<int>.broadcast();
 
   bool _isSpinning = false;
   double? _lastSpinReward;
   bool _adShownPreSpin = false;
-  int _selected = 0;
 
   @override
   void initState() {
@@ -51,6 +53,7 @@ class _SpinScreenState extends State<SpinScreen> {
   @override
   void dispose() {
     _confettiController.dispose();
+    _selectedController.close();
     super.dispose();
   }
 
@@ -113,17 +116,11 @@ class _SpinScreenState extends State<SpinScreen> {
 
     setState(() {
       _isSpinning = true;
-      _selected = math.Random().nextInt(_rewards.length);
     });
 
-    // Wait for animation to finish (FortuneWheel default duration is usually around 5s, but we can control it via physics or just wait)
-    // Actually FortuneWheel takes the selected index stream.
-    // But here we are using a static list and just setting state.
-    // Wait, FortuneWheel needs a Stream<int> for selected.
-    // I'll use a StreamController or just rely on the widget's internal state if I can, but standard usage is Stream.
-    // Let's assume standard usage for now, but I need to adapt to the existing code structure which didn't use Stream.
-    // Ah, the previous code used `FortuneWheel` but didn't show the Stream controller setup.
-    // I will implement it properly with StreamController.
+    // Select random index for visual spin
+    final index = math.Random().nextInt(_rewards.length);
+    _selectedController.add(index);
   }
 
   // Helper to record reward after spin completes
@@ -228,6 +225,15 @@ class _SpinScreenState extends State<SpinScreen> {
         children: [
           Consumer<UserProvider>(
             builder: (context, userProvider, _) {
+              final user = fb_auth.FirebaseAuth.instance.currentUser;
+              final remaining = user != null
+                  ? _cooldownService.getRemainingCooldown(
+                      user.uid,
+                      'spin_daily',
+                    )
+                  : 0;
+              final canSpin = remaining <= 0 && !_isSpinning;
+
               return Column(
                 children: [
                   Expanded(
@@ -251,7 +257,7 @@ class _SpinScreenState extends State<SpinScreen> {
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      'Win up to ₹1.00',
+                                      'Win up to ₹10.00',
                                       style: Theme.of(context)
                                           .textTheme
                                           .bodyMedium
@@ -297,7 +303,7 @@ class _SpinScreenState extends State<SpinScreen> {
                               alignment: Alignment.center,
                               children: [
                                 FortuneWheel(
-                                  selected: Stream.value(_selected),
+                                  selected: _selectedController.stream,
                                   animateFirst: false,
                                   items: List.generate(
                                     _rewards.length,
@@ -351,9 +357,9 @@ class _SpinScreenState extends State<SpinScreen> {
 
                           // Spin Button
                           ScaleButton(
-                            onTap: _isSpinning
-                                ? null
-                                : () => _executeSpin(userProvider),
+                            onTap: canSpin
+                                ? () => _executeSpin(userProvider)
+                                : null,
                             child: Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: AppTheme.space48,
@@ -361,12 +367,12 @@ class _SpinScreenState extends State<SpinScreen> {
                               ),
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
-                                  colors: _isSpinning
-                                      ? [Colors.grey, Colors.grey]
-                                      : [
+                                  colors: canSpin
+                                      ? [
                                           AppTheme.primaryColor,
                                           AppTheme.secondaryColor,
-                                        ],
+                                        ]
+                                      : [Colors.grey, Colors.grey],
                                 ),
                                 borderRadius: BorderRadius.circular(
                                   AppTheme.radiusXL,
@@ -374,7 +380,11 @@ class _SpinScreenState extends State<SpinScreen> {
                                 boxShadow: AppTheme.elevatedShadow,
                               ),
                               child: Text(
-                                _isSpinning ? 'Spinning...' : 'Spin Now!',
+                                _isSpinning
+                                    ? 'Spinning...'
+                                    : remaining > 0
+                                    ? 'Wait ${_cooldownService.formatCooldown(remaining)}'
+                                    : 'Spin Now!',
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 20,

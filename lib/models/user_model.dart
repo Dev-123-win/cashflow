@@ -16,6 +16,7 @@ class User {
   final String? upiId;
   final int failedWithdrawals;
   final bool accountLocked;
+  final List<String> completedTaskIds;
 
   User({
     required this.userId,
@@ -35,6 +36,7 @@ class User {
     this.upiId,
     required this.failedWithdrawals,
     required this.accountLocked,
+    required this.completedTaskIds,
   });
 
   factory User.empty() {
@@ -55,6 +57,7 @@ class User {
       kycVerified: false,
       failedWithdrawals: 0,
       accountLocked: false,
+      completedTaskIds: [],
     );
   }
 
@@ -80,6 +83,7 @@ class User {
       upiId: json['upiId'],
       failedWithdrawals: json['failedWithdrawals'] ?? 0,
       accountLocked: json['accountLocked'] ?? json['isAccountLocked'] ?? false,
+      completedTaskIds: List<String>.from(json['completedTaskIds'] ?? []),
     );
   }
 
@@ -105,6 +109,7 @@ class User {
     String? upiId,
     int? failedWithdrawals,
     bool? accountLocked,
+    List<String>? completedTaskIds,
   }) {
     return User(
       userId: userId ?? this.userId,
@@ -124,6 +129,7 @@ class User {
       upiId: upiId ?? this.upiId,
       failedWithdrawals: failedWithdrawals ?? this.failedWithdrawals,
       accountLocked: accountLocked ?? this.accountLocked,
+      completedTaskIds: completedTaskIds ?? this.completedTaskIds,
     );
   }
 }

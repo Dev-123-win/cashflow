@@ -26,7 +26,9 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
   late AnimationController _matchPulseAnimation;
   late AnimationController _successAnimation;
   bool _isPreviewMode = true;
-  int _previewSeconds = 3;
+  final int _previewSeconds = 3;
+
+  bool _isGameCompleted = false;
 
   @override
   void initState() {
@@ -34,6 +36,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
     _gameService = GameService();
     _cooldownService = CooldownService();
     _game = _gameService.createMemoryMatchGame();
+    _isGameCompleted = false;
 
     _matchAnimation = AnimationController(
       duration: const Duration(milliseconds: 300),
@@ -72,7 +75,8 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
     if (_isProcessing ||
         _game.revealed[index] ||
         _game.matched[index] ||
-        _selectedIndex1 == index) {
+        _selectedIndex1 == index ||
+        _isGameCompleted) {
       return;
     }
 
@@ -83,6 +87,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
       } else {
         _selectedIndex2 = index;
         _game.revealCard(index);
+        _game.moves++; // Increment moves only when pair is attempted
       }
     });
 
@@ -99,9 +104,16 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
         });
 
         if (_game.isGameOver()) {
-          await _recordGameWin();
-          if (mounted) {
-            _showGameResult();
+          if (_game.moves >= 6) {
+            // Minimum possible moves to win is 6
+            _isGameCompleted = true;
+            await _recordGameWin();
+            if (mounted) {
+              _showGameResult();
+            }
+          } else {
+            // Suspicious state, reset
+            _resetGame();
           }
         }
       } else {
@@ -109,11 +121,13 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
         _game.resetCards(_selectedIndex1!, _selectedIndex2!);
       }
 
-      setState(() {
-        _selectedIndex1 = null;
-        _selectedIndex2 = null;
-        _isProcessing = false;
-      });
+      if (mounted) {
+        setState(() {
+          _selectedIndex1 = null;
+          _selectedIndex2 = null;
+          _isProcessing = false;
+        });
+      }
     }
   }
 

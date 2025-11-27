@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/constants/app_assets.dart';
 import '../../widgets/zen_card.dart';
 import '../../widgets/scale_button.dart';
 
@@ -18,7 +20,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   final List<OnboardingPage> _pages = [
     OnboardingPage(
-      icon: '🎯',
+      assetPath: AppAssets.onboardingEarn,
       title: 'Complete Simple Tasks',
       description:
           'Earn ₹0.10-₹0.20 per task by completing surveys, social shares, and more. Fast & easy!',
@@ -26,7 +28,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       color: const Color(0xFF6366F1),
     ),
     OnboardingPage(
-      icon: '🎮',
+      assetPath: AppAssets.onboardingPlay,
       title: 'Play & Earn Games',
       description:
           'Win up to ₹0.08 per game. Play Tic-Tac-Toe, Memory Match, and more. 30-min cooldown.',
@@ -34,7 +36,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       color: const Color(0xFF8B5CF6),
     ),
     OnboardingPage(
-      icon: '🎰',
+      assetPath: AppAssets.onboardingWithdraw,
       title: 'Spin & Win',
       description:
           'Spin the daily wheel once per day for random rewards between ₹0.05-₹1.00. Free spins!',
@@ -42,7 +44,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       color: const Color(0xFFFFB800),
     ),
     OnboardingPage(
-      icon: '📺',
+      assetPath: AppAssets.onboardingEarn, // Reuse earn for ads
       title: 'Watch Ads & Earn',
       description:
           'Watch short video ads and earn ₹0.02-₹0.05 per ad. Up to 15 ads per day.',
@@ -50,7 +52,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       color: const Color(0xFF00D9C0),
     ),
     OnboardingPage(
-      icon: '💰',
+      assetPath: AppAssets.onboardingWithdraw,
       title: 'Withdraw Your Money',
       description:
           'Reach ₹50 minimum balance and withdraw directly to your UPI or bank account.',
@@ -58,7 +60,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       color: const Color(0xFFEC4899),
     ),
     OnboardingPage(
-      icon: '📈',
+      assetPath: AppAssets.onboardingPlay, // Reuse play for limits
       title: 'Daily Limit & Rewards',
       description:
           'Max earning: ₹1.50/day. Referrals: Earn ₹2 per friend. Streaks: Bonus rewards!',
@@ -200,22 +202,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           children: [
             const SizedBox(height: AppTheme.space24),
             Container(
-              width: 160,
-              height: 160,
-              decoration: BoxDecoration(
-                color: page.color.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: page.color.withValues(alpha: 0.2),
-                    blurRadius: 32,
-                    spreadRadius: 8,
-                  ),
-                ],
-              ),
-              child: Center(
-                child: Text(page.icon, style: const TextStyle(fontSize: 80)),
-              ),
+              height: 280,
+              width: double.infinity,
+              padding: const EdgeInsets.all(AppTheme.space24),
+              child: SvgPicture.asset(page.assetPath, fit: BoxFit.contain),
             ),
             const SizedBox(height: AppTheme.space48),
             Text(
@@ -284,14 +274,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 }
 
 class OnboardingPage {
-  final String icon;
+  final String assetPath;
   final String title;
   final String description;
   final List<String>? details;
   final Color color;
 
   OnboardingPage({
-    required this.icon,
+    required this.assetPath,
     required this.title,
     required this.description,
     required this.color,

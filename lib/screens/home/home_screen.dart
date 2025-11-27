@@ -4,6 +4,9 @@ import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:confetti/confetti.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:lottie/lottie.dart';
+import '../../core/constants/app_assets.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/task_provider.dart';
@@ -20,7 +23,7 @@ import '../games/spin_screen.dart';
 import '../ads/watch_ads_screen.dart';
 import '../withdrawal/withdrawal_screen.dart';
 import '../referral/referral_screen.dart';
-import '../notifications/notifications_screen.dart';
+import '../notification_screen.dart';
 import '../settings/settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -77,13 +80,22 @@ class _HomeScreenState extends State<HomeScreen> {
                   'EarnQuest',
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
+                flexibleSpace: FlexibleSpaceBar(
+                  background: Opacity(
+                    opacity: 0.1,
+                    child: SvgPicture.asset(
+                      AppAssets.topographicLines,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
                 actions: [
                   ScaleButton(
                     onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const NotificationsScreen(),
+                          builder: (context) => const NotificationScreen(),
                         ),
                       );
                     },
@@ -167,7 +179,21 @@ class _HomeScreenState extends State<HomeScreen> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      const Text('🔥 Streak'),
+                                      Row(
+                                        children: [
+                                          Lottie.asset(
+                                            AppAssets.streakFire,
+                                            height: 24,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            'Streak',
+                                            style: Theme.of(
+                                              context,
+                                            ).textTheme.bodyMedium,
+                                          ),
+                                        ],
+                                      ),
                                       const SizedBox(height: AppTheme.space4),
                                       Text(
                                         '${userProvider.user.streak} Days',
@@ -190,7 +216,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      const Text('🎯 Daily Goal'),
+                                      Text(
+                                        '🎯 Daily Goal',
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.bodyMedium,
+                                      ),
                                       const SizedBox(height: AppTheme.space4),
                                       Text(
                                         '${(taskProvider.dailyEarnings / taskProvider.dailyCap * 100).toInt()}%',
@@ -223,11 +254,11 @@ class _HomeScreenState extends State<HomeScreen> {
                               StaggeredGridTile.count(
                                 crossAxisCellCount: 2,
                                 mainAxisCellCount: 1,
-                                child: _buildBentoTile(
+                                child: _buildAnimatedBentoTile(
                                   context,
                                   title: 'Daily Tasks',
                                   subtitle: 'Complete tasks to earn',
-                                  icon: Icons.assignment_outlined,
+                                  lottieAsset: AppAssets.giftBoxOpen,
                                   color: const Color(0xFF6C63FF),
                                   onTap: () {
                                     _showInterstitialThenNavigate(
@@ -424,6 +455,51 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               child: Icon(icon, color: color),
             ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppTheme.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAnimatedBentoTile(
+    BuildContext context, {
+    required String title,
+    required String subtitle,
+    required String lottieAsset,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return ScaleButton(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(AppTheme.space16),
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceColor,
+          borderRadius: BorderRadius.circular(AppTheme.radiusM),
+          boxShadow: AppTheme.softShadow,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Lottie.asset(lottieAsset, height: 50, repeat: true),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
