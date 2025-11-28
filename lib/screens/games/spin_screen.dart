@@ -102,6 +102,11 @@ class _SpinScreenState extends State<SpinScreen> {
       return;
     }
 
+    final fingerprint = Provider.of<DeviceFingerprintService>(
+      context,
+      listen: false,
+    );
+
     // Check backend health before spinning
     final isBackendHealthy = await _cloudflareService.healthCheck();
     if (!isBackendHealthy) {
@@ -118,47 +123,120 @@ class _SpinScreenState extends State<SpinScreen> {
       _isSpinning = true;
     });
 
-    // Select random index for visual spin
-    final index = math.Random().nextInt(_rewards.length);
-    _selectedController.add(index);
-  }
-
-  // Helper to record reward after spin completes
-  Future<void> _onSpinComplete(UserProvider userProvider) async {
-    final user = fb_auth.FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
     try {
-      final fingerprint = Provider.of<DeviceFingerprintService>(
-        context,
-        listen: false,
-      );
       final deviceFingerprint = await fingerprint.getDeviceFingerprint();
 
-      // ✅ Execute spin via backend - backend determines the reward
+      // Execute spin via backend FIRST
       final result = await _cloudflareService.executeSpin(
         userId: user.uid,
         deviceId: deviceFingerprint,
       );
 
-      // Get reward from backend response
       final reward = (result['reward'] as num?)?.toDouble() ?? 0.0;
-
       _lastSpinReward = reward;
-      _confettiController.play();
 
-      if (mounted) {
-        await _showSpinResult(reward);
-        _cooldownService.startCooldown(user.uid, 'spin_daily', 86400);
+      // Determine target index
+      int targetIndex = -1;
 
-        // Refresh user data from backend
-        await userProvider.refreshUser();
+      // Find indices that match the reward
+      final matchingIndices = <int>[];
+      for (int i = 0; i < _rewards.length; i++) {
+        if ((_rewards[i] - reward).abs() < 0.01) {
+          matchingIndices.add(i);
+        }
       }
+
+      if (matchingIndices.isNotEmpty) {
+        // Pick a random matching index
+        targetIndex =
+            matchingIndices[math.Random().nextInt(matchingIndices.length)];
+      } else {
+        // Fallback: Pick index with closest value
+        double minDiff = double.infinity;
+        for (int i = 0; i < _rewards.length; i++) {
+          final diff = (_rewards[i] - reward).abs();
+          if (diff < minDiff) {
+            minDiff = diff;
+            targetIndex = i;
+          }
+        }
+      }
+
+      // NEAR MISS LOGIC:
+      // If reward is low (< 1.0), try to make it look like a near miss of a high reward (> 5.0)
+      if (reward < 1.0) {
+        // Find high reward indices
+        final highRewardIndices = <int>[];
+        for (int i = 0; i < _rewards.length; i++) {
+          if (_rewards[i] >= 5.0) {
+            highRewardIndices.add(i);
+          }
+        }
+
+        if (highRewardIndices.isNotEmpty) {
+          // Check if our target index is adjacent to any high reward index
+          // If not, try to find a matching reward index that IS adjacent
+          bool isAdjacent = false;
+          for (final highIndex in highRewardIndices) {
+            final prev = (highIndex - 1 + _rewards.length) % _rewards.length;
+            final next = (highIndex + 1) % _rewards.length;
+            if (targetIndex == prev || targetIndex == next) {
+              isAdjacent = true;
+              break;
+            }
+          }
+
+          if (!isAdjacent && matchingIndices.length > 1) {
+            // Try to switch to an adjacent one if available
+            for (final matchIndex in matchingIndices) {
+              for (final highIndex in highRewardIndices) {
+                final prev =
+                    (highIndex - 1 + _rewards.length) % _rewards.length;
+                final next = (highIndex + 1) % _rewards.length;
+                if (matchIndex == prev || matchIndex == next) {
+                  targetIndex = matchIndex;
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      // Start the visual spin
+      _selectedController.add(targetIndex);
     } catch (e) {
       debugPrint('Spin error: $e');
       if (mounted) {
         StateSnackbar.showError(context, 'Spin failed: ${e.toString()}');
+        setState(() => _isSpinning = false);
       }
+    }
+  }
+
+  // Helper to record reward after spin completes
+  Future<void> _onSpinComplete(UserProvider userProvider) async {
+    final user = fb_auth.FirebaseAuth.instance.currentUser;
+    if (user == null || _lastSpinReward == null) {
+      setState(() => _isSpinning = false);
+      return;
+    }
+
+    try {
+      _confettiController.play();
+
+      if (mounted) {
+        await _showSpinResult(_lastSpinReward!);
+        _cooldownService.startCooldown(user.uid, 'spin_daily', 86400);
+
+        // Refresh user data from backend
+        await userProvider.refreshUser();
+
+        // Check for Ad Break
+        await _adService.checkAdBreak();
+      }
+    } catch (e) {
+      debugPrint('Error showing result: $e');
     } finally {
       if (mounted) {
         setState(() => _isSpinning = false);

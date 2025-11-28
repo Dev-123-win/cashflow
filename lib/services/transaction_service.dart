@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
-import 'cloudflare_workers_service.dart';
+import 'database_helper.dart';
 
 class TransactionModel {
   final String id;
@@ -41,13 +41,28 @@ class TransactionModel {
     );
   }
 
-  Map<String, dynamic> toFirestore() => {
+  factory TransactionModel.fromMap(Map<String, dynamic> map) {
+    return TransactionModel(
+      id: map['id'],
+      userId: map['userId'],
+      type: map['type'],
+      amount: map['amount'],
+      gameType: map['gameType'],
+      success: map['success'] == 1,
+      timestamp: DateTime.fromMillisecondsSinceEpoch(map['timestamp']),
+      description: map['description'],
+      status: map['status'],
+    );
+  }
+
+  Map<String, dynamic> toMap() => {
+    'id': id,
     'userId': userId,
     'type': type,
     'amount': amount,
     'gameType': gameType,
-    'success': success,
-    'timestamp': Timestamp.fromDate(timestamp),
+    'success': success ? 1 : 0,
+    'timestamp': timestamp.millisecondsSinceEpoch,
     'description': description,
     'status': status,
   };
@@ -55,140 +70,132 @@ class TransactionModel {
 
 class TransactionService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final CloudflareWorkersService _backend = CloudflareWorkersService();
+  final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
-  // Get transaction history for a user
+  // Get transaction history for a user (Local + Sync)
   Stream<List<TransactionModel>> getUserTransactions(
     String userId, {
     String? filterType, // 'earning', 'withdrawal', null for all
     DateTime? startDate,
     DateTime? endDate,
     int limit = 50,
-  }) {
-    Query<Map<String, dynamic>> query = _firestore
-        .collection('users')
-        .doc(userId)
-        .collection('transactions')
-        .orderBy('timestamp', descending: true);
+  }) async* {
+    // 1. Sync withdrawals/referrals from Firestore first
+    _syncExternalTransactions(userId);
 
-    if (filterType != null) {
-      query = query.where('type', isEqualTo: filterType);
-    }
-
-    if (startDate != null) {
-      query = query.where(
-        'timestamp',
-        isGreaterThanOrEqualTo: Timestamp.fromDate(startDate),
+    // 2. Return local stream
+    while (true) {
+      final transactions = await _dbHelper.getTransactions(
+        userId,
+        filterType: filterType,
+        startDate: startDate,
+        endDate: endDate,
+        limit: limit,
       );
+      yield transactions;
+      await Future.delayed(
+        const Duration(seconds: 5),
+      ); // Poll every 5 seconds for updates
     }
+  }
 
-    if (endDate != null) {
-      query = query.where(
-        'timestamp',
-        isLessThanOrEqualTo: Timestamp.fromDate(endDate),
-      );
+  Future<void> _syncExternalTransactions(String userId) async {
+    try {
+      // Sync Withdrawals
+      final withdrawals = await _firestore
+          .collection('withdrawals')
+          .where('userId', isEqualTo: userId)
+          .limit(20) // Limit sync to recent
+          .get();
+
+      for (var doc in withdrawals.docs) {
+        final data = doc.data();
+        final transaction = TransactionModel(
+          id: doc.id,
+          userId: userId,
+          type: 'withdrawal',
+          amount: (data['amount'] ?? 0).toDouble(),
+          success: true,
+          timestamp:
+              (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+          status: data['status'] ?? 'pending',
+          description: 'Withdrawal Request',
+        );
+        await _dbHelper.insertTransaction(transaction);
+      }
+
+      // Sync Referrals (assuming source='referral')
+      final externalEarnings = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('transactions')
+          .where('type', isEqualTo: 'earning')
+          .where('source', isEqualTo: 'referral')
+          .limit(20)
+          .get();
+
+      for (var doc in externalEarnings.docs) {
+        final t = TransactionModel.fromFirestore(doc);
+        await _dbHelper.insertTransaction(t);
+      }
+    } catch (e) {
+      debugPrint('Sync error: $e');
     }
-
-    query = query.limit(limit);
-
-    return query.snapshots().map(
-      (snapshot) => snapshot.docs
-          .map((doc) => TransactionModel.fromFirestore(doc))
-          .toList(),
-    );
   }
 
-  // Get earnings transactions (games)
-  Stream<List<TransactionModel>> getUserEarnings(
-    String userId, {
-    DateTime? startDate,
-    DateTime? endDate,
-    int limit = 50,
-  }) {
-    return getUserTransactions(
-      userId,
-      filterType: 'earning',
-      startDate: startDate,
-      endDate: endDate,
-      limit: limit,
-    );
-  }
-
-  // Get withdrawal transactions
-  Stream<List<TransactionModel>> getUserWithdrawals(
-    String userId, {
-    DateTime? startDate,
-    DateTime? endDate,
-    int limit = 50,
-  }) {
-    return getUserTransactions(
-      userId,
-      filterType: 'withdrawal',
-      startDate: startDate,
-      endDate: endDate,
-      limit: limit,
-    );
-  }
-
-  // Record a new transaction
+  // Record a new transaction (Local Only for earnings)
   Future<void> recordTransaction({
     required String userId,
-    required String type, // 'earning', 'withdrawal', 'refund'
+    required String type,
     required double amount,
     String? gameType,
     required bool success,
     String? description,
     required String status,
+    Map<String, dynamic>?
+    extraData, // To pass full transaction object from worker response
   }) async {
     try {
-      await _backend.recordTransaction(
+      final transaction = TransactionModel(
+        id:
+            extraData?['requestId'] ??
+            '${type}_${DateTime.now().millisecondsSinceEpoch}',
         userId: userId,
         type: type,
         amount: amount,
-        description: description ?? '',
         gameType: gameType,
+        success: success,
+        timestamp: DateTime.now(),
+        description: description,
+        status: status,
       );
-      debugPrint('✅ Transaction recorded via Backend');
+
+      await _dbHelper.insertTransaction(transaction);
+      debugPrint('✅ Transaction recorded locally');
     } catch (e) {
       debugPrint('❌ Error recording transaction: $e');
       rethrow;
     }
   }
 
-  // Get transaction statistics
+  // Get transaction statistics (From Local DB)
   Future<Map<String, dynamic>> getTransactionStats(String userId) async {
     try {
-      final earnings = await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('transactions')
-          .where('type', isEqualTo: 'earning')
-          .where('status', isEqualTo: 'completed')
-          .get();
-
-      final withdrawals = await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('transactions')
-          .where('type', isEqualTo: 'withdrawal')
-          .where('status', isEqualTo: 'completed')
-          .get();
+      final transactions = await _dbHelper.getTransactions(userId, limit: 1000);
 
       double totalEarned = 0;
       double totalWithdrawn = 0;
       int earningCount = 0;
       int withdrawalCount = 0;
 
-      for (var doc in earnings.docs) {
-        final data = doc.data();
-        totalEarned += (data['amount'] ?? 0).toDouble();
-        earningCount++;
-      }
-
-      for (var doc in withdrawals.docs) {
-        final data = doc.data();
-        totalWithdrawn += (data['amount'] ?? 0).toDouble();
-        withdrawalCount++;
+      for (var t in transactions) {
+        if (t.type == 'earning' && t.status == 'completed') {
+          totalEarned += t.amount;
+          earningCount++;
+        } else if (t.type == 'withdrawal' && t.status == 'completed') {
+          totalWithdrawn += t.amount;
+          withdrawalCount++;
+        }
       }
 
       return {
@@ -197,8 +204,8 @@ class TransactionService {
         'balance': totalEarned - totalWithdrawn,
         'earningCount': earningCount,
         'withdrawalCount': withdrawalCount,
-        'thisMonthEarnings': _calculateMonthlyEarnings(earnings.docs),
-        'thisWeekEarnings': _calculateWeeklyEarnings(earnings.docs),
+        'thisMonthEarnings': _calculateMonthlyEarnings(transactions),
+        'thisWeekEarnings': _calculateWeeklyEarnings(transactions),
       };
     } catch (e) {
       debugPrint('Error getting transaction stats: $e');
@@ -207,16 +214,14 @@ class TransactionService {
   }
 
   // Calculate this month's earnings
-  double _calculateMonthlyEarnings(List<QueryDocumentSnapshot> docs) {
+  double _calculateMonthlyEarnings(List<TransactionModel> transactions) {
     final now = DateTime.now();
     final startOfMonth = DateTime(now.year, now.month, 1);
     double total = 0;
 
-    for (var doc in docs) {
-      final data = doc.data() as Map<String, dynamic>;
-      final timestamp = (data['timestamp'] as Timestamp?)?.toDate();
-      if (timestamp != null && timestamp.isAfter(startOfMonth)) {
-        total += (data['amount'] ?? 0).toDouble();
+    for (var t in transactions) {
+      if (t.timestamp.isAfter(startOfMonth) && t.type == 'earning') {
+        total += t.amount;
       }
     }
 
@@ -224,76 +229,17 @@ class TransactionService {
   }
 
   // Calculate this week's earnings
-  double _calculateWeeklyEarnings(List<QueryDocumentSnapshot> docs) {
+  double _calculateWeeklyEarnings(List<TransactionModel> transactions) {
     final now = DateTime.now();
     final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
     double total = 0;
 
-    for (var doc in docs) {
-      final data = doc.data() as Map<String, dynamic>;
-      final timestamp = (data['timestamp'] as Timestamp?)?.toDate();
-      if (timestamp != null && timestamp.isAfter(startOfWeek)) {
-        total += (data['amount'] ?? 0).toDouble();
+    for (var t in transactions) {
+      if (t.timestamp.isAfter(startOfWeek) && t.type == 'earning') {
+        total += t.amount;
       }
     }
 
     return total;
-  }
-
-  // Get earnings by game type
-  Future<Map<String, double>> getEarningsByGameType(String userId) async {
-    try {
-      final snapshot = await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('transactions')
-          .where('type', isEqualTo: 'earning')
-          .get();
-
-      final earnings = <String, double>{
-        'tictactoe': 0,
-        'memory_match': 0,
-        'quiz': 0,
-      };
-
-      for (var doc in snapshot.docs) {
-        final data = doc.data();
-        final gameType = (data['gameType'] as String?) ?? 'unknown';
-        final amount = (data['amount'] ?? 0).toDouble();
-
-        if (earnings.containsKey(gameType)) {
-          earnings[gameType] = (earnings[gameType] ?? 0) + amount;
-        }
-      }
-
-      return earnings;
-    } catch (e) {
-      debugPrint('Error getting earnings by game type: $e');
-      rethrow;
-    }
-  }
-
-  // Get total earnings for a specific game type
-  Future<double> getGameTypeEarnings(String userId, String gameType) async {
-    try {
-      final snapshot = await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('transactions')
-          .where('type', isEqualTo: 'earning')
-          .where('gameType', isEqualTo: gameType)
-          .get();
-
-      double total = 0;
-      for (var doc in snapshot.docs) {
-        final data = doc.data();
-        total += (data['amount'] ?? 0).toDouble();
-      }
-
-      return total;
-    } catch (e) {
-      debugPrint('Error getting game type earnings: $e');
-      rethrow;
-    }
   }
 }

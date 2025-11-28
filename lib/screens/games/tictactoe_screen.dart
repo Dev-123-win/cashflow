@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:provider/provider.dart';
 import 'dart:math' as math;
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/theme/app_theme.dart';
 import '../../services/game_service.dart';
 import '../../services/cooldown_service.dart';
@@ -10,6 +11,7 @@ import '../../services/device_fingerprint_service.dart';
 import '../../services/firestore_service.dart';
 import '../../services/cloudflare_workers_service.dart';
 import '../../services/ad_service.dart';
+import '../../services/local_notification_service.dart';
 import '../../providers/user_provider.dart';
 import '../../widgets/error_states.dart';
 import '../../widgets/banner_ad_widget.dart';
@@ -30,6 +32,7 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
   bool _isProcessing = false;
   bool _adShownPreGame = false;
   bool _isGameCompleted = false;
+  double _difficulty = 0.3; // Start easy
 
   @override
   void initState() {
@@ -43,6 +46,7 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
 
   void _initializeGame() {
     _game = _gameService.createTicTacToeGame();
+    _game.setDifficulty(_difficulty);
     _isGameCompleted = false;
   }
 
@@ -60,13 +64,55 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
     _adShownPreGame = true;
   }
 
+  void _showHowToPlay() {
+    showDialog(
+      context: context,
+      builder: (context) => CustomDialog(
+        title: 'How to Play',
+        emoji: '❓',
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: const [
+            Text('• Mark your position with X'),
+            SizedBox(height: 8),
+            Text('• AI will respond with O'),
+            SizedBox(height: 8),
+            Text('• Get 3 in a row to win'),
+            SizedBox(height: 8),
+            Text('• Win to earn ₹0.08'),
+            SizedBox(height: 8),
+            Text('• Max 20 games per day'),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Got it!'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _handleTap(int index) async {
-    final user = fb_auth.FirebaseAuth.instance.currentUser;
-    if (user == null) return;
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final user = userProvider.user;
+
+    // Check Daily Limit
+    if (user.gamesPlayedToday >= 20) {
+      if (mounted) {
+        StateSnackbar.showWarning(
+          context,
+          'Daily game limit reached (20/20). Come back tomorrow!',
+        );
+      }
+      return;
+    }
 
     // Check cooldown
     final remaining = _cooldownService.getRemainingCooldown(
-      user.uid,
+      user.userId,
       'game_tictactoe',
     );
     if (remaining > 0) {
@@ -97,11 +143,23 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
         if (_game.playerWon()) {
           await _recordGameWin();
           if (mounted) {
+            // Optimistic update
+            userProvider.updateLocalState(
+              availableBalance: userProvider.user.availableBalance + 0.08,
+              totalEarnings: userProvider.user.totalEarnings + 0.08,
+              gamesPlayedToday: userProvider.user.gamesPlayedToday + 1,
+            );
+
             _showGameResult(
               title: 'You Won! 🎉',
               message: 'You earned ₹0.08',
               won: true,
             );
+
+            // Increase difficulty for next game
+            setState(() {
+              _difficulty = (_difficulty + 0.1).clamp(0.0, 0.9);
+            });
           }
         } else if (_game.winner == 'draw') {
           if (mounted) {
@@ -210,7 +268,18 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
       // Set cooldown
       _cooldownService.startCooldown(user.uid, 'game_tictactoe', 300);
 
+      // Schedule notification
+      LocalNotificationService().scheduleCooldownExpiry(
+        gameName: 'Tic-Tac-Toe',
+        duration: const Duration(seconds: 300),
+      );
+
       debugPrint('✅ Game win recorded for ${user.uid}: tictactoe');
+
+      // Check for Ad Break
+      if (mounted) {
+        await _adService.checkAdBreak();
+      }
     } catch (e) {
       debugPrint('Error recording game: $e');
       if (mounted) {
@@ -329,6 +398,12 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
             icon: const Icon(Icons.arrow_back),
             onPressed: () => Navigator.pop(context),
           ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.help_outline),
+              onPressed: _showHowToPlay,
+            ),
+          ],
         ),
         body: Consumer<UserProvider>(
           builder: (context, userProvider, _) {
@@ -431,30 +506,38 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
                               final isEmpty = cell.isEmpty;
 
                               return GestureDetector(
-                                onTap: isEmpty ? () => _handleTap(index) : null,
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: isEmpty
-                                        ? AppTheme.surfaceVariant
-                                        : AppTheme.backgroundColor,
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(
-                                      color: AppTheme.primaryColor,
-                                      width: 2,
-                                    ),
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      cell,
-                                      style: const TextStyle(
-                                        fontSize: 32,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.blue,
+                                    onTap: isEmpty
+                                        ? () => _handleTap(index)
+                                        : null,
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: isEmpty
+                                            ? AppTheme.surfaceVariant
+                                            : AppTheme.backgroundColor,
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                          color: AppTheme.primaryColor,
+                                          width: 2,
+                                        ),
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          cell,
+                                          style: const TextStyle(
+                                            fontSize: 32,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.blue,
+                                          ),
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                ),
-                              );
+                                  )
+                                  .animate(target: isEmpty ? 0 : 1)
+                                  .scale(
+                                    duration: 300.ms,
+                                    curve: Curves.easeOutBack,
+                                  )
+                                  .fade();
                             }),
                           ),
                         ),
@@ -513,6 +596,9 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
                                             ? Colors.green
                                             : Colors.orange,
                                       ),
+                                ).animate().scale(
+                                  duration: 500.ms,
+                                  curve: Curves.elasticOut,
                                 ),
                             ],
                           ),
@@ -591,49 +677,17 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
                             return const SizedBox.shrink();
                           },
                         ),
-                        const SizedBox(height: AppTheme.space32),
-
-                        // How to Play
-                        Container(
-                          padding: const EdgeInsets.all(AppTheme.space16),
-                          decoration: BoxDecoration(
-                            color: AppTheme.surfaceColor,
-                            borderRadius: BorderRadius.circular(
-                              AppTheme.radiusM,
-                            ),
-                            boxShadow: AppTheme.cardShadow,
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '❓ How to Play',
-                                style: Theme.of(context).textTheme.titleLarge,
-                              ),
-                              const SizedBox(height: AppTheme.space12),
-                              Text(
-                                '• Mark your position with X\n• AI will respond with O\n• Get 3 in a row to win\n• Win to earn ₹0.08',
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                            ],
-                          ),
-                        ),
                       ],
                     ),
                   ),
                 ),
                 // Banner Ad at the bottom
-                _buildBannerAd(),
+                const BannerAdWidget(),
               ],
             );
           },
         ),
       ),
     );
-  }
-
-  // Build banner ad widget
-  Widget _buildBannerAd() {
-    return const BannerAdWidget();
   }
 }

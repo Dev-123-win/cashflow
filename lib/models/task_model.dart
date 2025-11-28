@@ -2,35 +2,57 @@ class Task {
   final String taskId;
   final String title;
   final String description;
-  final String type;
   final double reward;
-  final int timeRequired;
+  final String? icon;
+  final String actionUrl;
+  final String category;
+  final String duration;
   final bool completed;
-  final DateTime? completedAt;
-  final DateTime nextAvailableAt;
+  final DateTime? nextAvailableAt;
 
   Task({
     required this.taskId,
     required this.title,
     required this.description,
-    required this.type,
     required this.reward,
-    required this.timeRequired,
-    required this.completed,
-    this.completedAt,
-    required this.nextAvailableAt,
+    this.icon,
+    this.actionUrl = '',
+    this.category = 'general',
+    this.duration = '',
+    this.completed = false,
+    this.nextAvailableAt,
   });
 
-  factory Task.empty() {
+  // Alias for compatibility
+  String get id => taskId;
+
+  Task copyWith({
+    String? taskId,
+    String? title,
+    String? description,
+    double? reward,
+    String? icon,
+    String? actionUrl,
+    String? category,
+    String? duration,
+    bool? completed,
+    DateTime? nextAvailableAt,
+  }) {
     return Task(
-      taskId: '',
-      title: '',
-      description: '',
-      type: '',
-      reward: 0,
-      timeRequired: 0,
-      completed: false,
-      nextAvailableAt: DateTime.now(),
+      taskId: taskId ?? this.taskId,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      reward: reward ?? this.reward,
+      icon: icon ?? this.icon,
+      actionUrl: actionUrl ?? this.actionUrl,
+      category: category ?? this.category,
+      duration: duration ?? this.duration,
+      completed: completed ?? this.completed,
+      nextAvailableAt: nextAvailableAt ?? this.nextAvailableAt,
     );
+  }
+
+  factory Task.empty() {
+    return Task(taskId: '', title: '', description: '', reward: 0);
   }
 }

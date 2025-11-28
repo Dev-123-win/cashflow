@@ -94,12 +94,8 @@ service cloud.firestore {
         // User can read their own transactions
         allow read: if isAuthenticatedUser(userId);
         
-        // Client can create transactions (server validates balance via transaction log)
-        allow create: if isAuthenticatedUser(userId) &&
-                        validateTransaction(request.resource.data);
-        
-        // CRITICAL: Transactions are IMMUTABLE (no updates/deletes)
-        allow update, delete: if false;
+        // CRITICAL: Transactions are IMMUTABLE and created ONLY by Backend
+        allow create, update, delete: if false;
         
         /// ✅ CRITICAL: Validate transaction with daily cap enforcement
         function validateTransaction(data) {
@@ -132,11 +128,8 @@ service cloud.firestore {
         allow read: if isAuthenticatedUser(userId);
         
         // User can create game results
-        allow create: if isAuthenticatedUser(userId) &&
-                        validateGameResult(request.resource.data);
-        
-        // Game results are immutable
-        allow update, delete: if false;
+        // CRITICAL: Game results are created ONLY by Backend to prevent cheating
+        allow create, update, delete: if false;
         
         function validateGameResult(data) {
           return data.userId == userId &&
@@ -194,9 +187,8 @@ service cloud.firestore {
       // User task completions - APPEND ONLY
       match /completions/{completionId} {
         allow read: if isAuthenticatedUser(request.auth.uid);
-        allow create: if isAuthenticatedUser(request.resource.data.userId) &&
-                        validateCompletion(request.resource.data);
-        allow update, delete: if false;
+        // CRITICAL: Task completions are created ONLY by Backend
+        allow create, update, delete: if false;
         
         function validateCompletion(data) {
           return data.userId is string &&

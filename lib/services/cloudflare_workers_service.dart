@@ -411,18 +411,47 @@ class CloudflareWorkersService {
     }
   }
 
-  /// Check API health
+  // Health check cache
+  bool? _lastHealthStatus;
+  DateTime? _lastHealthCheckTime;
+  static const Duration _healthCheckCacheDuration = Duration(seconds: 30);
+
+  /// Check API health (with 30-second caching)
   ///
-  /// Returns: Health status
+  /// Returns: Health status (cached for 30 seconds)
   Future<bool> healthCheck() async {
     try {
+      // Return cached result if still valid
+      if (_lastHealthStatus != null && _lastHealthCheckTime != null) {
+        final cacheAge = DateTime.now().difference(_lastHealthCheckTime!);
+        if (cacheAge < _healthCheckCacheDuration) {
+          debugPrint(
+            '✅ Health check: Using cached result ($_lastHealthStatus)',
+          );
+          return _lastHealthStatus!;
+        }
+      }
+
+      // Perform fresh health check
       final response = await http
           .get(Uri.parse('$_baseUrl/health'))
           .timeout(const Duration(seconds: 5));
 
-      return response.statusCode == 200;
+      final isHealthy = response.statusCode == 200;
+
+      // Update cache
+      _lastHealthStatus = isHealthy;
+      _lastHealthCheckTime = DateTime.now();
+
+      debugPrint('🔄 Health check: Fresh result ($isHealthy)');
+      return isHealthy;
     } catch (e) {
       debugPrint('Health check error: $e');
+
+      // Cache the failure for 30 seconds to avoid hammering a down server
+      _lastHealthStatus = false;
+      _lastHealthCheckTime = DateTime.now();
+
       return false;
     }
   }

@@ -15,6 +15,7 @@ import '../../widgets/zen_card.dart';
 import '../../widgets/scale_button.dart';
 import '../../widgets/banner_ad_widget.dart';
 import '../../services/ad_service.dart';
+import '../../services/cloudflare_workers_service.dart';
 import '../leaderboard/leaderboard_screen.dart';
 import '../transaction_history_screen.dart';
 import '../tasks/tasks_screen.dart';
@@ -24,7 +25,7 @@ import '../ads/watch_ads_screen.dart';
 import '../withdrawal/withdrawal_screen.dart';
 import '../referral/referral_screen.dart';
 import '../notification_screen.dart';
-import '../settings/settings_screen.dart';
+import '../../widgets/shimmer_loading.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -36,6 +37,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   late final AdService _adService;
   late ConfettiController _confettiController;
+  String _userRank = '...';
 
   @override
   void initState() {
@@ -45,6 +47,33 @@ class _HomeScreenState extends State<HomeScreen> {
       duration: const Duration(seconds: 2),
     );
     _loadData();
+    _fetchRank();
+  }
+
+  Future<void> _fetchRank() async {
+    try {
+      final user = fb_auth.FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+
+      final leaderboard = await CloudflareWorkersService().getLeaderboard(
+        limit: 100,
+      );
+      final index = leaderboard.indexWhere(
+        (entry) => entry['userId'] == user.uid,
+      );
+
+      if (mounted) {
+        setState(() {
+          if (index != -1) {
+            _userRank = '#${index + 1}';
+          } else {
+            _userRank = '100+';
+          }
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching rank: $e');
+    }
   }
 
   void _loadData() {
@@ -115,7 +144,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const SettingsScreen(),
+                          builder: (context) => const SpinScreen(),
                         ),
                       );
                     },
@@ -126,7 +155,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         shape: BoxShape.circle,
                         boxShadow: AppTheme.softShadow,
                       ),
-                      child: const Icon(Icons.settings_outlined),
+                      child: const Icon(Icons.casino_outlined),
                     ),
                   ),
                   const SizedBox(width: AppTheme.space16),
@@ -137,10 +166,48 @@ class _HomeScreenState extends State<HomeScreen> {
               SliverPadding(
                 padding: const EdgeInsets.all(AppTheme.space16),
                 sliver: SliverToBoxAdapter(
-                  child: Consumer2<UserProvider, TaskProvider>(
-                    builder: (context, userProvider, taskProvider, _) {
-                      if (userProvider.isLoading) {
-                        return const Center(child: CircularProgressIndicator());
+                  child: Selector<UserProvider, bool>(
+                    selector: (_, provider) => provider.isLoading,
+                    builder: (context, isLoading, child) {
+                      if (isLoading) {
+                        return Column(
+                          children: [
+                            const ShimmerLoading.rectangular(
+                              height: 200,
+                              shapeBorder: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(AppTheme.radiusL),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: AppTheme.space24),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: const ShimmerLoading.rectangular(
+                                    height: 100,
+                                    shapeBorder: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(AppTheme.radiusM),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: AppTheme.space12),
+                                Expanded(
+                                  child: const ShimmerLoading.rectangular(
+                                    height: 100,
+                                    shapeBorder: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(AppTheme.radiusM),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        );
                       }
 
                       return Column(
@@ -152,29 +219,44 @@ class _HomeScreenState extends State<HomeScreen> {
                               HapticFeedback.mediumImpact();
                               _confettiController.play();
                             },
-                            child: ParallaxBalanceCard(
-                              balance: userProvider.user.availableBalance,
-                              onWithdraw: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        const WithdrawalScreen(),
-                                  ),
+                            child: Selector<UserProvider, double>(
+                              selector: (_, provider) =>
+                                  provider.user.availableBalance,
+                              builder: (context, balance, _) {
+                                return ParallaxBalanceCard(
+                                  balance: balance,
+                                  onWithdraw: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const WithdrawalScreen(),
+                                      ),
+                                    );
+                                  },
+                                  canWithdraw: balance >= 50,
                                 );
                               },
-                              canWithdraw:
-                                  userProvider.user.availableBalance >= 50,
                             ),
                           ),
                           const SizedBox(height: AppTheme.space24),
 
-                          // Stats Row
+                          // Daily Goal Card
+                          Consumer<TaskProvider>(
+                            builder: (context, taskProvider, _) {
+                              return _buildDailyGoalCard(context, taskProvider);
+                            },
+                          ),
+                          const SizedBox(height: AppTheme.space16),
+
+                          // Streak & Leaderboard
                           Row(
                             children: [
                               Expanded(
                                 child: ZenCard(
-                                  onTap: () {},
+                                  onTap: () {
+                                    HapticFeedback.lightImpact();
+                                  },
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
@@ -195,14 +277,20 @@ class _HomeScreenState extends State<HomeScreen> {
                                         ],
                                       ),
                                       const SizedBox(height: AppTheme.space4),
-                                      Text(
-                                        '${userProvider.user.streak} Days',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleLarge
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.bold,
-                                            ),
+                                      Selector<UserProvider, int>(
+                                        selector: (_, provider) =>
+                                            provider.user.streak,
+                                        builder: (context, streak, _) {
+                                          return Text(
+                                            '$streak Days',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .titleLarge
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                          );
+                                        },
                                       ),
                                     ],
                                   ),
@@ -211,20 +299,39 @@ class _HomeScreenState extends State<HomeScreen> {
                               const SizedBox(width: AppTheme.space12),
                               Expanded(
                                 child: ZenCard(
-                                  onTap: () {},
+                                  onTap: () {
+                                    HapticFeedback.lightImpact();
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const LeaderboardScreen(),
+                                      ),
+                                    );
+                                  },
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Text(
-                                        '🎯 Daily Goal',
-                                        style: Theme.of(
-                                          context,
-                                        ).textTheme.bodyMedium,
+                                      Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.emoji_events_outlined,
+                                            size: 24,
+                                            color: AppTheme.tertiaryColor,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            'Rank',
+                                            style: Theme.of(
+                                              context,
+                                            ).textTheme.bodyMedium,
+                                          ),
+                                        ],
                                       ),
                                       const SizedBox(height: AppTheme.space4),
                                       Text(
-                                        '${(taskProvider.dailyEarnings / taskProvider.dailyCap * 100).toInt()}%',
+                                        _userRank,
                                         style: Theme.of(context)
                                             .textTheme
                                             .titleLarge
@@ -361,19 +468,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                 const Divider(),
                                 _buildQuickLink(
                                   context,
-                                  icon: Icons.people_outline,
-                                  title: 'Refer Friends',
-                                  onTap: () => Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const ReferralScreen(),
-                                    ),
-                                  ),
-                                ),
-                                const Divider(),
-                                _buildQuickLink(
-                                  context,
                                   icon: Icons.history,
                                   title: 'History',
                                   onTap: () => Navigator.push(
@@ -422,6 +516,20 @@ class _HomeScreenState extends State<HomeScreen> {
             child: BannerAdWidget(),
           ),
         ],
+      ),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 60), // Space for Banner Ad
+        child: FloatingActionButton.extended(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const ReferralScreen()),
+            );
+          },
+          label: const Text('Invite'),
+          icon: const Icon(Icons.person_add_outlined),
+          backgroundColor: AppTheme.tertiaryColor,
+        ),
       ),
     );
   }
@@ -542,6 +650,76 @@ class _HomeScreenState extends State<HomeScreen> {
       trailing: const Icon(Icons.arrow_forward_ios, size: 16),
       onTap: onTap,
       contentPadding: EdgeInsets.zero,
+    );
+  }
+
+  Widget _buildDailyGoalCard(BuildContext context, TaskProvider taskProvider) {
+    final progress = (taskProvider.dailyEarnings / taskProvider.dailyCap).clamp(
+      0.0,
+      1.0,
+    );
+    final percentage = (progress * 100).toInt();
+
+    return ScaleButton(
+      onTap: () {
+        HapticFeedback.lightImpact();
+      },
+      child: Container(
+        padding: const EdgeInsets.all(AppTheme.space16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppTheme.primaryColor,
+              AppTheme.primaryColor.withValues(alpha: 0.8),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(AppTheme.radiusL),
+          boxShadow: AppTheme.elevatedShadow,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Daily Goal',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  '$percentage%',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppTheme.space12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AppTheme.radiusS),
+              child: LinearProgressIndicator(
+                value: progress,
+                backgroundColor: Colors.white.withValues(alpha: 0.2),
+                valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                minHeight: 8,
+              ),
+            ),
+            const SizedBox(height: AppTheme.space8),
+            Text(
+              'Earn ₹${(taskProvider.dailyCap - taskProvider.dailyEarnings).toStringAsFixed(2)} more to reach your goal!',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Colors.white.withValues(alpha: 0.8),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

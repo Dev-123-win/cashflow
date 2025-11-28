@@ -9,6 +9,10 @@ import '../../providers/user_provider.dart';
 import '../../widgets/error_states.dart';
 import '../../widgets/custom_dialog.dart';
 
+import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../widgets/shimmer_loading.dart';
+
 class WithdrawalScreen extends StatefulWidget {
   const WithdrawalScreen({super.key});
 
@@ -30,6 +34,21 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
     _upiController = TextEditingController();
     _amountController = TextEditingController();
     _initializeDeviceId();
+    _loadSavedUpi();
+  }
+
+  Future<void> _loadSavedUpi() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedUpi = prefs.getString('saved_upi_id');
+      if (savedUpi != null && mounted) {
+        setState(() {
+          _upiController.text = savedUpi;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading saved UPI: $e');
+    }
   }
 
   Future<void> _initializeDeviceId() async {
@@ -152,6 +171,10 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
         upiId: _upiController.text,
         deviceId: _deviceId!,
       );
+
+      // Save UPI ID
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('saved_upi_id', _upiController.text);
 
       final withdrawalId = result['withdrawalId'] as String? ?? 'pending';
 
@@ -318,6 +341,17 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
               // Balance Card
               Consumer<UserProvider>(
                 builder: (context, userProvider, _) {
+                  if (userProvider.isLoading) {
+                    return const ShimmerLoading.rectangular(
+                      height: 180,
+                      shapeBorder: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(
+                          Radius.circular(AppTheme.radiusL),
+                        ),
+                      ),
+                    );
+                  }
+
                   final currentBalance = userProvider.user.availableBalance;
                   return Container(
                     padding: const EdgeInsets.all(AppTheme.space24),
@@ -430,6 +464,7 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
                           return GestureDetector(
                             onTap: canUse
                                 ? () {
+                                    HapticFeedback.lightImpact();
                                     _amountController.text = amount
                                         .toStringAsFixed(0);
                                     setState(() {});

@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../core/theme/app_theme.dart';
 import '../../services/game_service.dart';
 import '../../services/cooldown_service.dart';
 import '../../services/cloudflare_workers_service.dart';
+import '../../services/ad_service.dart';
+import '../../services/local_notification_service.dart';
 import '../../providers/user_provider.dart';
 import '../../widgets/custom_dialog.dart';
+import '../../widgets/error_states.dart';
 
 class MemoryMatchScreen extends StatefulWidget {
   const MemoryMatchScreen({super.key});
@@ -18,6 +22,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
     with TickerProviderStateMixin {
   late final GameService _gameService;
   late final CooldownService _cooldownService;
+  late final AdService _adService;
   late MemoryMatchGame _game;
   int? _selectedIndex1;
   int? _selectedIndex2;
@@ -35,6 +40,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
     super.initState();
     _gameService = GameService();
     _cooldownService = CooldownService();
+    _adService = AdService();
     _game = _gameService.createMemoryMatchGame();
     _isGameCompleted = false;
 
@@ -72,6 +78,21 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
   }
 
   Future<void> _handleCardTap(int index) async {
+    if (index == 4) return; // Center card
+
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+
+    // Check Daily Limit
+    if (userProvider.user.gamesPlayedToday >= 20) {
+      if (mounted) {
+        StateSnackbar.showWarning(
+          context,
+          'Daily game limit reached (20/20). Come back tomorrow!',
+        );
+      }
+      return;
+    }
+
     if (_isProcessing ||
         _game.revealed[index] ||
         _game.matched[index] ||
@@ -104,16 +125,9 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
         });
 
         if (_game.isGameOver()) {
-          if (_game.moves >= 6) {
-            // Minimum possible moves to win is 6
-            _isGameCompleted = true;
-            await _recordGameWin();
-            if (mounted) {
-              _showGameResult();
-            }
-          } else {
-            // Suspicious state, reset
-            _resetGame();
+          _isGameCompleted = true;
+          if (mounted) {
+            _showClaimRewardDialog();
           }
         }
       } else {
@@ -131,6 +145,72 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
     }
   }
 
+  void _showClaimRewardDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => CustomDialog(
+        title: 'You Won! 🎉',
+        emoji: '🏆',
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Great memory!'),
+            const SizedBox(height: 8),
+            const Text('Watch a short ad to claim your reward.'),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.green.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.green),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.play_circle_filled, color: Colors.green),
+                  SizedBox(width: 8),
+                  Text(
+                    'Claim Reward',
+                    style: TextStyle(
+                      color: Colors.green,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _watchAdToClaim();
+            },
+            child: const Text('Watch Ad & Claim'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _resetGame();
+            },
+            child: const Text('Skip Reward'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _watchAdToClaim() async {
+    await _adService.showRewardedAd(
+      onRewardEarned: (reward) async {
+        await _recordGameWin();
+      },
+    );
+  }
+
   Future<void> _recordGameWin() async {
     try {
       final userProvider = context.read<UserProvider>();
@@ -140,21 +220,9 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
       final isBackendHealthy = await cloudflareService.healthCheck();
       if (!isBackendHealthy) {
         if (mounted) {
-          showDialog(
-            context: context,
-            builder: (context) => CustomDialog(
-              title: 'Connection Error',
-              emoji: '⚠️',
-              content: const Text(
-                'Cannot connect to server. Game result not saved.',
-              ),
-              actions: [
-                ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('OK'),
-                ),
-              ],
-            ),
+          StateSnackbar.showError(
+            context,
+            'Connection error. Reward not saved.',
           );
         }
         return;
@@ -176,31 +244,42 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
         customReward: reward,
       );
 
+      // Optimistic update to save reads
+      userProvider.updateLocalState(
+        availableBalance: userProvider.user.availableBalance + reward,
+        totalEarnings: userProvider.user.totalEarnings + reward,
+        gamesPlayedToday: userProvider.user.gamesPlayedToday + 1,
+      );
+
       _cooldownService.startCooldown(
         userProvider.user.userId,
         'game_memory',
         300,
       );
+
+      // Schedule notification
+      LocalNotificationService().scheduleCooldownExpiry(
+        gameName: 'Memory Match',
+        duration: const Duration(seconds: 300),
+      );
+
+      if (mounted) {
+        _showGameResult(reward);
+      }
     } catch (e) {
       debugPrint('Error recording game: $e');
     }
   }
 
-  void _showGameResult() {
+  void _showGameResult(double reward) {
     final accuracy = _game.getAccuracy();
-    double reward = 0.50;
-    if (accuracy >= 90) {
-      reward = 0.75;
-    } else if (accuracy >= 70) {
-      reward = 0.60;
-    }
 
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => CustomDialog(
-        title: 'Game Complete!',
-        emoji: '🎉',
+        title: 'Reward Claimed!',
+        emoji: '💰',
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -217,40 +296,26 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
               ],
             ),
             const SizedBox(height: AppTheme.space24),
-            Container(
-              padding: const EdgeInsets.all(AppTheme.space12),
-              decoration: BoxDecoration(
-                color: Colors.green.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(AppTheme.radiusM),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.monetization_on, color: Colors.green),
-                  const SizedBox(width: 8),
-                  Text(
-                    '₹${reward.toStringAsFixed(2)} earned!',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Colors.green,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
+            Text(
+              '₹${reward.toStringAsFixed(2)} added to wallet!',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: Colors.green,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ],
         ),
         actions: [
-          OutlinedButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
               _resetGame();
             },
             child: const Text('Play Again'),
+          ),
+          OutlinedButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
           ),
         ],
       ),
@@ -285,6 +350,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
       _selectedIndex2 = null;
       _isProcessing = false;
       _isPreviewMode = true;
+      _isGameCompleted = false;
     });
 
     Future.delayed(Duration(seconds: _previewSeconds), () {
@@ -366,7 +432,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                '${_game.matchedPairs}/6',
+                                '${_game.matchedPairs}/4',
                                 style: Theme.of(context).textTheme.headlineSmall
                                     ?.copyWith(
                                       fontWeight: FontWeight.bold,
@@ -399,7 +465,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
                   ),
                   const SizedBox(height: AppTheme.space32),
 
-                  // Game Board
+                  // Game Board (3x3)
                   Container(
                     padding: const EdgeInsets.all(AppTheme.space8),
                     decoration: BoxDecoration(
@@ -408,13 +474,14 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
                       boxShadow: AppTheme.cardShadow,
                     ),
                     child: GridView.count(
-                      crossAxisCount: 4,
+                      crossAxisCount: 3,
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       childAspectRatio: 1,
                       mainAxisSpacing: 8,
                       crossAxisSpacing: 8,
-                      children: List.generate(12, (index) {
+                      children: List.generate(9, (index) {
+                        final isCenter = index == 4;
                         final isRevealed =
                             _game.revealed[index] || _isPreviewMode;
                         final isMatched = _game.matched[index];
@@ -422,6 +489,27 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
                         final isSelected =
                             _selectedIndex1 == index ||
                             _selectedIndex2 == index;
+
+                        if (isCenter) {
+                          return Container(
+                            decoration: BoxDecoration(
+                              color: AppTheme.backgroundColor,
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radiusS,
+                              ),
+                              border: Border.all(
+                                color: AppTheme.surfaceVariant,
+                              ),
+                            ),
+                            child: const Center(
+                              child: Icon(
+                                Icons.gamepad,
+                                color: AppTheme.primaryColor,
+                                size: 32,
+                              ),
+                            ),
+                          );
+                        }
 
                         return GestureDetector(
                           onTap: _isProcessing || isMatched || _isPreviewMode
@@ -527,7 +615,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
                               style: Theme.of(context).textTheme.labelLarge,
                             ),
                             Text(
-                              '${(_game.matchedPairs / 6 * 100).toStringAsFixed(0)}%',
+                              '${(_game.matchedPairs / 4 * 100).toStringAsFixed(0)}%',
                               style: Theme.of(context).textTheme.labelLarge
                                   ?.copyWith(
                                     color: AppTheme.primaryColor,
@@ -540,7 +628,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
                         ClipRRect(
                           borderRadius: BorderRadius.circular(4),
                           child: LinearProgressIndicator(
-                            value: _game.matchedPairs / 6,
+                            value: _game.matchedPairs / 4,
                             minHeight: 8,
                             backgroundColor: AppTheme.surfaceVariant,
                             valueColor: AlwaysStoppedAnimation(
@@ -646,8 +734,8 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
                         Text(
                           '• Cards are hidden, tap to reveal\n'
                           '• Match pairs of identical emojis\n'
-                          '• Complete all 6 pairs to win\n'
-                          '• Better accuracy = Higher reward!\n'
+                          '• Complete all 4 pairs to win\n'
+                          '• Watch ad to claim reward\n'
                           '• 90%+ accuracy: ₹0.75 | 70%+: ₹0.60 | Base: ₹0.50',
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(

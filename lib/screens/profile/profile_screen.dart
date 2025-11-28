@@ -6,6 +6,7 @@ import '../../providers/user_provider.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/zen_card.dart';
 import '../../widgets/scale_button.dart';
+import '../settings/settings_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -47,6 +48,24 @@ class ProfileScreen extends StatelessWidget {
         elevation: 0,
         title: const Text('My Profile'),
         actions: [
+          ScaleButton(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              );
+            },
+            child: Container(
+              margin: const EdgeInsets.only(right: AppTheme.space12),
+              padding: const EdgeInsets.all(AppTheme.space8),
+              decoration: BoxDecoration(
+                color: AppTheme.surfaceColor,
+                shape: BoxShape.circle,
+                boxShadow: AppTheme.softShadow,
+              ),
+              child: const Icon(Icons.settings_outlined, color: Colors.black),
+            ),
+          ),
           ScaleButton(
             onTap: () => _logout(context),
             child: Container(

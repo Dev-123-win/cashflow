@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
+import 'dart:async';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../core/theme/app_theme.dart';
 import '../providers/user_provider.dart';
 
@@ -12,10 +15,124 @@ class LeaderboardScreen extends StatefulWidget {
 }
 
 class _LeaderboardScreenState extends State<LeaderboardScreen> {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  String _selectedFilter = 'allTime'; // allTime, monthly, weekly
-  int _selectedPage = 0;
-  final int _itemsPerPage = 10;
+  List<dynamic> _leaderboardData = [];
+  bool _isLoading = true;
+  String _errorMessage = '';
+  Timer? _timer;
+  Duration _timeLeft = Duration.zero;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchLeaderboard();
+    _startTimer();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _startTimer() {
+    // Calculate time until next midnight (UTC or local? Worker runs at midnight UTC usually)
+    // Let's assume midnight UTC for consistency with Cron "0 0 * * *"
+    final now = DateTime.now().toUtc();
+    final tomorrow = DateTime.utc(now.year, now.month, now.day + 1);
+    _timeLeft = tomorrow.difference(now);
+
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        if (_timeLeft.inSeconds > 0) {
+          _timeLeft = _timeLeft - const Duration(seconds: 1);
+        } else {
+          // Refresh when timer hits zero
+          _fetchLeaderboard();
+          final now = DateTime.now().toUtc();
+          final tomorrow = DateTime.utc(now.year, now.month, now.day + 1);
+          _timeLeft = tomorrow.difference(now);
+        }
+      });
+    });
+  }
+
+  Future<void> _fetchLeaderboard() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
+    });
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cachedData = prefs.getString('leaderboard_data');
+      final cachedTime = prefs.getInt('leaderboard_timestamp');
+
+      // Use cache if less than 1 hour old
+      if (cachedData != null && cachedTime != null) {
+        final now = DateTime.now().millisecondsSinceEpoch;
+        if (now - cachedTime < 3600000) {
+          // 1 hour
+          final data = json.decode(cachedData);
+          if (mounted) {
+            setState(() {
+              _leaderboardData = data;
+              _isLoading = false;
+            });
+          }
+          // Fetch background update if needed, but for now we trust cache
+          // return; // Uncomment to strictly use cache
+        }
+      }
+
+      // Replace with your actual Worker URL
+      const workerUrl =
+          'https://earnquest-worker.supreet-dalawai.workers.dev/api/leaderboard';
+      // Note: In production, use a config file for URLs
+
+      final response = await http.get(Uri.parse(workerUrl));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          final leaderboard = data['leaderboard'] ?? [];
+
+          // Update cache
+          await prefs.setString('leaderboard_data', json.encode(leaderboard));
+          await prefs.setInt(
+            'leaderboard_timestamp',
+            DateTime.now().millisecondsSinceEpoch,
+          );
+
+          if (mounted) {
+            setState(() {
+              _leaderboardData = leaderboard;
+              _isLoading = false;
+            });
+          }
+        } else {
+          throw Exception(data['error'] ?? 'Failed to load leaderboard');
+        }
+      } else {
+        throw Exception('Failed to load leaderboard: ${response.statusCode}');
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          // If we have cache, show it even if expired, but show error snackbar
+          // For now just show error state
+          _errorMessage = e.toString();
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
+    String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
+    return "${twoDigits(duration.inHours)}:$twoDigitMinutes:$twoDigitSeconds";
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,217 +145,69 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       ),
       body: Column(
         children: [
-          // Filter Tabs
+          // Timer Banner
           Container(
-            color: AppTheme.primaryColor.withValues(alpha: 0.1),
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: [
-                    _FilterChip(
-                      label: 'All Time',
-                      value: 'allTime',
-                      selectedValue: _selectedFilter,
-                      onTap: () => setState(() => _selectedFilter = 'allTime'),
-                    ),
-                    const SizedBox(width: 12),
-                    _FilterChip(
-                      label: 'This Month',
-                      value: 'monthly',
-                      selectedValue: _selectedFilter,
-                      onTap: () => setState(() => _selectedFilter = 'monthly'),
-                    ),
-                    const SizedBox(width: 12),
-                    _FilterChip(
-                      label: 'This Week',
-                      value: 'weekly',
-                      selectedValue: _selectedFilter,
-                      onTap: () => setState(() => _selectedFilter = 'weekly'),
-                    ),
-                  ],
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            color: Colors.orange.shade50,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.timer, size: 16, color: Colors.orange),
+                const SizedBox(width: 8),
+                Text(
+                  'Updates in: ${_formatDuration(_timeLeft)}',
+                  style: const TextStyle(
+                    color: Colors.orange,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
+
           // Leaderboard List
           Expanded(
-            child: StreamBuilder<List<QueryDocumentSnapshot>>(
-              stream: _getLeaderboardStream(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                }
-
-                if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return Center(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _errorMessage.isNotEmpty
+                ? Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(
-                          Icons.leaderboard_outlined,
-                          size: 64,
-                          color: Colors.grey,
-                        ),
+                        Text('Error: $_errorMessage'),
                         const SizedBox(height: 16),
-                        Text(
-                          'No leaderboard data yet',
-                          style: Theme.of(
-                            context,
-                          ).textTheme.titleMedium?.copyWith(color: Colors.grey),
+                        ElevatedButton(
+                          onPressed: _fetchLeaderboard,
+                          child: const Text('Retry'),
                         ),
                       ],
                     ),
-                  );
-                }
+                  )
+                : _leaderboardData.isEmpty
+                ? const Center(child: Text('No leaderboard data yet'))
+                : ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _leaderboardData.length,
+                    itemBuilder: (context, index) {
+                      final userData = _leaderboardData[index];
+                      final rank = index + 1;
+                      final currentUser = context.read<UserProvider>().user;
+                      final isCurrentUser =
+                          userData['userId'] == currentUser.id;
 
-                final docs = snapshot.data!;
-                final totalPages = (docs.length / _itemsPerPage).ceil();
-
-                return Column(
-                  children: [
-                    Expanded(
-                      child: ListView.builder(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        itemCount: _itemsPerPage,
-                        itemBuilder: (context, index) {
-                          final actualIndex =
-                              (_selectedPage * _itemsPerPage) + index;
-                          if (actualIndex >= docs.length) {
-                            return const SizedBox.shrink();
-                          }
-
-                          final doc = docs[actualIndex];
-                          final userData = doc.data() as Map<String, dynamic>;
-                          final rank = actualIndex + 1;
-                          final userId = doc.id;
-                          final currentUser = context.read<UserProvider>().user;
-                          final isCurrentUser = userId == currentUser.id;
-
-                          return _LeaderboardCard(
-                            rank: rank,
-                            name: userData['displayName'] ?? 'Unknown',
-                            avatar: userData['profilePicture'],
-                            earnings: (userData['totalEarned'] ?? 0).toDouble(),
-                            isCurrentUser: isCurrentUser,
-                            userId: userId,
-                          );
-                        },
-                      ),
-                    ),
-                    // Pagination
-                    if (totalPages > 1)
-                      Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            ElevatedButton.icon(
-                              onPressed: _selectedPage > 0
-                                  ? () => setState(() => _selectedPage--)
-                                  : null,
-                              icon: const Icon(Icons.arrow_back),
-                              label: const Text('Previous'),
-                            ),
-                            Text(
-                              'Page ${_selectedPage + 1} of $totalPages',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            ElevatedButton.icon(
-                              onPressed: _selectedPage < totalPages - 1
-                                  ? () => setState(() => _selectedPage++)
-                                  : null,
-                              icon: const Icon(Icons.arrow_forward),
-                              label: const Text('Next'),
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
-                );
-              },
-            ),
+                      return _LeaderboardCard(
+                        rank: rank,
+                        name: userData['displayName'] ?? 'Unknown',
+                        avatar: userData['profilePicture'],
+                        earnings: (userData['totalEarned'] ?? 0).toDouble(),
+                        isCurrentUser: isCurrentUser,
+                        userId: userData['userId'] ?? '',
+                      );
+                    },
+                  ),
           ),
         ],
-      ),
-    );
-  }
-
-  Stream<List<QueryDocumentSnapshot>> _getLeaderboardStream() {
-    final now = DateTime.now();
-    final startDate = _getStartDate(now);
-
-    return _firestore
-        .collection('users')
-        .orderBy('totalEarned', descending: true)
-        .snapshots()
-        .map((snapshot) {
-          if (_selectedFilter == 'allTime') {
-            return snapshot.docs;
-          }
-
-          // Filter by date if monthly or weekly
-          final filtered = snapshot.docs.where((doc) {
-            final userData = doc.data();
-            final timestamp = userData['lastGameDate'] as Timestamp?;
-            if (timestamp == null) return false;
-            return timestamp.toDate().isAfter(startDate);
-          }).toList();
-
-          return filtered;
-        });
-  }
-
-  DateTime _getStartDate(DateTime now) {
-    if (_selectedFilter == 'monthly') {
-      return DateTime(now.year, now.month, 1);
-    } else if (_selectedFilter == 'weekly') {
-      return now.subtract(Duration(days: now.weekday - 1));
-    }
-    return DateTime.fromMicrosecondsSinceEpoch(0);
-  }
-}
-
-class _FilterChip extends StatelessWidget {
-  final String label;
-  final String value;
-  final String selectedValue;
-  final VoidCallback onTap;
-
-  const _FilterChip({
-    required this.label,
-    required this.value,
-    required this.selectedValue,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isSelected = value == selectedValue;
-    return FilterChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (_) => onTap(),
-      backgroundColor: Colors.transparent,
-      selectedColor: AppTheme.primaryColor.withValues(alpha: 0.3),
-      labelStyle: TextStyle(
-        color: isSelected ? AppTheme.primaryColor : Colors.grey,
-        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-      ),
-      side: BorderSide(
-        color: isSelected ? AppTheme.primaryColor : Colors.grey.shade300,
-        width: isSelected ? 2 : 1,
       ),
     );
   }

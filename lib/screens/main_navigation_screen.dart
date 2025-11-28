@@ -4,9 +4,9 @@ import 'package:iconsax/iconsax.dart';
 import '../core/theme/app_theme.dart';
 import '../widgets/floating_dock.dart';
 import 'home/home_screen.dart';
-import 'tasks/tasks_screen.dart';
-import 'games/games_screen.dart';
-import 'games/spin_screen.dart';
+import 'earn_screen.dart';
+import 'wallet_screen.dart';
+import 'profile/profile_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -20,19 +20,19 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   final List<Widget> _screens = [
     const HomeScreen(),
-    const TasksScreen(),
-    const GamesScreen(),
-    const SpinScreen(),
+    const EarnScreen(),
+    const WalletScreen(),
+    const ProfileScreen(),
   ];
 
   final List<IconData> _icons = [
     Iconsax.home_2,
-    Iconsax.task_square,
-    Iconsax.game,
-    Iconsax.medal_star,
+    Iconsax.money_tick,
+    Iconsax.wallet_2,
+    Iconsax.user,
   ];
 
-  final List<String> _labels = ['Home', 'Tasks', 'Games', 'Spin'];
+  final List<String> _labels = ['Home', 'Earn', 'Wallet', 'Profile'];
 
   DateTime? _lastPressedAt;
 

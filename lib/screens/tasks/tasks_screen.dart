@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/task_model.dart';
 import '../../services/request_deduplication_service.dart';
@@ -14,6 +15,11 @@ import '../../widgets/scale_button.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../core/constants/app_assets.dart';
 import '../../widgets/zen_card.dart';
+import '../../services/task_service.dart';
+import '../../services/ad_service.dart';
+import '../../widgets/native_ad_widget.dart';
+import '../../providers/task_provider.dart';
+import '../../widgets/shimmer_loading.dart';
 
 class TasksScreen extends StatefulWidget {
   const TasksScreen({super.key});
@@ -22,16 +28,60 @@ class TasksScreen extends StatefulWidget {
   State<TasksScreen> createState() => _TasksScreenState();
 }
 
-class _TasksScreenState extends State<TasksScreen> {
-  final List<Task> _tasks = [];
+class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
+  bool _isLoading = true;
+  List<Task> _tasks = [];
   String? _deviceId;
   final Set<String> _loadingTaskIds = {};
+  DateTime? _pausedTime;
+  String? _pendingTaskId;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadTasks();
     _initializeDeviceId();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      _pausedTime = DateTime.now();
+    } else if (state == AppLifecycleState.resumed) {
+      _checkTaskCompletion();
+    }
+  }
+
+  Future<void> _checkTaskCompletion() async {
+    if (_pendingTaskId == null || _pausedTime == null) return;
+
+    final timeSpent = DateTime.now().difference(_pausedTime!);
+    final taskId = _pendingTaskId!;
+    _pendingTaskId = null;
+    _pausedTime = null;
+
+    // Require at least 5 seconds spent outside the app
+    if (timeSpent.inSeconds >= 5) {
+      final task = _tasks.firstWhere((t) => t.id == taskId);
+      await _completeTask(taskId, task.title, task.reward);
+    } else {
+      if (mounted) {
+        StateSnackbar.showWarning(
+          context,
+          'You didn\'t complete the task! Please try again.',
+        );
+        setState(() {
+          _loadingTaskIds.remove(taskId);
+        });
+      }
+    }
   }
 
   Future<void> _initializeDeviceId() async {
@@ -42,19 +92,35 @@ class _TasksScreenState extends State<TasksScreen> {
     }
   }
 
-  void _loadTasks() {
-    // Load sample tasks - in a real app these might come from a backend config
-    setState(() {
-      _tasks.clear();
-    });
+  Future<void> _loadTasks() async {
+    if (!mounted) return;
+    setState(() => _isLoading = true);
+    try {
+      final tasks = await TaskService().getTasks();
+      if (mounted) {
+        setState(() {
+          _tasks = tasks;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+      debugPrint('Error loading tasks: $e');
+    }
   }
 
   Future<void> _launchTaskAction(String taskId, String url) async {
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
+      _pendingTaskId = taskId; // Mark task as pending verification
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
       debugPrint('Could not launch $url');
+      setState(() {
+        _loadingTaskIds.remove(taskId);
+      });
     }
   }
 
@@ -71,33 +137,87 @@ class _TasksScreenState extends State<TasksScreen> {
 
     if (_loadingTaskIds.contains(taskId)) return;
 
+    // Show BottomSheet
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.surfaceColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'How to earn',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 16),
+            _buildStep(context, 1, 'Click "Start Task" to open the link.'),
+            _buildStep(
+              context,
+              2,
+              'Complete the action (e.g., install app, sign up).',
+            ),
+            _buildStep(context, 3, 'Return to EarnQuest to get your reward.'),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _startTask(taskId, actionUrl);
+                },
+                child: const Text('Start Task'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStep(BuildContext context, int step, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Container(
+            width: 24,
+            height: 24,
+            decoration: BoxDecoration(
+              color: AppTheme.primaryColor.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(
+                '$step',
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: AppTheme.primaryColor,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(text, style: Theme.of(context).textTheme.bodyMedium),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _startTask(String taskId, String actionUrl) async {
     setState(() {
       _loadingTaskIds.add(taskId);
     });
 
-    try {
-      // 1. Launch external action
-      await _launchTaskAction(taskId, actionUrl);
-
-      // 2. Wait for user to return (simulate time spent)
-      // In a real app, we might use AppLifecycleState to detect return
-      await Future.delayed(const Duration(seconds: 5));
-
-      // 3. Complete task
-      if (mounted) {
-        await _completeTask(taskId, title, reward);
-      }
-    } catch (e) {
-      if (mounted) {
-        StateSnackbar.showError(context, 'Task failed: $e');
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _loadingTaskIds.remove(taskId);
-        });
-      }
-    }
+    // Launch external action - verification happens in didChangeAppLifecycleState
+    await _launchTaskAction(taskId, actionUrl);
   }
 
   Future<void> _completeTask(String taskId, String title, double reward) async {
@@ -160,7 +280,6 @@ class _TasksScreenState extends State<TasksScreen> {
       }
 
       // Call Backend
-      // We use the cloudflare service to record task earning which handles validation
       final result = await cloudflareService.recordTaskEarning(
         userId: user.uid,
         taskId: taskId,
@@ -180,8 +299,16 @@ class _TasksScreenState extends State<TasksScreen> {
             context,
             'Task completed! +₹${reward.toStringAsFixed(2)}',
           );
-          // Refresh user to update completedTaskIds
-          await userProvider.refreshUser();
+          // Manually update local state to avoid a read
+          userProvider.updateLocalState(
+            availableBalance: userProvider.user.availableBalance + reward,
+            totalEarnings: userProvider.user.totalEarnings + reward,
+            completedTasks: userProvider.user.completedTasks + 1,
+            completedTaskIds: [...userProvider.user.completedTaskIds, taskId],
+          );
+
+          // Check for Ad Break
+          await AdService().checkAdBreak();
         }
       } else {
         throw Exception(result['error'] ?? 'Unknown error');
@@ -218,22 +345,11 @@ class _TasksScreenState extends State<TasksScreen> {
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: AppTheme.space12),
-                    Consumer<UserProvider>(
-                      builder: (context, userProvider, _) {
-                        final knownTaskIds = [
-                          'survey_1',
-                          'share_1',
-                          'rating_1',
-                        ];
-                        final completedToday = knownTaskIds
-                            .where(
-                              (id) => userProvider.user.completedTaskIds
-                                  .contains(id),
-                            )
-                            .length;
-                        final totalTasks = knownTaskIds.length;
-
-                        final earned = completedToday * 0.10;
+                    Consumer2<UserProvider, TaskProvider>(
+                      builder: (context, userProvider, taskProvider, _) {
+                        final completedToday = userProvider.user.completedTasks;
+                        final totalTasks = _tasks.length;
+                        final earned = taskProvider.dailyEarnings;
 
                         return Column(
                           children: [
@@ -241,7 +357,7 @@ class _TasksScreenState extends State<TasksScreen> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  '$completedToday/$totalTasks tasks completed',
+                                  '$completedToday tasks completed',
                                   style: Theme.of(context).textTheme.bodyMedium,
                                 ),
                                 Text(
@@ -251,7 +367,7 @@ class _TasksScreenState extends State<TasksScreen> {
                                 ),
                               ],
                             ),
-                            const SizedBox(height: AppTheme.space12),
+                            const SizedBox(height: AppTheme.space8),
                             ClipRRect(
                               borderRadius: BorderRadius.circular(
                                 AppTheme.radiusS,
@@ -263,11 +379,11 @@ class _TasksScreenState extends State<TasksScreen> {
                                         1.0,
                                       )
                                     : 0,
-                                minHeight: 8,
                                 backgroundColor: AppTheme.surfaceVariant,
-                                valueColor: const AlwaysStoppedAnimation(
-                                  AppTheme.successColor,
+                                valueColor: const AlwaysStoppedAnimation<Color>(
+                                  AppTheme.primaryColor,
                                 ),
+                                minHeight: 6,
                               ),
                             ),
                           ],
@@ -288,61 +404,88 @@ class _TasksScreenState extends State<TasksScreen> {
 
               Consumer<UserProvider>(
                 builder: (context, userProvider, _) {
+                  if (_isLoading) {
+                    return ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: 5,
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: AppTheme.space12),
+                      itemBuilder: (context, index) =>
+                          const ShimmerLoading.rectangular(
+                            height: 80,
+                            shapeBorder: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(AppTheme.radiusM),
+                              ),
+                            ),
+                          ),
+                    );
+                  }
+
+                  if (_tasks.isEmpty) {
+                    return const EmptyStateWidget(
+                      title: 'No Tasks',
+                      message:
+                          'No tasks available right now. Check back later!',
+                      icon: Icons.assignment_turned_in_outlined,
+                    );
+                  }
+
+                  final availableTasks = _tasks.where((task) {
+                    return !userProvider.user.completedTaskIds.contains(
+                      task.id,
+                    );
+                  }).toList();
+
+                  if (availableTasks.isEmpty) {
+                    return const EmptyStateWidget(
+                      title: 'All Done!',
+                      message: 'All tasks completed! Great job! 🎉',
+                      icon: Icons.check_circle_outline,
+                    );
+                  }
+
                   return Column(
                     children: [
-                      _TaskCard(
-                        title: 'Daily Survey',
-                        description: 'Answer 5 quick questions',
-                        duration: '1 min',
-                        reward: 0.10,
-                        icon: Icons.assignment_outlined,
-                        color: const Color(0xFF6C63FF),
-                        isCompleted: userProvider.user.completedTaskIds
-                            .contains('survey_1'),
-                        isLoading: _loadingTaskIds.contains('survey_1'),
-                        onTap: () => _handleTaskTap(
-                          'survey_1',
-                          'Daily Survey',
-                          0.10,
-                          'https://google.com',
-                        ),
-                      ),
-                      const SizedBox(height: AppTheme.space12),
-                      _TaskCard(
-                        title: 'Share & Earn',
-                        description: 'Share app with friends',
-                        duration: '30 sec',
-                        reward: 0.10,
-                        icon: Icons.share_outlined,
-                        color: const Color(0xFF00D9C0),
-                        isCompleted: userProvider.user.completedTaskIds
-                            .contains('share_1'),
-                        isLoading: _loadingTaskIds.contains('share_1'),
-                        onTap: () => _handleTaskTap(
-                          'share_1',
-                          'Share & Earn',
-                          0.10,
-                          'https://whatsapp.com',
-                        ),
-                      ),
-                      const SizedBox(height: AppTheme.space12),
-                      _TaskCard(
-                        title: 'Rate Us',
-                        description: 'Rate us on Play Store',
-                        duration: '1 min',
-                        reward: 0.10,
-                        icon: Icons.star_outline,
-                        color: const Color(0xFFFFB800),
-                        isCompleted: userProvider.user.completedTaskIds
-                            .contains('rating_1'),
-                        isLoading: _loadingTaskIds.contains('rating_1'),
-                        onTap: () => _handleTaskTap(
-                          'rating_1',
-                          'Rate Us',
-                          0.10,
-                          'market://details?id=com.example.cashflow',
-                        ),
-                      ),
+                      ...availableTasks.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final task = entry.value;
+
+                        return Column(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                bottom: AppTheme.space12,
+                              ),
+                              child: _TaskCard(
+                                title: task.title,
+                                description: task.description,
+                                duration: task.duration,
+                                reward: task.reward,
+                                iconUrl: task.icon,
+                                color: Colors.blue, // Default color
+                                isCompleted: false,
+                                isLoading: _loadingTaskIds.contains(task.id),
+                                onTap: () => _handleTaskTap(
+                                  task.id,
+                                  task.title,
+                                  task.reward,
+                                  task.actionUrl,
+                                ),
+                              ),
+                            ),
+                            // Insert Native Ad after every 3rd task
+                            if ((index + 1) % 3 == 0)
+                              const Padding(
+                                padding: EdgeInsets.only(
+                                  bottom: AppTheme.space12,
+                                ),
+                                child: NativeAdWidget(), // Placeholder for now
+                              ),
+                          ],
+                        );
+                      }),
                     ],
                   );
                 },
@@ -359,11 +502,9 @@ class _TasksScreenState extends State<TasksScreen> {
 
               Consumer<UserProvider>(
                 builder: (context, userProvider, _) {
-                  final knownTaskIds = ['survey_1', 'share_1', 'rating_1'];
-                  final completedTasks = knownTaskIds
-                      .where(
-                        (id) => userProvider.user.completedTaskIds.contains(id),
-                      )
+                  final completedIds = userProvider.user.completedTaskIds;
+                  final completedTasks = _tasks
+                      .where((task) => completedIds.contains(task.id))
                       .toList();
 
                   if (completedTasks.isEmpty) {
@@ -386,7 +527,7 @@ class _TasksScreenState extends State<TasksScreen> {
                   return Column(
                     children: completedTasks
                         .map(
-                          (taskId) => Padding(
+                          (task) => Padding(
                             padding: const EdgeInsets.only(
                               bottom: AppTheme.space12,
                             ),
@@ -415,13 +556,13 @@ class _TasksScreenState extends State<TasksScreen> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        _getTaskTitle(taskId),
+                                        task.title,
                                         style: Theme.of(
                                           context,
                                         ).textTheme.titleMedium,
                                       ),
                                       Text(
-                                        'Earned ₹0.10',
+                                        'Earned ₹${task.reward.toStringAsFixed(2)}',
                                         style: Theme.of(context)
                                             .textTheme
                                             .bodySmall
@@ -446,19 +587,6 @@ class _TasksScreenState extends State<TasksScreen> {
       ),
     );
   }
-
-  String _getTaskTitle(String taskId) {
-    switch (taskId) {
-      case 'survey_1':
-        return 'Daily Survey';
-      case 'share_1':
-        return 'Share & Earn';
-      case 'rating_1':
-        return 'Rate Us';
-      default:
-        return 'Task';
-    }
-  }
 }
 
 class _TaskCard extends StatelessWidget {
@@ -466,7 +594,7 @@ class _TaskCard extends StatelessWidget {
   final String description;
   final String duration;
   final double reward;
-  final IconData icon;
+  final String? iconUrl;
   final Color color;
   final VoidCallback onTap;
   final bool isCompleted;
@@ -477,7 +605,7 @@ class _TaskCard extends StatelessWidget {
     required this.description,
     required this.duration,
     required this.reward,
-    required this.icon,
+    this.iconUrl,
     required this.color,
     required this.onTap,
     required this.isCompleted,
@@ -509,11 +637,23 @@ class _TaskCard extends StatelessWidget {
                         color: color,
                       ),
                     )
-                  : Icon(
-                      icon,
-                      color: isCompleted ? Colors.grey : color,
-                      size: 24,
-                    ),
+                  : (iconUrl != null && iconUrl!.startsWith('http')
+                        ? CachedNetworkImage(
+                            imageUrl: iconUrl!,
+                            width: 24,
+                            height: 24,
+                            memCacheWidth: 72, // 3x for high density screens
+                            memCacheHeight: 72,
+                            placeholder: (context, url) =>
+                                const Icon(Icons.image),
+                            errorWidget: (context, url, error) =>
+                                const Icon(Icons.error),
+                          )
+                        : Icon(
+                            Icons.assignment, // Default icon
+                            color: isCompleted ? Colors.grey : color,
+                            size: 24,
+                          )),
             ),
             const SizedBox(width: AppTheme.space16),
             Expanded(

@@ -57,12 +57,37 @@ class AuthService {
       // Update display name
       await userCredential.user!.updateDisplayName(displayName);
 
-      // Create user document in Firestore
-      await _createUserInFirestore(
-        userId: userCredential.user!.uid,
-        email: email,
-        displayName: displayName,
-      );
+      // Create user document in Firestore with retry logic
+      bool profileCreated = false;
+      int attempts = 0;
+      while (!profileCreated && attempts < 3) {
+        try {
+          await _createUserInFirestore(
+            userId: userCredential.user!.uid,
+            email: email,
+            displayName: displayName,
+          );
+          // Verify creation
+          final doc = await _firestore
+              .collection('users')
+              .doc(userCredential.user!.uid)
+              .get();
+          if (doc.exists) {
+            profileCreated = true;
+          } else {
+            throw Exception('Profile verification failed');
+          }
+        } catch (e) {
+          attempts++;
+          await Future.delayed(Duration(seconds: 1 * attempts));
+        }
+      }
+
+      if (!profileCreated) {
+        // Critical failure: Delete auth user to prevent zombie state
+        await userCredential.user!.delete();
+        throw Exception('Failed to create user profile. Please try again.');
+      }
 
       // Send email verification
       await userCredential.user!.sendEmailVerification();
@@ -75,6 +100,8 @@ class AuthService {
       return userCredential;
     } on FirebaseAuthException catch (e) {
       throw Exception(_handleAuthException(e));
+    } catch (e) {
+      throw Exception('Signup failed: ${e.toString()}');
     }
   }
 

@@ -33,8 +33,9 @@ class _ParallaxBalanceCardState extends State<ParallaxBalanceCard> {
       AccelerometerEvent event,
     ) {
       final now = DateTime.now().millisecondsSinceEpoch;
-      // Throttle to ~30fps (33ms)
-      if (now - _lastUpdate > 33) {
+      // Throttle to ~15fps (66ms) - Reduced from 30fps to save battery
+      // The parallax effect is still smooth but uses 50% less CPU
+      if (now - _lastUpdate > 66) {
         if (mounted) {
           setState(() {
             _x = event.x;

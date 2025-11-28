@@ -5,6 +5,7 @@ import '../models/user_model.dart';
 import '../services/firestore_service.dart';
 import '../services/auth_service.dart';
 import '../services/cloudflare_workers_service.dart';
+import '../core/di/service_locator.dart';
 
 class UserProvider extends ChangeNotifier {
   User _user = User.empty();
@@ -18,10 +19,10 @@ class UserProvider extends ChangeNotifier {
   String? get error => _error;
   bool get isAuthenticated => _isAuthenticated;
 
-  final _firestoreService = FirestoreService();
+  final _firestoreService = getIt<FirestoreService>();
   final _auth = fb_auth.FirebaseAuth.instance;
 
-  /// Initialize user profile from Firebase
+  /// Initialize user profile from Firebase (Optimized for reads)
   Future<void> initializeUser(String userId) async {
     try {
       _isLoading = true;
@@ -33,26 +34,14 @@ class UserProvider extends ChangeNotifier {
         await AuthService().ensureUserExists(currentUser);
       }
 
-      // Listen to real-time user updates from Firestore
-      _userSubscription = _firestoreService
-          .getUserStream(userId)
-          .listen(
-            (user) {
-              if (user != null) {
-                _user = user;
-                _isAuthenticated = true;
-                _error = null;
-                notifyListeners();
-              }
-            },
-            onError: (error) {
-              _error = error.toString();
-              notifyListeners();
-            },
-          );
+      // Fetch user once (No Stream!)
+      // This saves massive amounts of reads. We will update local state manually.
+      final user = await _firestoreService.getUser(userId);
+      _user = user;
+      _isAuthenticated = true;
+      _error = null;
     } catch (e) {
       _error = e.toString();
-      notifyListeners();
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -82,6 +71,25 @@ class UserProvider extends ChangeNotifier {
 
   void updateMonthlyEarnings(double newEarnings) {
     _user = _user.copyWith(monthlyEarnings: newEarnings);
+    notifyListeners();
+  }
+
+  /// Manually update local user state (Optimized)
+  /// Call this after a successful backend operation to update UI without a read
+  void updateLocalState({
+    double? availableBalance,
+    double? totalEarnings,
+    int? completedTasks,
+    int? gamesPlayedToday,
+    List<String>? completedTaskIds,
+  }) {
+    _user = _user.copyWith(
+      availableBalance: availableBalance ?? _user.availableBalance,
+      totalEarnings: totalEarnings ?? _user.totalEarnings,
+      completedTasks: completedTasks ?? _user.completedTasks,
+      gamesPlayedToday: gamesPlayedToday ?? _user.gamesPlayedToday,
+      completedTaskIds: completedTaskIds ?? _user.completedTaskIds,
+    );
     notifyListeners();
   }
 

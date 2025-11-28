@@ -21,51 +21,27 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final List<OnboardingPage> _pages = [
     OnboardingPage(
       assetPath: AppAssets.onboardingEarn,
-      title: 'Complete Simple Tasks',
+      title: 'Earn Real Money',
       description:
-          'Earn ₹0.10-₹0.20 per task by completing surveys, social shares, and more. Fast & easy!',
-      details: ['📝 Surveys & Reviews', '🔗 Social Shares', '⭐ App Ratings'],
+          'Complete tasks, play games, and watch ads to earn cash rewards.',
+      details: ['Complete simple tasks', 'Play fun games', 'Watch short ads'],
       color: const Color(0xFF6366F1),
     ),
     OnboardingPage(
       assetPath: AppAssets.onboardingPlay,
-      title: 'Play & Earn Games',
+      title: 'Daily Rewards',
       description:
-          'Win up to ₹0.08 per game. Play Tic-Tac-Toe, Memory Match, and more. 30-min cooldown.',
-      details: ['🎯 Tic-Tac-Toe', '🧩 Memory Match', '❓ Quiz Games'],
+          'Spin the wheel daily and build streaks for bonus rewards.',
+      details: ['Daily free spin', 'Streak bonuses', 'Referral rewards'],
       color: const Color(0xFF8B5CF6),
     ),
     OnboardingPage(
       assetPath: AppAssets.onboardingWithdraw,
-      title: 'Spin & Win',
+      title: 'Withdraw Anytime',
       description:
-          'Spin the daily wheel once per day for random rewards between ₹0.05-₹1.00. Free spins!',
-      details: ['Daily Free Spin', 'Random Rewards', '💎 Bonus Multipliers'],
-      color: const Color(0xFFFFB800),
-    ),
-    OnboardingPage(
-      assetPath: AppAssets.onboardingEarn, // Reuse earn for ads
-      title: 'Watch Ads & Earn',
-      description:
-          'Watch short video ads and earn ₹0.02-₹0.05 per ad. Up to 15 ads per day.',
-      details: ['30-sec Videos', 'Instant Credit', 'No Spam'],
-      color: const Color(0xFF00D9C0),
-    ),
-    OnboardingPage(
-      assetPath: AppAssets.onboardingWithdraw,
-      title: 'Withdraw Your Money',
-      description:
-          'Reach ₹50 minimum balance and withdraw directly to your UPI or bank account.',
-      details: ['₹50 Minimum', '24-48hr Processing', 'Real Money'],
+          'Reach ₹50 and withdraw directly to your UPI or bank account.',
+      details: ['₹50 minimum', 'UPI/Bank transfer', '24-48hr processing'],
       color: const Color(0xFFEC4899),
-    ),
-    OnboardingPage(
-      assetPath: AppAssets.onboardingPlay, // Reuse play for limits
-      title: 'Daily Limit & Rewards',
-      description:
-          'Max earning: ₹1.50/day. Referrals: Earn ₹2 per friend. Streaks: Bonus rewards!',
-      details: ['₹1.50/Day Cap', '👥 Referral Bonus', '🔥 Streak Multipliers'],
-      color: const Color(0xFF00E676),
     ),
   ];
 

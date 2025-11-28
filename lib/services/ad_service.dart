@@ -331,6 +331,24 @@ class AdService {
   }
 
   // -----------------------------------------------------------------
+  // Ad Break Logic
+  // -----------------------------------------------------------------
+  int _actionCount = 0;
+  static const int _adBreakThreshold = 3;
+
+  /// Check if an ad break should be triggered based on user actions.
+  /// Call this after significant user actions (e.g. completing a task, finishing a game).
+  Future<void> checkAdBreak() async {
+    _actionCount++;
+    if (_actionCount >= _adBreakThreshold) {
+      debugPrint('📺 Ad Break triggered (Actions: $_actionCount)');
+      // Reset counter before showing ad to avoid double trigger if ad fails
+      _actionCount = 0;
+      await showInterstitialAd();
+    }
+  }
+
+  // -----------------------------------------------------------------
   // Dispose all ad objects.
   // -----------------------------------------------------------------
   void disposeAllAds() {

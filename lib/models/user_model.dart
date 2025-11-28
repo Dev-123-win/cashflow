@@ -17,6 +17,7 @@ class User {
   final int failedWithdrawals;
   final bool accountLocked;
   final List<String> completedTaskIds;
+  final int gamesPlayedToday;
 
   User({
     required this.userId,
@@ -37,6 +38,7 @@ class User {
     required this.failedWithdrawals,
     required this.accountLocked,
     required this.completedTaskIds,
+    required this.gamesPlayedToday,
   });
 
   factory User.empty() {
@@ -58,6 +60,7 @@ class User {
       failedWithdrawals: 0,
       accountLocked: false,
       completedTaskIds: [],
+      gamesPlayedToday: 0,
     );
   }
 
@@ -84,6 +87,7 @@ class User {
       failedWithdrawals: json['failedWithdrawals'] ?? 0,
       accountLocked: json['accountLocked'] ?? json['isAccountLocked'] ?? false,
       completedTaskIds: List<String>.from(json['completedTaskIds'] ?? []),
+      gamesPlayedToday: json['gamesPlayedToday'] ?? 0,
     );
   }
 
@@ -110,6 +114,7 @@ class User {
     int? failedWithdrawals,
     bool? accountLocked,
     List<String>? completedTaskIds,
+    int? gamesPlayedToday,
   }) {
     return User(
       userId: userId ?? this.userId,
@@ -130,6 +135,7 @@ class User {
       failedWithdrawals: failedWithdrawals ?? this.failedWithdrawals,
       accountLocked: accountLocked ?? this.accountLocked,
       completedTaskIds: completedTaskIds ?? this.completedTaskIds,
+      gamesPlayedToday: gamesPlayedToday ?? this.gamesPlayedToday,
     );
   }
 }

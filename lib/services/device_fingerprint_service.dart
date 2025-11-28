@@ -2,6 +2,7 @@ import 'package:crypto/crypto.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'dart:io';
 import 'dart:convert';
+import 'package:flutter_jailbreak_detection/flutter_jailbreak_detection.dart';
 
 /// SECURITY SERVICE: Device fingerprinting for fraud detection
 ///
@@ -124,6 +125,15 @@ class DeviceFingerprintService {
     }
 
     return {'platform': 'unknown', 'error': 'Could not get device info'};
+  }
+
+  /// Check if device is rooted/jailbroken
+  Future<bool> isRooted() async {
+    try {
+      return await FlutterJailbreakDetection.jailbroken;
+    } catch (e) {
+      return false;
+    }
   }
 
   /// Clears cached fingerprint (useful for testing)

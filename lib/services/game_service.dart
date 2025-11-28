@@ -36,63 +36,61 @@ class TicTacToeGame {
     return true;
   }
 
-  /// AI makes a move (easier difficulty - intentionally makes suboptimal moves)
+  double difficulty = 0.5; // 0.0 (Easy) to 1.0 (Impossible)
+
+  void setDifficulty(double value) {
+    difficulty = value.clamp(0.0, 1.0);
+  }
+
+  /// AI makes a move based on difficulty
   void aiMove() {
     if (isGameOver) return;
 
-    // 30% chance to play random move (makes AI beatable)
-    if (Random().nextDouble() < 0.3) {
-      final available = board
-          .asMap()
-          .entries
-          .where((e) => e.value.isEmpty)
-          .map((e) => e.key)
-          .toList();
-      if (available.isNotEmpty) {
-        board[available[Random().nextInt(available.length)]] = 'O';
+    // Chance to make a smart move based on difficulty
+    // If random > difficulty, make a random mistake (suboptimal move)
+    bool makeSmartMove = Random().nextDouble() < difficulty;
+
+    if (makeSmartMove) {
+      // 1. Try to win
+      final winMove = _findWinningMove('O');
+      if (winMove != -1) {
+        board[winMove] = 'O';
+        _checkGameState();
+        return;
+      }
+
+      // 2. Block player from winning
+      final blockMove = _findWinningMove('X');
+      if (blockMove != -1) {
+        board[blockMove] = 'O';
+        _checkGameState();
+        return;
+      }
+
+      // 3. Take center if available
+      if (board[4].isEmpty) {
+        board[4] = 'O';
+        _checkGameState();
+        return;
+      }
+
+      // 4. Take a corner
+      final corners = [0, 2, 6, 8].where((i) => board[i].isEmpty).toList();
+      if (corners.isNotEmpty) {
+        board[corners[Random().nextInt(corners.length)]] = 'O';
         _checkGameState();
         return;
       }
     }
 
-    // Try to win (50% of the time)
-    final winMove = _findWinningMove('O');
-    if (winMove != -1 && Random().nextDouble() < 0.5) {
-      board[winMove] = 'O';
-      _checkGameState();
-      return;
-    }
-
-    // Block player from winning (40% of the time)
-    final blockMove = _findWinningMove('X');
-    if (blockMove != -1 && Random().nextDouble() < 0.4) {
-      board[blockMove] = 'O';
-      _checkGameState();
-      return;
-    }
-
-    // Take center if available (60% chance)
-    if (board[4].isEmpty && Random().nextDouble() < 0.6) {
-      board[4] = 'O';
-      _checkGameState();
-      return;
-    }
-
-    // Take a corner
-    final corners = [0, 2, 6, 8].where((i) => board[i].isEmpty).toList();
-    if (corners.isNotEmpty) {
-      board[corners[Random().nextInt(corners.length)]] = 'O';
-      _checkGameState();
-      return;
-    }
-
-    // Take any available space
+    // Fallback: Take any available space (Random move)
     final available = board
         .asMap()
         .entries
         .where((e) => e.value.isEmpty)
         .map((e) => e.key)
         .toList();
+
     if (available.isNotEmpty) {
       board[available[Random().nextInt(available.length)]] = 'O';
       _checkGameState();
@@ -168,34 +166,32 @@ class MemoryMatchGame {
   }
 
   void initializeGame() {
-    final cardEmojis = [
-      '🍎',
-      '🍊',
-      '🍋',
-      '🍌',
-      '🍓',
-      '🍉',
-      '🍎',
-      '🍊',
-      '🍋',
-      '🍌',
-      '🍓',
-      '🍉',
-    ];
+    final cardEmojis = ['🍎', '🍊', '🍋', '🍌', '🍎', '🍊', '🍋', '🍌'];
     cards = cardEmojis..shuffle();
-    revealed = List.filled(12, false);
-    matched = List.filled(12, false);
+    // Insert LOGO at center (index 4)
+    cards.insert(4, 'LOGO');
+
+    revealed = List.filled(9, false);
+    matched = List.filled(9, false);
+
+    // Mark center as matched/revealed so it doesn't interfere
+    matched[4] = true;
+    revealed[4] = true;
+
     moves = 0;
     matchedPairs = 0;
   }
 
   bool revealCard(int index) {
+    if (index == 4) return false; // Center card is not interactive
     if (revealed[index] || matched[index]) return false;
     revealed[index] = true;
     return true;
   }
 
   bool checkMatch(int index1, int index2) {
+    if (index1 == 4 || index2 == 4) return false;
+
     final isMatch = cards[index1] == cards[index2];
     if (isMatch) {
       matched[index1] = true;
@@ -210,7 +206,7 @@ class MemoryMatchGame {
     revealed[index2] = false;
   }
 
-  bool isGameOver() => matchedPairs == 6;
+  bool isGameOver() => matchedPairs == 4; // 4 pairs to win
 
   double getAccuracy() {
     if (moves == 0) return 0;

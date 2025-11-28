@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/task_model.dart';
 import '../services/firestore_service.dart';
+import '../core/di/service_locator.dart';
 
 class TaskProvider extends ChangeNotifier {
   List<Task> _tasks = [];
@@ -19,7 +20,7 @@ class TaskProvider extends ChangeNotifier {
   int get completedTasks =>
       completedTasksCount; // Alias for backwards compatibility
 
-  final _firestoreService = FirestoreService();
+  final _firestoreService = getIt<FirestoreService>();
 
   void setLoading(bool loading) {
     _isLoading = loading;
@@ -59,18 +60,7 @@ class TaskProvider extends ChangeNotifier {
       // Update local task state
       final index = _tasks.indexWhere((t) => t.taskId == taskId);
       if (index != -1) {
-        final task = _tasks[index];
-        _tasks[index] = Task(
-          taskId: task.taskId,
-          title: task.title,
-          description: task.description,
-          type: task.type,
-          reward: task.reward,
-          timeRequired: task.timeRequired,
-          completed: true,
-          completedAt: DateTime.now(),
-          nextAvailableAt: task.nextAvailableAt,
-        );
+        _tasks[index] = _tasks[index].copyWith(completed: true);
       }
 
       // Update daily earnings locally
