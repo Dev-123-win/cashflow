@@ -77,14 +77,14 @@ class UserProvider extends ChangeNotifier {
   /// Manually update local user state (Optimized)
   /// Call this after a successful backend operation to update UI without a read
   void updateLocalState({
-    double? availableBalance,
+    int? coins,
     double? totalEarnings,
     int? completedTasks,
     int? gamesPlayedToday,
     List<String>? completedTaskIds,
   }) {
     _user = _user.copyWith(
-      availableBalance: availableBalance ?? _user.availableBalance,
+      coins: coins ?? _user.coins,
       totalEarnings: totalEarnings ?? _user.totalEarnings,
       completedTasks: completedTasks ?? _user.completedTasks,
       gamesPlayedToday: gamesPlayedToday ?? _user.gamesPlayedToday,

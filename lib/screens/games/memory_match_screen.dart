@@ -230,12 +230,12 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
 
       final accuracy = _game.getAccuracy();
 
-      // Reward based on accuracy: 90%+ = ₹0.75, 70%+ = ₹0.60, else = ₹0.50
-      double reward = 0.50;
+      // Reward based on accuracy: 90%+ = 75 Coins, 70%+ = 60 Coins, else = 50 Coins
+      int reward = 50;
       if (accuracy >= 90) {
-        reward = 0.75;
+        reward = 75;
       } else if (accuracy >= 70) {
-        reward = 0.60;
+        reward = 60;
       }
 
       await _gameService.recordGameWin(
@@ -246,8 +246,8 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
 
       // Optimistic update to save reads
       userProvider.updateLocalState(
-        availableBalance: userProvider.user.availableBalance + reward,
-        totalEarnings: userProvider.user.totalEarnings + reward,
+        coins: userProvider.user.coins + reward,
+        totalEarnings: userProvider.user.totalEarnings + (reward / 1000),
         gamesPlayedToday: userProvider.user.gamesPlayedToday + 1,
       );
 
@@ -271,7 +271,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
     }
   }
 
-  void _showGameResult(double reward) {
+  void _showGameResult(int reward) {
     final accuracy = _game.getAccuracy();
 
     showDialog(
@@ -297,7 +297,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
             ),
             const SizedBox(height: AppTheme.space24),
             Text(
-              '₹${reward.toStringAsFixed(2)} added to wallet!',
+              '${(reward * 1000).toInt()} Coins added to wallet!',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 color: Colors.green,
                 fontWeight: FontWeight.bold,
@@ -450,7 +450,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                '₹0.50+',
+                                '500+ Coins',
                                 style: Theme.of(context).textTheme.headlineSmall
                                     ?.copyWith(
                                       fontWeight: FontWeight.bold,
@@ -736,7 +736,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
                           '• Match pairs of identical emojis\n'
                           '• Complete all 4 pairs to win\n'
                           '• Watch ad to claim reward\n'
-                          '• 90%+ accuracy: ₹0.75 | 70%+: ₹0.60 | Base: ₹0.50',
+                          '• 90%+ accuracy: 750 Coins | 70%+: 600 Coins | Base: 500 Coins',
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(
                                 color: AppTheme.textSecondary,

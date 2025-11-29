@@ -174,7 +174,7 @@ class QuizService {
         userId,
         'quiz',
         correctAnswers >= (totalQuestions ~/ 2),
-        reward,
+        (reward * 1000).toInt(),
       );
       debugPrint(
         '✅ Quiz result recorded: $userId ($correctAnswers/$totalQuestions)',

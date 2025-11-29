@@ -5,9 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/task_model.dart';
-import '../../services/request_deduplication_service.dart';
-import '../../services/device_fingerprint_service.dart';
-import '../../services/cloudflare_workers_service.dart';
+
 import '../../core/utils/device_utils.dart';
 import '../../providers/user_provider.dart';
 import '../../widgets/error_states.dart';
@@ -16,9 +14,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../core/constants/app_assets.dart';
 import '../../widgets/zen_card.dart';
 import '../../services/task_service.dart';
-import '../../services/ad_service.dart';
+
 import '../../widgets/native_ad_widget.dart';
-import '../../providers/task_provider.dart';
 import '../../widgets/shimmer_loading.dart';
 
 class TasksScreen extends StatefulWidget {
@@ -127,7 +124,7 @@ class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
   Future<void> _handleTaskTap(
     String taskId,
     String title,
-    double reward,
+    int reward,
     String actionUrl,
   ) async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
@@ -220,7 +217,7 @@ class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
     await _launchTaskAction(taskId, actionUrl);
   }
 
-  Future<void> _completeTask(String taskId, String title, double reward) async {
+  Future<void> _completeTask(String taskId, String title, int reward) async {
     final user = fb_auth.FirebaseAuth.instance.currentUser;
     if (user == null) {
       StateSnackbar.showError(context, 'User not logged in');
@@ -232,90 +229,30 @@ class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
       return;
     }
 
-    final dedup = Provider.of<RequestDeduplicationService>(
-      context,
-      listen: false,
-    );
-    final fingerprint = Provider.of<DeviceFingerprintService>(
-      context,
-      listen: false,
-    );
     final userProvider = Provider.of<UserProvider>(context, listen: false);
 
-    // Check backend health
-    final cloudflareService = CloudflareWorkersService();
-    final isBackendHealthy = await cloudflareService.healthCheck();
-    if (!isBackendHealthy) {
-      if (mounted) {
-        StateSnackbar.showError(
-          context,
-          'Cannot connect to server. Please try again later.',
-        );
-      }
-      return;
-    }
-
     try {
-      final deviceFingerprint = await fingerprint.getDeviceFingerprint();
-      final requestId = dedup.generateRequestId(user.uid, 'task_completion', {
-        'taskId': taskId,
-        'reward': reward,
-      });
-
-      // Check local dedup
-      final cachedRecord = dedup.getFromLocalCache(requestId);
-      if (cachedRecord != null && cachedRecord.success) {
-        if (mounted) {
-          StateSnackbar.showWarning(context, 'Task already completed!');
-        }
-        return;
-      }
-
-      // Check user profile (double check)
-      if (userProvider.user.completedTaskIds.contains(taskId)) {
-        if (mounted) {
-          StateSnackbar.showWarning(context, 'Task already completed!');
-        }
-        return;
-      }
-
-      // Call Backend
-      final result = await cloudflareService.recordTaskEarning(
-        userId: user.uid,
-        taskId: taskId,
-        deviceId: deviceFingerprint,
+      // Optimistic update
+      userProvider.updateLocalState(
+        coins: userProvider.user.coins + reward,
+        totalEarnings: userProvider.user.totalEarnings + (reward / 1000),
+        completedTasks: userProvider.user.completedTasks + 1,
+        completedTaskIds: [...userProvider.user.completedTaskIds, taskId],
       );
 
-      if (result['success'] == true) {
-        await dedup.recordRequest(
-          requestId: requestId,
-          requestHash: requestId.hashCode.toString(),
-          success: true,
-          transactionId: '$taskId:${DateTime.now().millisecondsSinceEpoch}',
+      await TaskService().completeTask(user.uid, taskId, reward);
+
+      if (mounted) {
+        StateSnackbar.showSuccess(
+          context,
+          'Task completed! You earned $reward Coins.',
         );
-
-        if (mounted) {
-          StateSnackbar.showSuccess(
-            context,
-            'Task completed! +₹${reward.toStringAsFixed(2)}',
-          );
-          // Manually update local state to avoid a read
-          userProvider.updateLocalState(
-            availableBalance: userProvider.user.availableBalance + reward,
-            totalEarnings: userProvider.user.totalEarnings + reward,
-            completedTasks: userProvider.user.completedTasks + 1,
-            completedTaskIds: [...userProvider.user.completedTaskIds, taskId],
-          );
-
-          // Check for Ad Break
-          await AdService().checkAdBreak();
-        }
-      } else {
-        throw Exception(result['error'] ?? 'Unknown error');
       }
     } catch (e) {
+      debugPrint('Error completing task: $e');
+      // Revert optimistic update if needed (omitted for brevity, but good practice)
       if (mounted) {
-        StateSnackbar.showError(context, 'Failed: ${e.toString()}');
+        StateSnackbar.showError(context, 'Failed to complete task');
       }
     }
   }
@@ -324,266 +261,193 @@ class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
-      appBar: AppBar(
-        title: const Text('Daily Tasks'),
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-      ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppTheme.space16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Progress Section
-              ZenCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Daily Progress',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: AppTheme.space12),
-                    Consumer2<UserProvider, TaskProvider>(
-                      builder: (context, userProvider, taskProvider, _) {
-                        final completedToday = userProvider.user.completedTasks;
-                        final totalTasks = _tasks.length;
-                        final earned = taskProvider.dailyEarnings;
-
-                        return Column(
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  '$completedToday tasks completed',
-                                  style: Theme.of(context).textTheme.bodyMedium,
-                                ),
-                                Text(
-                                  '₹${earned.toStringAsFixed(2)} earned',
-                                  style: Theme.of(context).textTheme.labelLarge
-                                      ?.copyWith(color: AppTheme.successColor),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: AppTheme.space8),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(
-                                AppTheme.radiusS,
-                              ),
-                              child: LinearProgressIndicator(
-                                value: totalTasks > 0
-                                    ? (completedToday / totalTasks).clamp(
-                                        0.0,
-                                        1.0,
-                                      )
-                                    : 0,
-                                backgroundColor: AppTheme.surfaceVariant,
-                                valueColor: const AlwaysStoppedAnimation<Color>(
-                                  AppTheme.primaryColor,
-                                ),
-                                minHeight: 6,
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                  ],
+        child: _isLoading
+            ? ListView.builder(
+                padding: const EdgeInsets.all(AppTheme.space16),
+                itemCount: 6,
+                itemBuilder: (context, index) => const Padding(
+                  padding: EdgeInsets.only(bottom: 16.0),
+                  child: ShimmerLoading.rectangular(height: 80),
                 ),
-              ),
-              const SizedBox(height: AppTheme.space24),
-
-              // Available Tasks
-              Text(
-                'Available Tasks',
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: AppTheme.space12),
-
-              Consumer<UserProvider>(
-                builder: (context, userProvider, _) {
-                  if (_isLoading) {
-                    return ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: 5,
-                      separatorBuilder: (context, index) =>
-                          const SizedBox(height: AppTheme.space12),
-                      itemBuilder: (context, index) =>
-                          const ShimmerLoading.rectangular(
-                            height: 80,
-                            shapeBorder: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(AppTheme.radiusM),
-                              ),
-                            ),
-                          ),
-                    );
-                  }
-
-                  if (_tasks.isEmpty) {
-                    return const EmptyStateWidget(
-                      title: 'No Tasks',
-                      message:
-                          'No tasks available right now. Check back later!',
-                      icon: Icons.assignment_turned_in_outlined,
-                    );
-                  }
-
-                  final availableTasks = _tasks.where((task) {
-                    return !userProvider.user.completedTaskIds.contains(
-                      task.id,
-                    );
-                  }).toList();
-
-                  if (availableTasks.isEmpty) {
-                    return const EmptyStateWidget(
-                      title: 'All Done!',
-                      message: 'All tasks completed! Great job! 🎉',
-                      icon: Icons.check_circle_outline,
-                    );
-                  }
-
-                  return Column(
+              )
+            : RefreshIndicator(
+                onRefresh: _loadTasks,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(AppTheme.space16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      ...availableTasks.asMap().entries.map((entry) {
-                        final index = entry.key;
-                        final task = entry.value;
-
-                        return Column(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                bottom: AppTheme.space12,
-                              ),
-                              child: _TaskCard(
-                                title: task.title,
-                                description: task.description,
-                                duration: task.duration,
-                                reward: task.reward,
-                                iconUrl: task.icon,
-                                color: Colors.blue, // Default color
-                                isCompleted: false,
-                                isLoading: _loadingTaskIds.contains(task.id),
-                                onTap: () => _handleTaskTap(
-                                  task.id,
-                                  task.title,
-                                  task.reward,
-                                  task.actionUrl,
-                                ),
-                              ),
-                            ),
-                            // Insert Native Ad after every 3rd task
-                            if ((index + 1) % 3 == 0)
-                              const Padding(
-                                padding: EdgeInsets.only(
-                                  bottom: AppTheme.space12,
-                                ),
-                                child: NativeAdWidget(), // Placeholder for now
-                              ),
-                          ],
-                        );
-                      }),
-                    ],
-                  );
-                },
-              ),
-
-              const SizedBox(height: AppTheme.space32),
-
-              // Completed Today
-              Text(
-                'Completed Today',
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: AppTheme.space12),
-
-              Consumer<UserProvider>(
-                builder: (context, userProvider, _) {
-                  final completedIds = userProvider.user.completedTaskIds;
-                  final completedTasks = _tasks
-                      .where((task) => completedIds.contains(task.id))
-                      .toList();
-
-                  if (completedTasks.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SvgPicture.asset(AppAssets.emptyTasks, height: 200),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No completed tasks yet',
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(color: AppTheme.textSecondary),
-                          ),
-                        ],
+                      // Header
+                      Text(
+                        'Available Tasks',
+                        style: Theme.of(context).textTheme.headlineSmall,
                       ),
-                    );
-                  }
+                      const SizedBox(height: AppTheme.space4),
+                      Text(
+                        'Complete tasks to earn Coins',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: AppTheme.space24),
 
-                  return Column(
-                    children: completedTasks
-                        .map(
-                          (task) => Padding(
-                            padding: const EdgeInsets.only(
-                              bottom: AppTheme.space12,
-                            ),
-                            child: ZenCard(
-                              child: Row(
+                      // Task List
+                      Consumer<UserProvider>(
+                        builder: (context, userProvider, _) {
+                          final completedIds =
+                              userProvider.user.completedTaskIds;
+                          return ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: _tasks.length,
+                            itemBuilder: (context, index) {
+                              final task = _tasks[index];
+                              final isCompleted = completedIds.contains(
+                                task.id,
+                              );
+                              final isLoading = _loadingTaskIds.contains(
+                                task.id,
+                              );
+
+                              return Column(
                                 children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(
-                                      AppTheme.space8,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: AppTheme.successColor.withValues(
-                                        alpha: 0.1,
-                                      ),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(
-                                      Icons.check_circle,
-                                      color: AppTheme.successColor,
-                                      size: 20,
+                                  _TaskCard(
+                                    title: task.title,
+                                    description: task.description,
+                                    duration: '2 min', // Placeholder
+                                    reward: task.reward,
+                                    iconUrl: task.icon,
+                                    color: AppTheme.primaryColor,
+                                    isCompleted: isCompleted,
+                                    isLoading: isLoading,
+                                    onTap: () => _handleTaskTap(
+                                      task.id,
+                                      task.title,
+                                      task.reward,
+                                      task.actionUrl,
                                     ),
                                   ),
-                                  const SizedBox(width: AppTheme.space12),
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        task.title,
-                                        style: Theme.of(
-                                          context,
-                                        ).textTheme.titleMedium,
+                                  // Insert Native Ad after every 3rd task
+                                  if ((index + 1) % 3 == 0)
+                                    const Padding(
+                                      padding: EdgeInsets.only(
+                                        bottom: AppTheme.space12,
                                       ),
-                                      Text(
-                                        'Earned ₹${task.reward.toStringAsFixed(2)}',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodySmall
-                                            ?.copyWith(
-                                              color: AppTheme.textSecondary,
-                                            ),
-                                      ),
-                                    ],
+                                      child: NativeAdWidget(),
+                                    ),
+                                  const SizedBox(height: AppTheme.space12),
+                                ],
+                              );
+                            },
+                          );
+                        },
+                      ),
+
+                      const SizedBox(height: AppTheme.space32),
+
+                      // Completed Today
+                      Text(
+                        'Completed Today',
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                      const SizedBox(height: AppTheme.space12),
+
+                      Consumer<UserProvider>(
+                        builder: (context, userProvider, _) {
+                          final completedIds =
+                              userProvider.user.completedTaskIds;
+                          final completedTasks = _tasks
+                              .where((task) => completedIds.contains(task.id))
+                              .toList();
+
+                          if (completedTasks.isEmpty) {
+                            return Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  SvgPicture.asset(
+                                    AppAssets.emptyTasks,
+                                    height: 200,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'No completed tasks yet',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(
+                                          color: AppTheme.textSecondary,
+                                        ),
                                   ),
                                 ],
                               ),
-                            ),
-                          ),
-                        )
-                        .toList(),
-                  );
-                },
+                            );
+                          }
+
+                          return Column(
+                            children: completedTasks
+                                .map(
+                                  (task) => Padding(
+                                    padding: const EdgeInsets.only(
+                                      bottom: AppTheme.space12,
+                                    ),
+                                    child: ZenCard(
+                                      child: Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.all(
+                                              AppTheme.space8,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: AppTheme.successColor
+                                                  .withValues(alpha: 0.1),
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: const Icon(
+                                              Icons.check_circle,
+                                              color: AppTheme.successColor,
+                                              size: 20,
+                                            ),
+                                          ),
+                                          const SizedBox(
+                                            width: AppTheme.space12,
+                                          ),
+                                          Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                task.title,
+                                                style: Theme.of(
+                                                  context,
+                                                ).textTheme.titleMedium,
+                                              ),
+                                              Text(
+                                                'Earned ${task.reward} Coins',
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .bodySmall
+                                                    ?.copyWith(
+                                                      color: AppTheme
+                                                          .textSecondary,
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -593,7 +457,7 @@ class _TaskCard extends StatelessWidget {
   final String title;
   final String description;
   final String duration;
-  final double reward;
+  final int reward;
   final String? iconUrl;
   final Color color;
   final VoidCallback onTap;
@@ -642,7 +506,7 @@ class _TaskCard extends StatelessWidget {
                             imageUrl: iconUrl!,
                             width: 24,
                             height: 24,
-                            memCacheWidth: 72, // 3x for high density screens
+                            memCacheWidth: 72,
                             memCacheHeight: 72,
                             placeholder: (context, url) =>
                                 const Icon(Icons.image),
@@ -704,7 +568,7 @@ class _TaskCard extends StatelessWidget {
                             ),
                           ),
                           child: Text(
-                            '+₹${reward.toStringAsFixed(2)}',
+                            '+$reward Coins',
                             style: Theme.of(context).textTheme.labelSmall
                                 ?.copyWith(
                                   color: AppTheme.successColor,

@@ -12,47 +12,39 @@ class AppConstants {
   static const String userStatsEndpoint = '/api/user/stats';
 
   // Daily Limits (OPTIMIZED for profitability)
-  static const double maxDailyEarnings = 1.20; // Reduced from 1.50
+  static const int maxDailyCoins = 1200; // 1.20 * 1000
   static const int maxTasksPerDay = 3;
   static const int maxGamesPerDay = 6;
   static const int maxAdsPerDay = 15;
   static const int maxSpinsPerDay = 1;
 
   // Withdrawal Settings (OPTIMIZED - Backend source-of-truth)
-  static const double minWithdrawalAmount = 100.0; // Increased from 50.0
-  static const double maxWithdrawalPerRequest = 5000.0;
+  static const int minWithdrawalCoins = 100000; // 100 * 1000
+  static const int maxWithdrawalCoins = 5000000; // 5000 * 1000
   static const int minAccountAgeDays = 7;
   static const double withdrawalFeePercentage = 0.02; // 2% fee
 
   // Task Rewards (OPTIMIZED - Reduced by 15%)
-  static const Map<String, double> taskRewards = {
-    'survey': 0.085, // Was 0.10
-    'social_share': 0.085, // Was 0.10
-    'app_rating': 0.085, // Was 0.10
+  static const Map<String, int> taskRewards = {
+    'survey': 85, // 0.085 * 1000
+    'social_share': 85, // 0.085 * 1000
+    'app_rating': 85, // 0.085 * 1000
   };
 
   // Game Rewards (OPTIMIZED - Reduced by 25%)
-  static const Map<String, double> gameRewards = {
-    'tictactoe': 0.06, // Was 0.08
-    'memory_match': 0.06, // Was 0.08
+  static const Map<String, int> gameRewards = {
+    'tictactoe': 60, // 0.06 * 1000
+    'memory_match': 60, // 0.06 * 1000
   };
 
   // Ad Rewards (OPTIMIZED - Reduced by 15%)
-  static const double rewardedAdReward = 0.025; // Was 0.03
-  static const double interstitialAdReward = 0.02;
+  static const int rewardedAdReward = 25; // 0.025 * 1000
+  static const int interstitialAdReward = 20; // 0.02 * 1000
 
   // Spin Rewards (OPTIMIZED - Backend source-of-truth)
-  static const double spinMinReward = 0.05;
-  static const double spinMaxReward = 0.75; // Reduced from 1.00
-  static const List<double> spinRewards = [
-    0.05,
-    0.10,
-    0.15,
-    0.20,
-    0.30,
-    0.50,
-    0.75, // Max reduced from 1.00
-  ];
+  static const int spinMinReward = 50; // 0.05 * 1000
+  static const int spinMaxReward = 750; // 0.75 * 1000
+  static const List<double> spinRewards = [50, 100, 150, 200, 300, 500, 750];
 
   // Cooldown Periods (in minutes)
   static const int taskCooldownMinutes = 0;
@@ -60,11 +52,15 @@ class AppConstants {
   static const int adCooldownMinutes = 0;
 
   // Streak Bonuses
-  static const Map<int, double> streakBonuses = {7: 0.50, 14: 1.00, 30: 2.00};
+  static const Map<int, int> streakBonuses = {
+    7: 500,
+    14: 1000,
+    30: 2000,
+  }; // 0.50, 1.00, 2.00 * 1000
 
   // Referral Settings
-  static const double referralReward = 2.00;
-  static const double referralLimit = 10.0;
+  static const int referralReward = 2000; // 2.00 * 1000
+  static const int referralLimit = 10000; // 10.0 * 1000
 
   // App Settings
   static const String appVersion = '1.0.0';

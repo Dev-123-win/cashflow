@@ -219,12 +219,11 @@ class _HomeScreenState extends State<HomeScreen> {
                               HapticFeedback.mediumImpact();
                               _confettiController.play();
                             },
-                            child: Selector<UserProvider, double>(
-                              selector: (_, provider) =>
-                                  provider.user.availableBalance,
-                              builder: (context, balance, _) {
+                            child: Selector<UserProvider, int>(
+                              selector: (_, provider) => provider.user.coins,
+                              builder: (context, coins, _) {
                                 return ParallaxBalanceCard(
-                                  balance: balance,
+                                  coins: coins,
                                   onWithdraw: () {
                                     Navigator.push(
                                       context,
@@ -234,7 +233,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ),
                                     );
                                   },
-                                  canWithdraw: balance >= 50,
+                                  canWithdraw:
+                                      coins >= 50000, // 50,000 Coins = ₹50
                                 );
                               },
                             ),

@@ -52,7 +52,8 @@ service cloud.firestore {
              (!('adsWatchedToday' in incomingData.keys()) || incomingData.adsWatchedToday == existingData.adsWatchedToday) &&
              (!('dailySpins' in incomingData.keys()) || incomingData.dailySpins == existingData.dailySpins) &&
              (!('dailyEarningsToday' in incomingData.keys()) || incomingData.dailyEarningsToday == existingData.dailyEarningsToday) &&
-             (!('currentStreak' in incomingData.keys()) || incomingData.currentStreak == existingData.currentStreak);
+             (!('currentStreak' in incomingData.keys()) || incomingData.currentStreak == existingData.currentStreak) &&
+             (!('coins' in incomingData.keys()) || incomingData.coins == existingData.coins);
     }
 
     // CRITICAL: Validate profile updates don't touch financial fields
@@ -72,9 +73,9 @@ service cloud.firestore {
       allow read: if isAuthenticatedUser(userId) || 
                      (isAuthenticated() && resource.data.profilePublic == true);
       
-      // Write: Only user can update their own profile (but NOT balance/earnings)
-      allow write: if isAuthenticatedUser(userId) &&
-                      validateUserProfileUpdate(request.resource.data, resource.data);
+      // Update: Only user can update their own profile (but NOT balance/earnings)
+      allow update: if isAuthenticatedUser(userId) &&
+                       validateUserProfileUpdate(request.resource.data, resource.data);
       
       // Create: User creating their own account during signup
       allow create: if isAuthenticatedUser(userId) &&
@@ -316,14 +317,30 @@ service cloud.firestore {
       allow update, delete: if false;
     }
     
-    // Device fingerprints - For fraud detection
+    // Device fingerprints - For fraud detection with security status
     match /deviceFingerprints/{fingerprintId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() &&
                        request.resource.data.userId is string &&
                        request.resource.data.fingerprint is string &&
-                       request.resource.data.createdAt == request.time;
+                       request.resource.data.createdAt == request.time &&
+                       // Optional security status fields
+                       (!request.resource.data.keys().hasAny(['securityStatus']) || 
+                        validateDeviceSecurityStatus(request.resource.data.securityStatus));
       allow update, delete: if false;
+      
+      function validateDeviceSecurityStatus(status) {
+        return status is map &&
+               status.isJailbroken is bool &&
+               status.canMockLocation is bool &&
+               status.isRealDevice is bool &&
+               status.isSafeDevice is bool &&
+               status.isDevelopmentMode is bool &&
+               status.isOnExternalStorage is bool &&
+               status.riskScore is number &&
+               status.riskScore >= 0 &&
+               status.riskScore <= 100;
+      }
     }
     
     // Analytics collection (append-only, read-only for users)

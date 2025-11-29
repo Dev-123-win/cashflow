@@ -234,8 +234,8 @@ class GameService {
   static const int maxGamesPerDay = 10;
 
   // Game rewards
-  static const double gameWinReward = 0.50;
-  static const double gameLossReward = 0.10;
+  static const int gameWinReward = 60; // 0.06 * 1000
+  static const int gameLossReward = 10; // 0.01 * 1000
 
   // Cooldown tracking
   final Map<String, DateTime> _gameCooldowns = {};
@@ -292,7 +292,7 @@ class GameService {
   Future<void> recordGameWin(
     String userId,
     String gameId, {
-    double? customReward,
+    int? customReward,
   }) async {
     try {
       final reward = customReward ?? gameWinReward;
@@ -307,7 +307,9 @@ class GameService {
         deviceId: deviceId,
       );
 
-      debugPrint('✅ Game won: $gameId for $userId (+₹$reward) via backend');
+      debugPrint(
+        '✅ Game won: $gameId for $userId (+$reward Coins) via backend',
+      );
     } catch (e) {
       debugPrint('❌ Error recording game win: $e');
       rethrow;
@@ -318,7 +320,7 @@ class GameService {
   Future<void> recordGameLoss(
     String userId,
     String gameId, {
-    double? customReward,
+    int? customReward,
   }) async {
     try {
       final deviceId = await _deviceFingerprint.getDeviceFingerprint();
@@ -335,7 +337,7 @@ class GameService {
       final reward = customReward ?? 0.0;
       if (reward > 0) {
         debugPrint(
-          '✅ Game lost: $gameId for $userId (+₹$reward consolation) via backend',
+          '✅ Game lost: $gameId for $userId (+$reward Coins consolation) via backend',
         );
       } else {
         debugPrint('✅ Game lost: $gameId for $userId (no reward) via backend');

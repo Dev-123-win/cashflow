@@ -7,15 +7,15 @@ class TaskProvider extends ChangeNotifier {
   List<Task> _tasks = [];
   bool _isLoading = false;
   String? _error;
-  double _dailyEarnings = 0;
-  final double _dailyCap = 1.50;
+  int _dailyEarnings = 0;
+  final int _dailyCap = 1500; // 1.50 * 1000
 
   List<Task> get tasks => _tasks;
   bool get isLoading => _isLoading;
   String? get error => _error;
-  double get dailyEarnings => _dailyEarnings;
-  double get dailyCap => _dailyCap;
-  double get remainingDaily => (_dailyCap - _dailyEarnings).clamp(0, _dailyCap);
+  int get dailyEarnings => _dailyEarnings;
+  int get dailyCap => _dailyCap;
+  int get remainingDaily => (_dailyCap - _dailyEarnings).clamp(0, _dailyCap);
   int get completedTasksCount => _tasks.where((t) => t.completed).length;
   int get completedTasks =>
       completedTasksCount; // Alias for backwards compatibility
@@ -39,14 +39,14 @@ class TaskProvider extends ChangeNotifier {
   }
 
   /// Complete task and record in Firestore
-  Future<void> completeTask(String userId, String taskId, double reward) async {
+  Future<void> completeTask(String userId, String taskId, int reward) async {
     try {
       _isLoading = true;
       notifyListeners();
 
       // ✅ CRITICAL: Check daily cap BEFORE recording (client-side validation)
       if (_dailyEarnings + reward > _dailyCap) {
-        _error = 'Daily limit reached. You can only earn ₹$_dailyCap/day.';
+        _error = 'Daily limit reached. You can only earn $_dailyCap Coins/day.';
         notifyListeners();
         throw Exception(
           'Daily cap exceeded: $_dailyEarnings + $reward > $_dailyCap',
@@ -79,7 +79,7 @@ class TaskProvider extends ChangeNotifier {
     String userId,
     String gameId,
     bool won,
-    double reward,
+    int reward,
   ) async {
     try {
       _isLoading = true;
@@ -110,14 +110,14 @@ class TaskProvider extends ChangeNotifier {
   }
 
   /// Record spin result in Firestore
-  Future<double> recordSpinResult(String userId, double reward) async {
+  Future<int> recordSpinResult(String userId, int reward) async {
     try {
       _isLoading = true;
       notifyListeners();
 
       // ✅ CRITICAL: Check daily cap BEFORE recording
       if (_dailyEarnings + reward > _dailyCap) {
-        _error = 'Daily limit reached! Maximum ₹$_dailyCap per day.';
+        _error = 'Daily limit reached! Maximum $_dailyCap Coins per day.';
         notifyListeners();
         throw Exception(
           'Daily cap exceeded for spin: $_dailyEarnings + $reward > $_dailyCap',
@@ -140,7 +140,7 @@ class TaskProvider extends ChangeNotifier {
   }
 
   /// Record ad view in Firestore
-  Future<void> recordAdView(String userId, String adType, double reward) async {
+  Future<void> recordAdView(String userId, String adType, int reward) async {
     try {
       _isLoading = true;
       notifyListeners();

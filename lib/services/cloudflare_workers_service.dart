@@ -227,7 +227,7 @@ class CloudflareWorkersService {
   /// Returns: Withdrawal request confirmation
   Future<Map<String, dynamic>> requestWithdrawal({
     required String userId,
-    required double amount,
+    required int coins,
     required String upiId,
     required String deviceId,
   }) async {
@@ -240,7 +240,7 @@ class CloudflareWorkersService {
       final url = '$_baseUrl/api/withdrawal/request';
       final body = jsonEncode({
         'userId': userId,
-        'amount': amount,
+        'amount': coins, // Backend expects coins in 'amount' field
         'upiId': upiId,
         'deviceId': deviceId,
       });

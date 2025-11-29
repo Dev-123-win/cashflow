@@ -2,7 +2,7 @@ import 'package:crypto/crypto.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'dart:io';
 import 'dart:convert';
-import 'package:flutter_jailbreak_detection/flutter_jailbreak_detection.dart';
+import 'package:safe_device/safe_device.dart';
 
 /// SECURITY SERVICE: Device fingerprinting for fraud detection
 ///
@@ -33,6 +33,7 @@ class DeviceFingerprintService {
 
   final DeviceInfoPlugin _deviceInfo = DeviceInfoPlugin();
   String? _cachedFingerprint;
+  Map<String, bool>? _cachedSecurityStatus;
 
   /// Generates a SHA-256 fingerprint of device characteristics
   ///
@@ -127,17 +128,100 @@ class DeviceFingerprintService {
     return {'platform': 'unknown', 'error': 'Could not get device info'};
   }
 
+  /// Comprehensive device security check using safe_device
+  /// Returns a map with security status flags
+  Future<Map<String, bool>> getDeviceSecurityStatus() async {
+    if (_cachedSecurityStatus != null) {
+      return _cachedSecurityStatus!;
+    }
+
+    try {
+      final results = await Future.wait([
+        SafeDevice.isJailBroken,
+        SafeDevice.isMockLocation,
+        SafeDevice.isRealDevice,
+        SafeDevice.isSafeDevice,
+        SafeDevice.isDevelopmentModeEnable,
+        SafeDevice.isOnExternalStorage,
+      ]);
+
+      _cachedSecurityStatus = {
+        'isJailbroken': results[0],
+        'isMockLocation': results[1],
+        'isRealDevice': results[2],
+        'isSafeDevice': results[3],
+        'isDevelopmentMode': results[4],
+        'isOnExternalStorage': results[5],
+      };
+
+      return _cachedSecurityStatus!;
+    } catch (e) {
+      // Return safe defaults on error
+      return {
+        'isJailbroken': false,
+        'isMockLocation': false,
+        'isRealDevice': true,
+        'isSafeDevice': true,
+        'isDevelopmentMode': false,
+        'isOnExternalStorage': false,
+      };
+    }
+  }
+
   /// Check if device is rooted/jailbroken
   Future<bool> isRooted() async {
     try {
-      return await FlutterJailbreakDetection.jailbroken;
+      return await SafeDevice.isJailBroken;
     } catch (e) {
       return false;
     }
   }
 
+  /// Check if device is an emulator
+  Future<bool> isEmulator() async {
+    try {
+      final isReal = await SafeDevice.isRealDevice;
+      return !isReal;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Check if device can mock location (GPS spoofing)
+  Future<bool> canMockLocation() async {
+    try {
+      return await SafeDevice.isMockLocation;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Check if device is safe (not rooted, not emulator, etc.)
+  Future<bool> isSafeDevice() async {
+    try {
+      return await SafeDevice.isSafeDevice;
+    } catch (e) {
+      return true; // Default to safe on error
+    }
+  }
+
+  /// Get security risk score (0-100, higher = more risky)
+  Future<int> getSecurityRiskScore() async {
+    final status = await getDeviceSecurityStatus();
+    int score = 0;
+
+    if (status['isJailbroken'] == true) score += 40;
+    if (status['isRealDevice'] == false) score += 30;
+    if (status['isMockLocation'] == true) score += 15;
+    if (status['isDevelopmentMode'] == true) score += 10;
+    if (status['isOnExternalStorage'] == true) score += 5;
+
+    return score;
+  }
+
   /// Clears cached fingerprint (useful for testing)
   void clearCache() {
     _cachedFingerprint = null;
+    _cachedSecurityStatus = null;
   }
 }

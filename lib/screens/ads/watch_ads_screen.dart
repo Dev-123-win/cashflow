@@ -21,7 +21,7 @@ class _WatchAdsScreenState extends State<WatchAdsScreen> {
   int _adsWatchedToday = 0;
   final int _maxAdsPerDay = AppConstants.maxAdsPerDay;
   bool _isLoadingAd = false;
-  double _totalEarned = 0.0;
+  int _totalEarned = 0;
 
   @override
   void initState() {
@@ -120,7 +120,7 @@ class _WatchAdsScreenState extends State<WatchAdsScreen> {
               // Show success message
               StateSnackbar.showSuccess(
                 context,
-                'Great! You earned ₹${AppConstants.rewardedAdReward.toStringAsFixed(2)}',
+                'Great! You earned ${AppConstants.rewardedAdReward} Coins',
               );
             }
           } catch (e) {
@@ -202,7 +202,7 @@ class _WatchAdsScreenState extends State<WatchAdsScreen> {
                           ),
                           const SizedBox(height: AppTheme.space8),
                           Text(
-                            '₹${_totalEarned.toStringAsFixed(2)}',
+                            '$_totalEarned Coins',
                             style: Theme.of(context).textTheme.headlineSmall
                                 ?.copyWith(color: AppTheme.primaryColor),
                           ),
@@ -250,7 +250,7 @@ class _WatchAdsScreenState extends State<WatchAdsScreen> {
                   ),
                   const SizedBox(height: AppTheme.space12),
                   Text(
-                    '• Watch full video advertisements\n• Get ₹${AppConstants.rewardedAdReward.toStringAsFixed(2)} per ad\n• Limit: $_maxAdsPerDay ads per day\n• Ads reset daily at midnight',
+                    '• Watch full video advertisements\n• Get ${AppConstants.rewardedAdReward} Coins per ad\n• Limit: $_maxAdsPerDay ads per day\n• Ads reset daily at midnight',
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ],
@@ -291,7 +291,7 @@ class _WatchAdsScreenState extends State<WatchAdsScreen> {
                           const Text('Watch Video Ad'),
                           if (_adsWatchedToday < _maxAdsPerDay)
                             Text(
-                              'Earn ₹${AppConstants.rewardedAdReward.toStringAsFixed(2)}',
+                              'Earn ${AppConstants.rewardedAdReward} Coins',
                               style: Theme.of(context).textTheme.labelSmall
                                   ?.copyWith(color: Colors.white),
                             ),

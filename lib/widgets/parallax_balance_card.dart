@@ -4,13 +4,13 @@ import 'dart:async';
 import '../core/theme/app_theme.dart';
 
 class ParallaxBalanceCard extends StatefulWidget {
-  final double balance;
+  final int coins;
   final VoidCallback onWithdraw;
   final bool canWithdraw;
 
   const ParallaxBalanceCard({
     super.key,
-    required this.balance,
+    required this.coins,
     required this.onWithdraw,
     required this.canWithdraw,
   });
@@ -108,22 +108,33 @@ class _ParallaxBalanceCardState extends State<ParallaxBalanceCard> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Total Balance',
+                          'Total Coins',
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(
                                 color: Colors.white.withValues(alpha: 0.8),
                               ),
                         ),
                         const SizedBox(height: AppTheme.space8),
-                        Text(
-                          '₹${widget.balance.toStringAsFixed(2)}',
-                          style: Theme.of(context).textTheme.headlineLarge
-                              ?.copyWith(
-                                color: Colors.white,
-                                fontFeatures: [
-                                  const FontFeature.tabularFigures(),
-                                ],
-                              ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Image.asset(
+                              'assets/icons/Coin.png',
+                              width: 32,
+                              height: 32,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '${widget.coins}',
+                              style: Theme.of(context).textTheme.headlineLarge
+                                  ?.copyWith(
+                                    color: Colors.white,
+                                    fontFeatures: [
+                                      const FontFeature.tabularFigures(),
+                                    ],
+                                  ),
+                            ),
+                          ],
                         ),
                       ],
                     ),

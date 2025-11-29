@@ -35,7 +35,7 @@ class _SpinScreenState extends State<SpinScreen> {
       StreamController<int>.broadcast();
 
   bool _isSpinning = false;
-  double? _lastSpinReward;
+  int? _lastSpinReward;
   bool _adShownPreSpin = false;
 
   @override
@@ -92,11 +92,11 @@ class _SpinScreenState extends State<SpinScreen> {
       return;
     }
 
-    if (userProvider.user.availableBalance >= AppConstants.maxDailyEarnings) {
+    if (userProvider.user.coins >= AppConstants.maxDailyCoins) {
       if (mounted) {
         StateSnackbar.showWarning(
           context,
-          'Daily earning limit reached (₹${AppConstants.maxDailyEarnings})',
+          'Daily earning limit reached (${AppConstants.maxDailyCoins} Coins)',
         );
       }
       return;
@@ -132,7 +132,7 @@ class _SpinScreenState extends State<SpinScreen> {
         deviceId: deviceFingerprint,
       );
 
-      final reward = (result['reward'] as num?)?.toDouble() ?? 0.0;
+      final reward = (result['reward'] as num?)?.toInt() ?? 0;
       _lastSpinReward = reward;
 
       // Determine target index
@@ -244,7 +244,7 @@ class _SpinScreenState extends State<SpinScreen> {
     }
   }
 
-  Future<void> _showSpinResult(double reward) async {
+  Future<void> _showSpinResult(int reward) async {
     return showDialog(
       context: context,
       barrierDismissible: false,
@@ -266,7 +266,7 @@ class _SpinScreenState extends State<SpinScreen> {
                 borderRadius: BorderRadius.circular(AppTheme.radiusM),
               ),
               child: Text(
-                '₹${reward.toStringAsFixed(2)} earned!',
+                '$reward Coins earned!',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   color: AppTheme.successColor,
                   fontWeight: FontWeight.bold,
@@ -335,7 +335,7 @@ class _SpinScreenState extends State<SpinScreen> {
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      'Win up to ₹10.00',
+                                      'Win up to 750 Coins',
                                       style: Theme.of(context)
                                           .textTheme
                                           .bodyMedium
@@ -387,7 +387,7 @@ class _SpinScreenState extends State<SpinScreen> {
                                     _rewards.length,
                                     (index) => FortuneItem(
                                       child: Text(
-                                        '₹${_rewards[index].toStringAsFixed(2)}',
+                                        '${_rewards[index].toInt()}',
                                         style: const TextStyle(
                                           fontWeight: FontWeight.bold,
                                           fontSize: 16,
@@ -497,7 +497,7 @@ class _SpinScreenState extends State<SpinScreen> {
                                         ).textTheme.labelSmall,
                                       ),
                                       Text(
-                                        '₹${_lastSpinReward!.toStringAsFixed(2)} won',
+                                        '$_lastSpinReward Coins won',
                                         style: Theme.of(context)
                                             .textTheme
                                             .titleMedium

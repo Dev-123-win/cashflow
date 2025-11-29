@@ -179,9 +179,9 @@ class ProfileScreen extends StatelessWidget {
                   children: [
                     _buildStatCard(
                       context,
-                      '₹${user.totalEarnings.toStringAsFixed(2)}',
-                      'Total Earned',
-                      Icons.account_balance_wallet,
+                      '${(user.totalEarnings * 1000).toInt()}',
+                      'Total Coins',
+                      Icons.monetization_on,
                       AppTheme.primaryColor,
                     ),
                     _buildStatCard(
@@ -193,14 +193,14 @@ class ProfileScreen extends StatelessWidget {
                     ),
                     _buildStatCard(
                       context,
-                      '₹${user.monthlyEarnings.toStringAsFixed(2)}',
+                      '${(user.monthlyEarnings * 1000).toInt()}',
                       'This Month',
                       Icons.calendar_today,
                       AppTheme.secondaryColor,
                     ),
                     _buildStatCard(
                       context,
-                      '₹${user.availableBalance.toStringAsFixed(2)}',
+                      '${user.coins}',
                       'Available',
                       Icons.savings,
                       AppTheme.successColor,

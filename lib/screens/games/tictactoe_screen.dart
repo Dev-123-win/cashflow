@@ -80,7 +80,7 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
             SizedBox(height: 8),
             Text('• Get 3 in a row to win'),
             SizedBox(height: 8),
-            Text('• Win to earn ₹0.08'),
+            Text('• Win to earn 80 Coins'),
             SizedBox(height: 8),
             Text('• Max 20 games per day'),
           ],
@@ -145,14 +145,14 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
           if (mounted) {
             // Optimistic update
             userProvider.updateLocalState(
-              availableBalance: userProvider.user.availableBalance + 0.08,
+              coins: userProvider.user.coins + 80,
               totalEarnings: userProvider.user.totalEarnings + 0.08,
               gamesPlayedToday: userProvider.user.gamesPlayedToday + 1,
             );
 
             _showGameResult(
               title: 'You Won! 🎉',
-              message: 'You earned ₹0.08',
+              message: 'You earned 80 Coins',
               won: true,
             );
 
@@ -235,7 +235,7 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
       final requestId = dedup.generateRequestId(user.uid, 'game_result', {
         'gameId': 'tictactoe',
         'won': true,
-        'reward': 0.50,
+        'reward': 80,
       });
 
       // Check if already processed (prevents duplicate earnings)
@@ -252,7 +252,7 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
         user.uid,
         'tictactoe',
         true,
-        0.08,
+        (0.08 * 1000).toInt(),
         requestId: requestId,
         deviceFingerprint: deviceFingerprint,
       );
@@ -305,7 +305,7 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
             Text(message),
             const SizedBox(height: AppTheme.space16),
             Text(
-              won ? '₹0.08 earned!' : 'Better luck next time!',
+              won ? '80 Coins earned!' : 'Better luck next time!',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 color: won ? Colors.green : Colors.orange,
                 fontWeight: FontWeight.bold,
@@ -322,7 +322,7 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    'Watch ad for +₹0.10 bonus?',
+                    'Watch ad for +100 Coins bonus?',
                     style: Theme.of(
                       context,
                     ).textTheme.bodySmall?.copyWith(color: Colors.blue),
@@ -368,7 +368,7 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
           // Balance update handled by recordGameResult via backend
 
           if (mounted) {
-            StateSnackbar.showSuccess(context, 'Bonus ₹0.10 added!');
+            StateSnackbar.showSuccess(context, 'Bonus 100 Coins added!');
           }
         } catch (e) {
           debugPrint('Error adding bonus: $e');
@@ -442,7 +442,7 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        '₹0.08',
+                                        '80 Coins',
                                         style: Theme.of(context)
                                             .textTheme
                                             .headlineSmall

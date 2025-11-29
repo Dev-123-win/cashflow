@@ -102,7 +102,7 @@ class FirestoreService {
   Future<void> recordTaskCompletion(
     String userId,
     String taskId,
-    double reward, {
+    int reward, {
     String? requestId,
     String? deviceFingerprint,
   }) async {
@@ -130,7 +130,7 @@ class FirestoreService {
     String userId,
     String gameId,
     bool won,
-    double reward, {
+    int reward, {
     String? requestId,
     String? deviceFingerprint,
   }) async {
@@ -157,7 +157,7 @@ class FirestoreService {
   Future<void> recordAdView(
     String userId,
     String adType,
-    double reward, {
+    int reward, {
     String? requestId,
     String? deviceFingerprint,
   }) async {
@@ -181,7 +181,7 @@ class FirestoreService {
   /// Record spin result (OPTIMIZED with batch writes)
   /// Reduces 2 separate writes to 1 batch write
   /// Record spin result
-  Future<void> recordSpinResult(String userId, double reward) async {
+  Future<void> recordSpinResult(String userId, int reward) async {
     try {
       await _backend.executeSpin(
         userId: userId,
@@ -210,7 +210,7 @@ class FirestoreService {
     try {
       final result = await _backend.requestWithdrawal(
         userId: userId,
-        amount: amount,
+        coins: (amount * 1000).toInt(),
         upiId: upiId,
         deviceId: 'unknown',
       );

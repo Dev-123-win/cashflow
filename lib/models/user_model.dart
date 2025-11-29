@@ -7,6 +7,7 @@ class User {
   final double monthlyEarnings;
   final int totalTasks;
   final int completedTasks;
+  final int coins;
   final int streak;
   final DateTime createdAt;
   final String referralCode;
@@ -28,6 +29,7 @@ class User {
     required this.monthlyEarnings,
     required this.totalTasks,
     required this.completedTasks,
+    required this.coins,
     required this.streak,
     required this.createdAt,
     required this.referralCode,
@@ -51,6 +53,7 @@ class User {
       monthlyEarnings: 0,
       totalTasks: 0,
       completedTasks: 0,
+      coins: 0,
       streak: 0,
       createdAt: DateTime.now(),
       referralCode: '',
@@ -75,6 +78,8 @@ class User {
       monthlyEarnings: (json['monthlyEarnings'] ?? 0.0).toDouble(),
       totalTasks: json['totalTasks'] ?? 0,
       completedTasks: json['completedTasks'] ?? 0,
+      coins:
+          json['coins'] ?? ((json['availableBalance'] ?? 0.0) * 1000).round(),
       streak: json['streak'] ?? json['currentStreak'] ?? 0,
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'].toString())
@@ -104,6 +109,7 @@ class User {
     double? monthlyEarnings,
     int? totalTasks,
     int? completedTasks,
+    int? coins,
     int? streak,
     DateTime? createdAt,
     String? referralCode,
@@ -125,6 +131,7 @@ class User {
       monthlyEarnings: monthlyEarnings ?? this.monthlyEarnings,
       totalTasks: totalTasks ?? this.totalTasks,
       completedTasks: completedTasks ?? this.completedTasks,
+      coins: coins ?? this.coins,
       streak: streak ?? this.streak,
       createdAt: createdAt ?? this.createdAt,
       referralCode: referralCode ?? this.referralCode,

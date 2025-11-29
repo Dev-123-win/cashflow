@@ -166,15 +166,75 @@ class _AuthenticationWrapperState extends State<AuthenticationWrapper> {
   }
 
   Future<void> _checkRootStatus() async {
-    final isRooted = await DeviceFingerprintService().isRooted();
-    if (isRooted && mounted) {
+    final deviceService = DeviceFingerprintService();
+    final securityStatus = await deviceService.getDeviceSecurityStatus();
+    final riskScore = await deviceService.getSecurityRiskScore();
+
+    // Build warning message based on security issues
+    List<String> warnings = [];
+
+    if (securityStatus['isJailbroken'] == true) {
+      warnings.add('• Device is rooted/jailbroken');
+    }
+    if (securityStatus['isRealDevice'] == false) {
+      warnings.add('• Running on an emulator');
+    }
+    if (securityStatus['isMockLocation'] == true) {
+      warnings.add('• Location mocking is enabled');
+    }
+    if (securityStatus['isDevelopmentMode'] == true) {
+      warnings.add('• Developer mode is enabled');
+    }
+    if (securityStatus['isOnExternalStorage'] == true) {
+      warnings.add('• App is installed on external storage');
+    }
+
+    // Show warning if there are any security issues
+    if (warnings.isNotEmpty && mounted) {
+      String severity = riskScore >= 40
+          ? 'High Risk'
+          : riskScore >= 20
+          ? 'Medium Risk'
+          : 'Low Risk';
+
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (context) => AlertDialog(
-          title: const Text('Security Warning'),
-          content: const Text(
-            'This device appears to be rooted or jailbroken. Some features may not work correctly, and your account may be flagged for security review.',
+          title: Row(
+            children: [
+              Icon(
+                Icons.warning_amber_rounded,
+                color: riskScore >= 40 ? Colors.red : Colors.orange,
+                size: 28,
+              ),
+              const SizedBox(width: 8),
+              Text('Security Warning ($severity)'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'The following security issues were detected:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              ...warnings.map(
+                (w) => Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text(w),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                riskScore >= 40
+                    ? 'Your account may be flagged or restricted due to high security risk.'
+                    : 'Some features may not work correctly. Your account may be subject to additional verification.',
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              ),
+            ],
           ),
           actions: [
             TextButton(

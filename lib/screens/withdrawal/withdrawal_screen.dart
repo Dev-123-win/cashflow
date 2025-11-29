@@ -26,7 +26,7 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
   final CloudflareWorkersService _api = CloudflareWorkersService();
   String? _deviceId;
   bool _isProcessing = false;
-  double minWithdrawal = 50.0;
+  double minWithdrawal = 50.0; // ₹50
 
   @override
   void initState() {
@@ -104,10 +104,12 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
     }
 
     final userProvider = context.read<UserProvider>();
-    if (amount > userProvider.user.availableBalance) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Insufficient balance')));
+    final coinsRequired = (amount * 1000).toInt();
+
+    if (coinsRequired > userProvider.user.coins) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Insufficient coin balance')),
+      );
       return;
     }
 
@@ -167,7 +169,7 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
       // Request withdrawal via API
       final result = await _api.requestWithdrawal(
         userId: user.uid,
-        amount: amount,
+        coins: coinsRequired,
         upiId: _upiController.text,
         deviceId: _deviceId!,
       );
@@ -352,7 +354,8 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
                     );
                   }
 
-                  final currentBalance = userProvider.user.availableBalance;
+                  final currentCoins = userProvider.user.coins;
+                  final cashValue = currentCoins / 1000;
                   return Container(
                     padding: const EdgeInsets.all(AppTheme.space24),
                     decoration: BoxDecoration(
@@ -374,10 +377,28 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
                               ?.copyWith(color: Colors.white70),
                         ),
                         const SizedBox(height: AppTheme.space8),
+                        Row(
+                          children: [
+                            Image.asset(
+                              'assets/icons/Coin.png',
+                              width: 32,
+                              height: 32,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '$currentCoins Coins',
+                              style: Theme.of(context).textTheme.headlineMedium
+                                  ?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
+                          ],
+                        ),
                         Text(
-                          '₹${currentBalance.toStringAsFixed(2)}',
-                          style: Theme.of(context).textTheme.headlineLarge
-                              ?.copyWith(color: Colors.white),
+                          '≈ ₹${cashValue.toStringAsFixed(2)}',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(color: Colors.white70),
                         ),
                         const SizedBox(height: AppTheme.space16),
                         Container(
@@ -456,11 +477,11 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
                   ),
                   Consumer<UserProvider>(
                     builder: (context, userProvider, _) {
-                      final balance = userProvider.user.availableBalance;
+                      final cashBalance = userProvider.user.coins / 1000;
                       return Wrap(
                         spacing: AppTheme.space8,
                         children: [50.0, 100.0, 150.0].map((amount) {
-                          final canUse = amount <= balance;
+                          final canUse = amount <= cashBalance;
                           return GestureDetector(
                             onTap: canUse
                                 ? () {

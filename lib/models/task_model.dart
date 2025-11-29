@@ -2,7 +2,7 @@ class Task {
   final String taskId;
   final String title;
   final String description;
-  final double reward;
+  final int reward; // Changed to int for Coins
   final String? icon;
   final String actionUrl;
   final String category;
@@ -30,7 +30,7 @@ class Task {
     String? taskId,
     String? title,
     String? description,
-    double? reward,
+    int? reward,
     String? icon,
     String? actionUrl,
     String? category,
