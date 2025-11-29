@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -39,19 +38,9 @@ class _FloatingDockState extends State<FloatingDock> {
     return Container(
       margin: const EdgeInsets.all(AppTheme.space20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.white.withValues(alpha: 0.15),
-            Colors.white.withValues(alpha: 0.05),
-          ],
-        ),
+        color: AppTheme.surfaceColor,
         borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.2),
-          width: 1.5,
-        ),
+        border: Border.all(color: AppTheme.surfaceVariant, width: 1),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.1),
@@ -59,28 +48,25 @@ class _FloatingDockState extends State<FloatingDock> {
             offset: const Offset(0, 10),
           ),
           BoxShadow(
-            color: AppTheme.primaryColor.withValues(alpha: 0.1),
-            blurRadius: 40,
-            offset: const Offset(0, 20),
+            color: AppTheme.primaryColor.withValues(alpha: 0.15),
+            blurRadius: 30,
+            offset: const Offset(0, 15),
           ),
         ],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppTheme.space12,
-              vertical: AppTheme.space8,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              mainAxisSize: MainAxisSize.min,
-              children: List.generate(widget.icons.length, (index) {
-                return _buildNavItem(index);
-              }),
-            ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppTheme.space12,
+            vertical: AppTheme.space8,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisSize: MainAxisSize.min,
+            children: List.generate(widget.icons.length, (index) {
+              return _buildNavItem(index);
+            }),
           ),
         ),
       ),

@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../services/quiz_service.dart';
-import '../../services/cooldown_service.dart';
-import '../../services/cloudflare_workers_service.dart';
+import '../../services/ad_service.dart';
 import '../../providers/user_provider.dart';
 import '../../widgets/custom_dialog.dart';
+import '../../widgets/error_states.dart';
 
 class QuizScreen extends StatefulWidget {
   const QuizScreen({super.key});
@@ -16,22 +16,22 @@ class QuizScreen extends StatefulWidget {
 
 class _QuizScreenState extends State<QuizScreen> {
   late final QuizService _quizService;
-  late final CooldownService _cooldownService;
+  late final AdService _adService;
   late List<QuizQuestion> _questions;
   late List<int?> _answers;
   int _currentQuestionIndex = 0;
   bool _quizStarted = false;
   bool _quizCompleted = false;
   int _timeRemaining = 60;
-  late DateTime _quizStartTime;
+  bool _isClaiming = false;
 
   @override
   void initState() {
     super.initState();
     _quizService = QuizService();
-    _cooldownService = CooldownService();
-    _quizStartTime = DateTime.now();
+    _adService = AdService();
     _initializeQuiz();
+    _adService.loadRewardedAd();
   }
 
   void _initializeQuiz() {
@@ -83,112 +83,174 @@ class _QuizScreenState extends State<QuizScreen> {
 
   Future<void> _completeQuiz() async {
     setState(() => _quizCompleted = true);
+    final score = _quizService.calculateScore(_questions, _answers);
 
-    // Calculate time spent on quiz
-    final timeSpent = DateTime.now().difference(_quizStartTime).inSeconds;
+    if (mounted) {
+      _showResultDialog(score);
+    }
+  }
+
+  Future<void> _watchAdToClaim(Map<String, dynamic> score) async {
+    if (_isClaiming) return;
+    setState(() => _isClaiming = true);
+    Navigator.pop(context); // Close result dialog
 
     try {
-      final score = _quizService.calculateScore(_questions, _answers);
-      final userProvider = context.read<UserProvider>();
+      final success = await _adService.showRewardedAd(
+        onRewardEarned: (amount) async {
+          await _claimReward(score);
+        },
+      );
 
-      // Check backend health
-      final cloudflareService = CloudflareWorkersService();
-      final isBackendHealthy = await cloudflareService.healthCheck();
-      if (!isBackendHealthy) {
+      if (!success) {
         if (mounted) {
-          showDialog(
-            context: context,
-            builder: (context) => CustomDialog(
-              title: 'Connection Error',
-              emoji: '⚠️',
-              content: const Text(
-                'Cannot connect to server. Quiz result not saved.',
-              ),
-              actions: [
-                ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('OK'),
-                ),
-              ],
-            ),
-          );
+          StateSnackbar.showWarning(context, 'Ad not ready. Please try again.');
+          _showResultDialog(score); // Re-show dialog
         }
-        return;
       }
-
-      // Record quiz result with time spent
-      debugPrint('Quiz completed in ${timeSpent}s');
-      await _quizService.recordQuizResult(
-        userProvider.user.userId,
-        score['correct'],
-        score['total'],
-        score['reward'],
-      );
-
-      // Set cooldown
-      _cooldownService.startCooldown(
-        userProvider.user.userId,
-        'game_quiz',
-        300,
-      );
-
+    } catch (e) {
+      debugPrint('Error showing ad: $e');
       if (mounted) {
         _showResultDialog(score);
       }
-    } catch (e) {
+    } finally {
       if (mounted) {
-        ScaffoldMessenger.of(
+        setState(() => _isClaiming = false);
+      }
+    }
+  }
+
+  Future<void> _claimReward(Map<String, dynamic> score) async {
+    final userProvider = context.read<UserProvider>();
+    final reward = 50; // Fixed 50 Coins for Quiz
+
+    // Optimistic Update
+    userProvider.addOptimisticCoins(reward);
+
+    try {
+      // Record result to backend with timeout
+      await _quizService
+          .recordQuizResult(
+            userProvider.user.userId,
+            score['correct'],
+            score['total'],
+            reward,
+          )
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () {
+              throw Exception('Request timed out');
+            },
+          );
+
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => CustomDialog(
+            title: 'Reward Claimed!',
+            emoji: '🎉',
+            content: Text(
+              'You earned $reward Coins!',
+              style: Theme.of(context).textTheme.titleMedium,
+              textAlign: TextAlign.center,
+            ),
+            actions: [
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _resetQuiz();
+                },
+                child: const Text('Play Again'),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error claiming reward: $e');
+      // Rollback
+      userProvider.rollbackOptimisticCoins(reward);
+      if (mounted) {
+        StateSnackbar.showError(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+          'Failed to claim reward: ${e.toString().replaceAll('Exception: ', '')}',
+        );
       }
     }
   }
 
   void _showResultDialog(Map<String, dynamic> score) {
+    final correct = score['correct'] as int;
+    final total = score['total'] as int;
+    final passed = correct >= 3; // Pass if 3 or more correct
+
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => CustomDialog(
-        title: score['message'],
+        title: passed ? 'Quiz Completed!' : 'Try Again',
+        emoji: passed ? '🏆' : '📚',
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             CircleAvatar(
               radius: 48,
-              backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.2),
+              backgroundColor: (passed ? AppTheme.successColor : Colors.orange)
+                  .withValues(alpha: 0.2),
               child: Text(
-                '${score['percentage'].toStringAsFixed(0)}%',
+                '${(correct / total * 100).toStringAsFixed(0)}%',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
+                  color: passed ? AppTheme.successColor : Colors.orange,
                 ),
               ),
             ),
             const SizedBox(height: AppTheme.space16),
             Text(
-              '${score['correct']}/${score['total']} Correct',
+              '$correct/$total Correct',
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: AppTheme.space12),
-            Text(
-              '₹${(score['reward'] as double).toStringAsFixed(2)} Earned!',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: Colors.green,
-                fontWeight: FontWeight.bold,
+            if (passed)
+              Text(
+                'Watch Ad to claim 50 Coins!',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary),
+                textAlign: TextAlign.center,
+              )
+            else
+              Text(
+                'Get at least 3 correct to earn rewards.',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary),
+                textAlign: TextAlign.center,
               ),
-            ),
           ],
         ),
         actions: [
-          ElevatedButton(
+          if (passed)
+            ElevatedButton(
+              onPressed: _isClaiming ? null : () => _watchAdToClaim(score),
+              child: _isClaiming
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Watch Ad to Claim'),
+            ),
+          OutlinedButton(
             onPressed: () {
               Navigator.pop(context);
               _resetQuiz();
             },
             child: const Text('Try Again'),
           ),
-          OutlinedButton(
+          TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Go Back'),
+            child: const Text('Exit'),
           ),
         ],
       ),
@@ -253,14 +315,14 @@ class _QuizScreenState extends State<QuizScreen> {
                 Text('🧠', style: Theme.of(context).textTheme.displaySmall),
                 const SizedBox(height: AppTheme.space24),
                 Text(
-                  'Daily Quiz Challenge',
+                  'Unlimited Quiz',
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: AppTheme.space16),
                 Text(
-                  'Answer 5 questions and earn up to ₹0.75',
+                  'Answer 5 questions correctly to earn 50 Coins!',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: AppTheme.textSecondary,
                   ),
@@ -287,9 +349,9 @@ class _QuizScreenState extends State<QuizScreen> {
                 const SizedBox(height: AppTheme.space12),
                 Text(
                   '• You have 60 seconds for 5 questions\n'
-                  '• Each correct answer: ₹0.15\n'
-                  '• You can come back after 5 minutes\n'
-                  '• No penalty for wrong answers',
+                  '• Get 3+ correct to win\n'
+                  '• Watch an ad to claim 50 Coins\n'
+                  '• Play as many times as you want!',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppTheme.textSecondary,
                     height: 1.6,

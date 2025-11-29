@@ -21,9 +21,11 @@ class CustomDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return Dialog(
       backgroundColor: AppTheme.surfaceColor,
-      elevation: 0,
+      elevation: 10,
+      shadowColor: Colors.black.withValues(alpha: 0.2),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppTheme.radiusL),
+        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+        side: BorderSide(color: AppTheme.surfaceVariant, width: 1),
       ),
       child: Padding(
         padding: const EdgeInsets.all(AppTheme.space24),
@@ -62,8 +64,14 @@ class CustomDialog extends StatelessWidget {
               const SizedBox(height: AppTheme.space24),
               SizedBox(
                 width: double.infinity,
-                child: OutlinedButton(
+                child: ElevatedButton(
                   onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.surfaceVariant,
+                    foregroundColor: AppTheme.textPrimary,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
                   child: const Text('Close'),
                 ),
               ),

@@ -73,9 +73,9 @@ service cloud.firestore {
       allow read: if isAuthenticatedUser(userId) || 
                      (isAuthenticated() && resource.data.profilePublic == true);
       
-      // Update: Only user can update their own profile (but NOT balance/earnings)
-      allow update: if isAuthenticatedUser(userId) &&
-                       validateUserProfileUpdate(request.resource.data, resource.data);
+      // Update: DENY all client-side updates (Security Fix)
+      // Profile updates must now go through backend (or be re-enabled with strict validation if needed)
+      allow update: if false;
       
       // Create: User creating their own account during signup
       allow create: if isAuthenticatedUser(userId) &&

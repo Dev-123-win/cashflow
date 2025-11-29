@@ -8,6 +8,7 @@ import '../../services/request_deduplication_service.dart';
 import '../../services/device_fingerprint_service.dart';
 import '../../core/constants/app_constants.dart';
 import '../../widgets/error_states.dart';
+import '../../providers/user_provider.dart';
 
 class WatchAdsScreen extends StatefulWidget {
   const WatchAdsScreen({super.key});
@@ -36,6 +37,8 @@ class _WatchAdsScreenState extends State<WatchAdsScreen> {
     super.dispose();
   }
 
+  bool _isClaiming = false;
+
   Future<void> _watchRewardedAd() async {
     if (_adsWatchedToday >= _maxAdsPerDay) {
       if (mounted) {
@@ -47,7 +50,11 @@ class _WatchAdsScreenState extends State<WatchAdsScreen> {
       return;
     }
 
-    setState(() => _isLoadingAd = true);
+    if (_isClaiming) return;
+    setState(() {
+      _isLoadingAd = true;
+      _isClaiming = true;
+    });
 
     try {
       // Show the rewarded ad using Google's native ad implementation
@@ -61,6 +68,15 @@ class _WatchAdsScreenState extends State<WatchAdsScreen> {
             }
             return;
           }
+
+          final userProvider = Provider.of<UserProvider>(
+            context,
+            listen: false,
+          );
+          final reward = AppConstants.rewardedAdReward;
+
+          // Optimistic Update
+          userProvider.addOptimisticCoins(reward);
 
           try {
             // Get deduplication and fingerprinting services
@@ -78,29 +94,41 @@ class _WatchAdsScreenState extends State<WatchAdsScreen> {
             final deviceFingerprint = await fingerprint.getDeviceFingerprint();
 
             // Generate unique request ID for deduplication
-            final requestId = dedup
-                .generateRequestId(user.uid, 'ad_view_rewarded', {
-                  'timestamp': DateTime.now().millisecondsSinceEpoch,
-                  'reward': AppConstants.rewardedAdReward,
-                });
+            final requestId = dedup.generateRequestId(
+              user.uid,
+              'ad_view_rewarded',
+              {
+                'timestamp': DateTime.now().millisecondsSinceEpoch,
+                'reward': reward,
+              },
+            );
 
             // Check if already processed (prevents duplicate earnings)
             final cachedRecord = dedup.getFromLocalCache(requestId);
             if (cachedRecord != null && cachedRecord.success) {
+              // Rollback if duplicate
+              userProvider.rollbackOptimisticCoins(reward);
               if (mounted) {
                 StateSnackbar.showWarning(context, 'Ad reward already claimed');
               }
               return;
             }
 
-            // Record ad view via Firestore with deduplication fields
-            await firestore.recordAdView(
-              user.uid,
-              'rewarded',
-              AppConstants.rewardedAdReward,
-              requestId: requestId,
-              deviceFingerprint: deviceFingerprint,
-            );
+            // Record ad view via Firestore with deduplication fields and timeout
+            await firestore
+                .recordAdView(
+                  user.uid,
+                  'rewarded',
+                  reward,
+                  requestId: requestId,
+                  deviceFingerprint: deviceFingerprint,
+                )
+                .timeout(
+                  const Duration(seconds: 10),
+                  onTimeout: () {
+                    throw Exception('Request timed out');
+                  },
+                );
 
             // Mark as processed in deduplication cache
             await dedup.recordRequest(
@@ -114,21 +142,23 @@ class _WatchAdsScreenState extends State<WatchAdsScreen> {
             if (mounted) {
               setState(() {
                 _adsWatchedToday++;
-                _totalEarned += AppConstants.rewardedAdReward;
+                _totalEarned += reward;
               });
 
               // Show success message
               StateSnackbar.showSuccess(
                 context,
-                'Great! You earned ${AppConstants.rewardedAdReward} Coins',
+                'Great! You earned $reward Coins',
               );
             }
           } catch (e) {
             debugPrint('Error recording ad view: $e');
+            // Rollback on error
+            userProvider.rollbackOptimisticCoins(reward);
             if (mounted) {
               StateSnackbar.showError(
                 context,
-                'Failed to claim reward: ${e.toString()}',
+                'Failed to claim reward: ${e.toString().replaceAll('Exception: ', '')}',
               );
             }
           }
@@ -146,7 +176,10 @@ class _WatchAdsScreenState extends State<WatchAdsScreen> {
       }
     } finally {
       if (mounted) {
-        setState(() => _isLoadingAd = false);
+        setState(() {
+          _isLoadingAd = false;
+          _isClaiming = false;
+        });
       }
     }
   }

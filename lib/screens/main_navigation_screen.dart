@@ -64,7 +64,12 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         body: Stack(
           children: [
             // Main Content
-            IndexedStack(index: _currentIndex, children: _screens),
+            Padding(
+              padding: const EdgeInsets.only(
+                bottom: 100,
+              ), // Space for FloatingDock
+              child: IndexedStack(index: _currentIndex, children: _screens),
+            ),
 
             // Floating Dock
             Align(

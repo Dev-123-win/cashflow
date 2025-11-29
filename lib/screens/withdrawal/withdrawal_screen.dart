@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
-import '../../core/theme/app_theme.dart';
-import '../../core/utils/device_utils.dart';
-import '../../services/cloudflare_workers_service.dart';
-import '../../services/fee_calculation_service.dart';
-import '../../providers/user_provider.dart';
-import '../../widgets/error_states.dart';
-import '../../widgets/custom_dialog.dart';
-
-import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/services.dart';
+import '../../core/theme/app_theme.dart';
+import '../../services/cloudflare_workers_service.dart';
+import '../../services/device_fingerprint_service.dart';
+import '../../providers/user_provider.dart';
+import '../../widgets/custom_dialog.dart';
 import '../../widgets/shimmer_loading.dart';
 
 class WithdrawalScreen extends StatefulWidget {
@@ -26,7 +23,7 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
   final CloudflareWorkersService _api = CloudflareWorkersService();
   String? _deviceId;
   bool _isProcessing = false;
-  double minWithdrawal = 50.0; // ₹50
+  double minWithdrawal = 5000.0; // 5000 Coins = ₹5
 
   @override
   void initState() {
@@ -53,7 +50,7 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
 
   Future<void> _initializeDeviceId() async {
     try {
-      _deviceId = await DeviceUtils.getDeviceId();
+      _deviceId = await DeviceFingerprintService().getDeviceFingerprint();
     } catch (e) {
       debugPrint('Error getting device ID: $e');
     }
@@ -65,6 +62,8 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
     _amountController.dispose();
     super.dispose();
   }
+
+  // ... (keep existing methods)
 
   Future<void> _submitWithdrawal() async {
     final user = fb_auth.FirebaseAuth.instance.currentUser;
@@ -87,26 +86,23 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
     if (_amountController.text.isEmpty) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Please enter amount')));
+      ).showSnackBar(const SnackBar(content: Text('Please enter coins')));
       return;
     }
 
-    final amount = double.tryParse(_amountController.text) ?? 0;
-    if (amount < minWithdrawal) {
+    final coins = double.tryParse(_amountController.text) ?? 0;
+    if (coins < minWithdrawal) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            'Minimum withdrawal amount is ₹${minWithdrawal.toStringAsFixed(2)}',
-          ),
+          content: Text('Minimum withdrawal is ${minWithdrawal.toInt()} Coins'),
         ),
       );
       return;
     }
 
     final userProvider = context.read<UserProvider>();
-    final coinsRequired = (amount * 1000).toInt();
 
-    if (coinsRequired > userProvider.user.coins) {
+    if (coins > userProvider.user.coins) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Insufficient coin balance')),
       );
@@ -169,7 +165,7 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
       // Request withdrawal via API
       final result = await _api.requestWithdrawal(
         userId: user.uid,
-        coins: coinsRequired,
+        coins: coins.toInt(),
         upiId: _upiController.text,
         deviceId: _deviceId!,
       );
@@ -179,11 +175,7 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
       await prefs.setString('saved_upi_id', _upiController.text);
 
       final withdrawalId = result['withdrawalId'] as String? ?? 'pending';
-
-      // Deduct balance from user
-      if (mounted) {
-        // Balance update is handled by backend and reflected via UserProvider stream
-      }
+      final fiatValue = coins / 1000;
 
       // Close loading dialog
       if (mounted) {
@@ -201,7 +193,7 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  '₹${amount.toStringAsFixed(2)} will be transferred to your UPI in 24-48 hours',
+                  '${coins.toInt()} Coins (₹${fiatValue.toStringAsFixed(2)}) will be transferred to your UPI in 24-48 hours',
                   style: Theme.of(context).textTheme.bodyMedium,
                   textAlign: TextAlign.center,
                 ),
@@ -255,23 +247,13 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
   }
 
   Widget _buildFeeBreakdown(BuildContext context) {
-    final feeService = Provider.of<FeeCalculationService>(
-      context,
-      listen: false,
-    );
-    final amount = double.tryParse(_amountController.text) ?? 0;
-    final breakdown = feeService.getFeeBreakdown(amount);
+    // Simplified fee breakdown for Coins
+    final coins = double.tryParse(_amountController.text) ?? 0;
+    final fiatValue = coins / 1000;
 
-    // Validate amount
-    final (isValid, error) = feeService.validateWithdrawalAmount(amount);
-
-    if (!isValid) {
-      return ErrorStateWidget(
-        title: 'Invalid Amount',
-        message: error,
-        icon: Icons.warning_amber,
-      );
-    }
+    // Assuming 5% fee on fiat value
+    final feeFiat = fiatValue * 0.05;
+    final netFiat = fiatValue - feeFiat;
 
     return Card(
       child: Padding(
@@ -279,21 +261,19 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _breakdownRow(
-              'Amount Requested',
-              breakdown['grossAmount']!,
-              bold: true,
-            ),
+            _breakdownRow('Coins to Redeem', '${coins.toInt()}', bold: true),
+            const SizedBox(height: AppTheme.space8),
+            _breakdownRow('Fiat Value', '₹${fiatValue.toStringAsFixed(2)}'),
             const SizedBox(height: AppTheme.space8),
             _breakdownRow(
-              'Withdrawal Fee (5%)',
-              breakdown['fee']!,
+              'Processing Fee (5%)',
+              '-₹${feeFiat.toStringAsFixed(2)}',
               color: Colors.red,
             ),
             const Divider(height: 16),
             _breakdownRow(
               'You Will Receive',
-              breakdown['netAmount']!,
+              '₹${netFiat.toStringAsFixed(2)}',
               bold: true,
               color: Colors.green,
             ),
@@ -333,7 +313,7 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
-      appBar: AppBar(title: const Text('Withdraw Earnings'), elevation: 0),
+      appBar: AppBar(title: const Text('Redeem Coins'), elevation: 0),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppTheme.space16),
@@ -413,7 +393,7 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
                             ),
                           ),
                           child: Text(
-                            'Min withdrawal: ₹${minWithdrawal.toStringAsFixed(2)}',
+                            'Min withdrawal: ${minWithdrawal.toInt()} Coins',
                             style: Theme.of(context).textTheme.labelLarge
                                 ?.copyWith(color: Colors.white),
                           ),
@@ -433,29 +413,89 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
               const SizedBox(height: AppTheme.space16),
 
               // UPI ID Field
-              Text('UPI ID', style: Theme.of(context).textTheme.titleLarge),
+              Text(
+                'UPI ID',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: AppTheme.space8),
-              TextField(
-                controller: _upiController,
-                decoration: InputDecoration(
-                  hintText: 'yourname@upi',
-                  prefixIcon: const Icon(Icons.account_balance_wallet_outlined),
+              Container(
+                decoration: BoxDecoration(
+                  color: AppTheme.surfaceColor,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-                keyboardType: TextInputType.emailAddress,
+                child: TextField(
+                  controller: _upiController,
+                  decoration: InputDecoration(
+                    hintText: 'yourname@upi',
+                    prefixIcon: const Icon(
+                      Icons.account_balance_wallet_outlined,
+                      color: AppTheme.primaryColor,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                      borderSide: BorderSide.none,
+                    ),
+                    filled: true,
+                    fillColor: AppTheme.surfaceColor,
+                    contentPadding: const EdgeInsets.all(AppTheme.space16),
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                ),
               ),
               const SizedBox(height: AppTheme.space24),
 
               // Amount Field
-              Text('Amount', style: Theme.of(context).textTheme.titleLarge),
+              Text(
+                'Coins to Withdraw',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: AppTheme.space8),
-              TextField(
-                controller: _amountController,
-                decoration: InputDecoration(
-                  hintText: 'Enter amount',
-                  prefixIcon: const Icon(Icons.currency_rupee),
+              Container(
+                decoration: BoxDecoration(
+                  color: AppTheme.surfaceColor,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-                keyboardType: TextInputType.number,
-                onChanged: (_) => setState(() {}),
+                child: TextField(
+                  controller: _amountController,
+                  decoration: InputDecoration(
+                    hintText: 'Enter Coins',
+                    prefixIcon: Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Image.asset(
+                        'assets/icons/Coin.png',
+                        width: 24,
+                        height: 24,
+                      ),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                      borderSide: BorderSide.none,
+                    ),
+                    filled: true,
+                    fillColor: AppTheme.surfaceColor,
+                    contentPadding: const EdgeInsets.all(AppTheme.space16),
+                  ),
+                  keyboardType: TextInputType.number,
+                  onChanged: (_) => setState(() {}),
+                ),
               ),
               const SizedBox(height: AppTheme.space12),
 
@@ -477,37 +517,52 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
                   ),
                   Consumer<UserProvider>(
                     builder: (context, userProvider, _) {
-                      final cashBalance = userProvider.user.coins / 1000;
+                      final currentCoins = userProvider.user.coins;
                       return Wrap(
                         spacing: AppTheme.space8,
-                        children: [50.0, 100.0, 150.0].map((amount) {
-                          final canUse = amount <= cashBalance;
+                        children: [5000, 10000, 25000].map((amount) {
+                          final canUse = amount <= currentCoins;
                           return GestureDetector(
                             onTap: canUse
                                 ? () {
                                     HapticFeedback.lightImpact();
-                                    _amountController.text = amount
-                                        .toStringAsFixed(0);
+                                    _amountController.text = amount.toString();
                                     setState(() {});
                                   }
                                 : null,
                             child: Container(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: AppTheme.space12,
+                                horizontal: AppTheme.space16,
                                 vertical: AppTheme.space8,
                               ),
                               decoration: BoxDecoration(
-                                color: AppTheme.surfaceColor,
+                                color: canUse
+                                    ? AppTheme.primaryColor.withValues(
+                                        alpha: 0.1,
+                                      )
+                                    : AppTheme.surfaceVariant,
                                 borderRadius: BorderRadius.circular(
-                                  AppTheme.radiusS,
+                                  AppTheme.radiusM,
                                 ),
-                                boxShadow: AppTheme.cardShadow,
+                                border: canUse
+                                    ? Border.all(
+                                        color: AppTheme.primaryColor.withValues(
+                                          alpha: 0.3,
+                                        ),
+                                      )
+                                    : null,
                               ),
                               child: Opacity(
                                 opacity: canUse ? 1.0 : 0.5,
                                 child: Text(
-                                  '₹${amount.toStringAsFixed(0)}',
-                                  style: Theme.of(context).textTheme.labelLarge,
+                                  '$amount',
+                                  style: Theme.of(context).textTheme.labelLarge
+                                      ?.copyWith(
+                                        color: canUse
+                                            ? AppTheme.primaryColor
+                                            : AppTheme.textSecondary,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                 ),
                               ),
                             ),
@@ -522,23 +577,38 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
 
               // Info Box
               Container(
-                padding: const EdgeInsets.all(AppTheme.space12),
+                padding: const EdgeInsets.all(AppTheme.space16),
                 decoration: BoxDecoration(
                   color: AppTheme.surfaceColor,
                   borderRadius: BorderRadius.circular(AppTheme.radiusM),
-                  border: Border.all(color: AppTheme.tertiaryColor, width: 1),
+                  border: Border.all(
+                    color: AppTheme.tertiaryColor.withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.tertiaryColor.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.info_outline, size: 20),
+                        const Icon(
+                          Icons.info_outline,
+                          size: 20,
+                          color: AppTheme.tertiaryColor,
+                        ),
                         const SizedBox(width: AppTheme.space12),
                         Expanded(
                           child: Text(
                             'Processing Time',
-                            style: Theme.of(context).textTheme.titleLarge,
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.bold),
                           ),
                         ),
                       ],
@@ -546,7 +616,9 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
                     const SizedBox(height: AppTheme.space8),
                     Text(
                       'Withdrawals are processed within 24-48 hours. You will receive a notification once your money is transferred.',
-                      style: Theme.of(context).textTheme.bodyMedium,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppTheme.textSecondary,
+                      ),
                     ),
                   ],
                 ),
@@ -554,25 +626,57 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
               const SizedBox(height: AppTheme.space32),
 
               // Submit Button
-              SizedBox(
+              Container(
                 width: double.infinity,
-                height: 48,
+                height: 56,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(AppTheme.radiusL),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
                 child: ElevatedButton(
                   onPressed: _isProcessing ? null : _submitWithdrawal,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusL),
+                    ),
+                    elevation: 0,
+                  ),
                   child: _isProcessing
                       ? const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
                             ),
-                            SizedBox(width: 8),
-                            Text('Processing...'),
+                            SizedBox(width: 12),
+                            Text(
+                              'Processing...',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ],
                         )
-                      : const Text('Request Withdrawal'),
+                      : const Text(
+                          'Request Withdrawal',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
               ),
               const SizedBox(height: AppTheme.space32),

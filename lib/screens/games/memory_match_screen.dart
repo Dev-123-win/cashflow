@@ -6,7 +6,6 @@ import '../../services/game_service.dart';
 import '../../services/cooldown_service.dart';
 import '../../services/cloudflare_workers_service.dart';
 import '../../services/ad_service.dart';
-import '../../services/local_notification_service.dart';
 import '../../providers/user_provider.dart';
 import '../../widgets/custom_dialog.dart';
 import '../../widgets/error_states.dart';
@@ -157,7 +156,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
           children: [
             const Text('Great memory!'),
             const SizedBox(height: 8),
-            const Text('Watch a short ad to claim your reward.'),
+            const Text('Watch a short ad to claim your Coins!'),
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(12),
@@ -172,7 +171,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
                   Icon(Icons.play_circle_filled, color: Colors.green),
                   SizedBox(width: 8),
                   Text(
-                    'Claim Reward',
+                    'Claim Reward 📺',
                     style: TextStyle(
                       color: Colors.green,
                       fontWeight: FontWeight.bold,
@@ -203,39 +202,75 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
     );
   }
 
+  bool _isClaiming = false;
+
   Future<void> _watchAdToClaim() async {
-    await _adService.showRewardedAd(
-      onRewardEarned: (reward) async {
-        await _recordGameWin();
-      },
-    );
+    if (_isClaiming) return;
+    setState(() => _isClaiming = true);
+
+    try {
+      await _adService.showRewardedAd(
+        onRewardEarned: (rewardItem) async {
+          if (!mounted) return;
+
+          final userProvider = Provider.of<UserProvider>(
+            context,
+            listen: false,
+          );
+          final accuracy = _game.getAccuracy();
+
+          // Calculate reward based on accuracy
+          int reward = 500; // Base 500 Coins
+          if (accuracy >= 90) {
+            reward = 750;
+          } else if (accuracy >= 70) {
+            reward = 600;
+          }
+
+          // 1. Optimistic Update
+          userProvider.addOptimisticCoins(reward);
+
+          // Show success dialog immediately
+          if (mounted) {
+            _showGameResult(reward);
+          }
+
+          // 2. Call Backend with Timeout
+          try {
+            await _recordGameWin(reward).timeout(
+              const Duration(seconds: 10),
+              onTimeout: () {
+                throw Exception('Request timed out');
+              },
+            );
+          } catch (e) {
+            // 3. Rollback on failure
+            userProvider.rollbackOptimisticCoins(reward);
+            if (mounted) {
+              StateSnackbar.showError(
+                context,
+                'Failed to save reward: ${e.toString().replaceAll('Exception: ', '')}',
+              );
+            }
+          }
+        },
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isClaiming = false);
+      }
+    }
   }
 
-  Future<void> _recordGameWin() async {
+  Future<void> _recordGameWin(int reward) async {
     try {
-      final userProvider = context.read<UserProvider>();
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
 
       // Check backend health
       final cloudflareService = CloudflareWorkersService();
       final isBackendHealthy = await cloudflareService.healthCheck();
       if (!isBackendHealthy) {
-        if (mounted) {
-          StateSnackbar.showError(
-            context,
-            'Connection error. Reward not saved.',
-          );
-        }
-        return;
-      }
-
-      final accuracy = _game.getAccuracy();
-
-      // Reward based on accuracy: 90%+ = 75 Coins, 70%+ = 60 Coins, else = 50 Coins
-      int reward = 50;
-      if (accuracy >= 90) {
-        reward = 75;
-      } else if (accuracy >= 70) {
-        reward = 60;
+        throw Exception('Backend unreachable');
       }
 
       await _gameService.recordGameWin(
@@ -244,10 +279,41 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
         customReward: reward,
       );
 
-      // Optimistic update to save reads
+      // We don't need to update local state here as optimistic update handled it.
+      // But we might want to sync other stats like gamesPlayedToday.
+      // Actually, let's update stats but NOT coins (since we already did).
+      // Or better, update everything to be safe and confirm.
+
+      // Since addOptimisticCoins adds to a separate buffer, and updateLocalState updates the base user,
+      // we need to be careful.
+      // Ideally:
+      // 1. Optimistic: _optimisticCoins += 500
+      // 2. Backend Success: Returns new total coins (e.g. 10500).
+      // 3. We update User.coins = 10500.
+      // 4. We clear _optimisticCoins = 0.
+
+      // For now, let's just rely on the optimistic update for the visual
+      // and let the next refresh sync the real state.
+      // But to be correct with `gamesPlayedToday`, we should update it.
+
+      userProvider.updateLocalState(
+        gamesPlayedToday: userProvider.user.gamesPlayedToday + 1,
+        // Don't update coins here to avoid double counting if we don't clear optimistic
+        // But wait, if we don't update base coins, and we clear optimistic, it flickers back.
+        // We need a way to "commit" the optimistic coins.
+        // For this iteration, let's just leave optimistic coins as is until next refresh?
+        // No, that's risky.
+        // Let's use `confirmOptimisticCoins` if we had it, or just:
+        // userProvider.confirmOptimisticCoins(reward); // We added this method!
+      );
+
+      // Commit the optimistic coins
+      userProvider.confirmOptimisticCoins(reward);
+      // And update the base user with the new total (approximate or wait for refresh)
+      // Actually, confirmOptimisticCoins just subtracts from optimistic.
+      // We need to ADD to base user at the same time.
       userProvider.updateLocalState(
         coins: userProvider.user.coins + reward,
-        totalEarnings: userProvider.user.totalEarnings + (reward / 1000),
         gamesPlayedToday: userProvider.user.gamesPlayedToday + 1,
       );
 
@@ -257,17 +323,10 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
         300,
       );
 
-      // Schedule notification
-      LocalNotificationService().scheduleCooldownExpiry(
-        gameName: 'Memory Match',
-        duration: const Duration(seconds: 300),
-      );
-
-      if (mounted) {
-        _showGameResult(reward);
-      }
+      debugPrint('✅ Game win recorded');
     } catch (e) {
       debugPrint('Error recording game: $e');
+      rethrow;
     }
   }
 

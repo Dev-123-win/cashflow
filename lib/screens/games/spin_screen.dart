@@ -225,12 +225,17 @@ class _SpinScreenState extends State<SpinScreen> {
     try {
       _confettiController.play();
 
+      // Optimistic Update
+      userProvider.addOptimisticCoins(_lastSpinReward!);
+
       if (mounted) {
         await _showSpinResult(_lastSpinReward!);
         _cooldownService.startCooldown(user.uid, 'spin_daily', 86400);
 
-        // Refresh user data from backend
-        await userProvider.refreshUser();
+        // Sync with backend in background
+        userProvider.refreshUser().catchError((e) {
+          debugPrint('Error refreshing user data: $e');
+        });
 
         // Check for Ad Break
         await _adService.checkAdBreak();

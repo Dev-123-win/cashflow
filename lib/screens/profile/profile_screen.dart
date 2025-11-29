@@ -104,8 +104,8 @@ class ProfileScreen extends StatelessWidget {
                   child: Column(
                     children: [
                       Container(
-                        width: 96,
-                        height: 96,
+                        width: 100,
+                        height: 100,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           gradient: LinearGradient(
@@ -116,13 +116,22 @@ class ProfileScreen extends StatelessWidget {
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
-                          boxShadow: AppTheme.elevatedShadow,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppTheme.primaryColor.withValues(
+                                alpha: 0.3,
+                              ),
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
+                          border: Border.all(color: Colors.white, width: 3),
                         ),
                         child: Center(
                           child: Text(
                             initials,
                             style: const TextStyle(
-                              fontSize: 32,
+                              fontSize: 36,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
                             ),
@@ -317,8 +326,20 @@ class ProfileScreen extends StatelessWidget {
     IconData icon,
     Color color,
   ) {
-    return ZenCard(
+    return Container(
       padding: const EdgeInsets.all(AppTheme.space16),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceColor,
+        borderRadius: BorderRadius.circular(AppTheme.radiusL),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(color: AppTheme.surfaceVariant, width: 1),
+      ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [

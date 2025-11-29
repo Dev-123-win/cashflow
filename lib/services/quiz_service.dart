@@ -32,7 +32,7 @@ class QuizService {
 
   // Quiz configuration
   static const int questionsPerQuiz = 5;
-  static const double rewardPerCorrect = 0.15;
+  static const int rewardPerCorrect = 10; // 10 Coins per correct answer
   static const int timeLimitSeconds = 60;
 
   /// Question bank - Simple Math Questions for Beginners Only
@@ -137,7 +137,7 @@ class QuizService {
     }
 
     double percentage = (correct / questions.length) * 100;
-    double reward = correct * rewardPerCorrect;
+    int reward = correct * rewardPerCorrect;
 
     return {
       'correct': correct,
@@ -167,14 +167,14 @@ class QuizService {
     String userId,
     int correctAnswers,
     int totalQuestions,
-    double reward,
+    int reward,
   ) async {
     try {
       await _firestoreService.recordGameResult(
         userId,
         'quiz',
         correctAnswers >= (totalQuestions ~/ 2),
-        (reward * 1000).toInt(),
+        reward,
       );
       debugPrint(
         '✅ Quiz result recorded: $userId ($correctAnswers/$totalQuestions)',

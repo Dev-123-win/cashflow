@@ -27,31 +27,31 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         rank: 1,
         userId: 'user1',
         displayName: 'Rajesh K.',
-        totalEarnings: 250.50,
+        totalEarnings: 250500, // Coins
       ),
       LeaderboardEntry(
         rank: 2,
         userId: 'user2',
         displayName: 'Priya S.',
-        totalEarnings: 180.75,
+        totalEarnings: 180750,
       ),
       LeaderboardEntry(
         rank: 3,
         userId: 'user3',
         displayName: 'Amit P.',
-        totalEarnings: 165.25,
+        totalEarnings: 165250,
       ),
       LeaderboardEntry(
         rank: 4,
         userId: 'user4',
         displayName: 'Sneha T.',
-        totalEarnings: 142.10,
+        totalEarnings: 142100,
       ),
       LeaderboardEntry(
         rank: 5,
         userId: 'user5',
         displayName: 'Vikram R.',
-        totalEarnings: 125.50,
+        totalEarnings: 125500,
       ),
     ];
   }
@@ -227,7 +227,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text(
-                                '₹${entry.totalEarnings.toStringAsFixed(2)}',
+                                '${entry.totalEarnings.toInt()} Coins',
                                 style: Theme.of(context).textTheme.titleMedium
                                     ?.copyWith(
                                       color: AppTheme.successColor,
@@ -310,7 +310,7 @@ class _HighlightedRankCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppTheme.radiusS),
               ),
               child: Text(
-                '₹${earnings.toStringAsFixed(0)}',
+                '${earnings.toInt()} Coins',
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
                   color: AppTheme.successColor,
                   fontWeight: FontWeight.bold,

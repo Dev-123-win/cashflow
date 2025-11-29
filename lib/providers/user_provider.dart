@@ -14,18 +14,47 @@ class UserProvider extends ChangeNotifier {
   bool _isAuthenticated = false;
   StreamSubscription? _userSubscription;
 
+  // Optimistic UI State
+  int _optimisticCoins = 0;
+
   User get user => _user;
   bool get isLoading => _isLoading;
   String? get error => _error;
   bool get isAuthenticated => _isAuthenticated;
 
+  // Get effective coins (Server + Optimistic)
+  int get coins => _user.coins + _optimisticCoins;
+
   final _firestoreService = getIt<FirestoreService>();
   final _auth = fb_auth.FirebaseAuth.instance;
+
+  /// Add coins optimistically (Instant UI update)
+  void addOptimisticCoins(int amount) {
+    _optimisticCoins += amount;
+    notifyListeners();
+  }
+
+  /// Rollback optimistic coins (If backend fails)
+  void rollbackOptimisticCoins(int amount) {
+    _optimisticCoins -= amount;
+    notifyListeners();
+  }
+
+  /// Confirm optimistic coins (Backend success)
+  /// We don't need to do anything here if we fetch the new user state,
+  /// but if we just want to clear the optimistic buffer and assume server state is updated:
+  void confirmOptimisticCoins(int amount) {
+    _optimisticCoins -= amount;
+    // We assume the server state (which we might fetch or update manually) now has the coins.
+    // If we updated local state manually via updateLocalState, we should do that concurrently.
+    notifyListeners();
+  }
 
   /// Initialize user profile from Firebase (Optimized for reads)
   Future<void> initializeUser(String userId) async {
     try {
       _isLoading = true;
+      _optimisticCoins = 0; // Reset on init
       notifyListeners();
 
       // Ensure user exists before listening (self-healing)
@@ -90,6 +119,15 @@ class UserProvider extends ChangeNotifier {
       gamesPlayedToday: gamesPlayedToday ?? _user.gamesPlayedToday,
       completedTaskIds: completedTaskIds ?? _user.completedTaskIds,
     );
+
+    // If coins provided, update the underlying user model (we need to add a copyWith for coins if not exists)
+    // Since User model might not have copyWith for coins (it uses availableBalance), we handle it.
+    // The User model has `int get coins => availableBalance.toInt()`.
+    // So updating availableBalance updates coins.
+    if (coins != null) {
+      _user = _user.copyWith(availableBalance: coins.toDouble());
+    }
+
     notifyListeners();
   }
 
@@ -128,10 +166,7 @@ class UserProvider extends ChangeNotifier {
       final isBackendHealthy = await cloudflareService.healthCheck();
 
       if (!isBackendHealthy) {
-        // If backend is down, we can still try Firestore if offline persistence is enabled,
-        // but for now let's just log it and rely on the stream.
         debugPrint('Backend unreachable during refreshUser');
-        // We don't throw error here to avoid disrupting UI, just return
         return;
       }
 

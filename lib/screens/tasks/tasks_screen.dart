@@ -480,10 +480,28 @@ class _TaskCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return ScaleButton(
       onTap: isCompleted || isLoading ? null : onTap,
-      child: ZenCard(
-        color: isCompleted
-            ? AppTheme.surfaceVariant.withValues(alpha: 0.5)
-            : null,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: AppTheme.space12),
+        padding: const EdgeInsets.all(AppTheme.space16),
+        decoration: BoxDecoration(
+          color: isCompleted
+              ? AppTheme.surfaceVariant.withValues(alpha: 0.5)
+              : AppTheme.surfaceColor,
+          borderRadius: BorderRadius.circular(AppTheme.radiusL),
+          boxShadow: isCompleted
+              ? null
+              : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+          border: Border.all(
+            color: isCompleted ? Colors.transparent : AppTheme.surfaceVariant,
+            width: 1,
+          ),
+        ),
         child: Row(
           children: [
             Container(
@@ -527,6 +545,7 @@ class _TaskCard extends StatelessWidget {
                   Text(
                     title,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
                       decoration: isCompleted
                           ? TextDecoration.lineThrough
                           : null,

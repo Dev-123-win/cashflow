@@ -163,7 +163,7 @@ class _ParallaxBalanceCardState extends State<ParallaxBalanceCard> {
                         vertical: AppTheme.space12,
                       ),
                     ),
-                    child: const Text('Withdraw Funds'),
+                    child: const Text('Redeem Coins'),
                   ),
                 ),
               ],

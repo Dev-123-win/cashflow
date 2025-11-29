@@ -11,7 +11,6 @@ import '../../services/device_fingerprint_service.dart';
 import '../../services/firestore_service.dart';
 import '../../services/cloudflare_workers_service.dart';
 import '../../services/ad_service.dart';
-import '../../services/local_notification_service.dart';
 import '../../providers/user_provider.dart';
 import '../../widgets/error_states.dart';
 import '../../widgets/banner_ad_widget.dart';
@@ -141,18 +140,11 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
         _isGameCompleted = true;
         // Game ended
         if (_game.playerWon()) {
-          await _recordGameWin();
+          // Don't record win yet - wait for ad claim
           if (mounted) {
-            // Optimistic update
-            userProvider.updateLocalState(
-              coins: userProvider.user.coins + 80,
-              totalEarnings: userProvider.user.totalEarnings + 0.08,
-              gamesPlayedToday: userProvider.user.gamesPlayedToday + 1,
-            );
-
             _showGameResult(
               title: 'You Won! 🎉',
-              message: 'You earned 80 Coins',
+              message: 'Claim your 80 Coins!',
               won: true,
             );
 
@@ -194,15 +186,58 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
     }
   }
 
+  bool _isClaiming = false;
+
+  Future<void> _claimReward() async {
+    if (_isClaiming) return;
+    setState(() => _isClaiming = true);
+
+    try {
+      // Show Rewarded Ad
+      await _adService.showRewardedAd(
+        onRewardEarned: (rewardItem) async {
+          if (!mounted) return;
+
+          final userProvider = Provider.of<UserProvider>(
+            context,
+            listen: false,
+          );
+
+          // 1. Optimistic Update
+          userProvider.addOptimisticCoins(80);
+
+          // 2. Call Backend with Timeout
+          try {
+            await _recordGameWin().timeout(
+              const Duration(seconds: 10),
+              onTimeout: () {
+                throw Exception('Request timed out');
+              },
+            );
+            // If successful, we confirm (or just leave it as server state will eventually sync)
+          } catch (e) {
+            // 3. Rollback on failure
+            userProvider.rollbackOptimisticCoins(80);
+            if (mounted) {
+              StateSnackbar.showError(
+                context,
+                'Failed to save reward: ${e.toString().replaceAll('Exception: ', '')}',
+              );
+            }
+          }
+        },
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isClaiming = false);
+      }
+    }
+  }
+
   Future<void> _recordGameWin() async {
     try {
       final user = fb_auth.FirebaseAuth.instance.currentUser;
-      if (user == null) {
-        if (mounted) {
-          StateSnackbar.showError(context, 'User not logged in');
-        }
-        return;
-      }
+      if (user == null) return;
 
       // Get providers before async gap
       final dedup = Provider.of<RequestDeduplicationService>(
@@ -219,13 +254,7 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
       final cloudflareService = CloudflareWorkersService();
       final isBackendHealthy = await cloudflareService.healthCheck();
       if (!isBackendHealthy) {
-        if (mounted) {
-          StateSnackbar.showError(
-            context,
-            'Cannot connect to server. Game result not saved.',
-          );
-        }
-        return;
+        throw Exception('Backend unreachable');
       }
 
       // Get device fingerprint
@@ -238,21 +267,12 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
         'reward': 80,
       });
 
-      // Check if already processed (prevents duplicate earnings)
-      final cachedRecord = dedup.getFromLocalCache(requestId);
-      if (cachedRecord != null && cachedRecord.success) {
-        if (mounted) {
-          StateSnackbar.showWarning(context, 'Game result already recorded');
-        }
-        return;
-      }
-
       // Record game result via Firestore with deduplication fields
       await firestore.recordGameResult(
         user.uid,
         'tictactoe',
         true,
-        (0.08 * 1000).toInt(),
+        80, // 80 Coins
         requestId: requestId,
         deviceFingerprint: deviceFingerprint,
       );
@@ -268,23 +288,10 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
       // Set cooldown
       _cooldownService.startCooldown(user.uid, 'game_tictactoe', 300);
 
-      // Schedule notification
-      LocalNotificationService().scheduleCooldownExpiry(
-        gameName: 'Tic-Tac-Toe',
-        duration: const Duration(seconds: 300),
-      );
-
       debugPrint('✅ Game win recorded for ${user.uid}: tictactoe');
-
-      // Check for Ad Break
-      if (mounted) {
-        await _adService.checkAdBreak();
-      }
     } catch (e) {
       debugPrint('Error recording game: $e');
-      if (mounted) {
-        StateSnackbar.showError(context, 'Failed to record game result');
-      }
+      rethrow; // Propagate error to _claimReward for rollback
     }
   }
 
@@ -305,30 +312,12 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
             Text(message),
             const SizedBox(height: AppTheme.space16),
             Text(
-              won ? '80 Coins earned!' : 'Better luck next time!',
+              won ? 'Watch Ad to Claim 80 Coins' : 'Better luck next time!',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 color: won ? Colors.green : Colors.orange,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            if (won)
-              Padding(
-                padding: const EdgeInsets.only(top: 16),
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withValues(alpha: 0.1),
-                    border: Border.all(color: Colors.blue),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    'Watch ad for +100 Coins bonus?',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodySmall?.copyWith(color: Colors.blue),
-                  ),
-                ),
-              ),
           ],
         ),
         actions: [
@@ -336,9 +325,9 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(context);
-                _watchBonusAd();
+                _claimReward();
               },
-              child: const Text('Watch Ad'),
+              child: const Text('Claim Reward 📺'),
             ),
           OutlinedButton(
             onPressed: () {
@@ -356,26 +345,13 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
     );
   }
 
-  // Watch rewarded ad for bonus +₹0.10
+  // Watch rewarded ad for bonus +₹0.10 - DEPRECATED / REMOVED
+  // Merged into main claim flow
+  /*
   Future<void> _watchBonusAd() async {
-    await _adService.showRewardedAd(
-      onRewardEarned: (reward) async {
-        try {
-          final user = fb_auth.FirebaseAuth.instance.currentUser;
-          if (user == null) return;
-
-          // Add bonus to user balance
-          // Balance update handled by recordGameResult via backend
-
-          if (mounted) {
-            StateSnackbar.showSuccess(context, 'Bonus 100 Coins added!');
-          }
-        } catch (e) {
-          debugPrint('Error adding bonus: $e');
-        }
-      },
-    );
+    ...
   }
+  */
 
   void _resetGame() {
     setState(() {

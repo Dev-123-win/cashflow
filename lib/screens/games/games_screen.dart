@@ -142,7 +142,7 @@ class _GamesScreenState extends State<GamesScreen> {
                           child: _GameCard(
                             title: 'Tic-Tac-Toe',
                             description: 'Beat the AI to win!',
-                            reward: 0.50,
+                            reward: 80,
                             icon: Icons.close,
                             color: const Color(0xFF6C63FF),
                             onTap: () =>
@@ -155,7 +155,7 @@ class _GamesScreenState extends State<GamesScreen> {
                           child: _GameCard(
                             title: 'Memory Match',
                             description: 'Find pairs!',
-                            reward: 0.50,
+                            reward: 500,
                             icon: Icons.grid_view,
                             color: const Color(0xFF00D9C0),
                             onTap: () =>
@@ -168,7 +168,7 @@ class _GamesScreenState extends State<GamesScreen> {
                           child: _GameCard(
                             title: 'Daily Quiz',
                             description: 'Test knowledge',
-                            reward: 0.75,
+                            reward: 50,
                             icon: Icons.psychology,
                             color: const Color(0xFFFFB800),
                             onTap: () => _navigateToGame('quiz', 'Daily Quiz'),
@@ -243,7 +243,7 @@ class _GamesScreenState extends State<GamesScreen> {
 class _GameCard extends StatelessWidget {
   final String title;
   final String description;
-  final double reward;
+  final int reward;
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
@@ -265,8 +265,15 @@ class _GameCard extends StatelessWidget {
         padding: const EdgeInsets.all(AppTheme.space16),
         decoration: BoxDecoration(
           color: AppTheme.surfaceColor,
-          borderRadius: BorderRadius.circular(AppTheme.radiusM),
-          boxShadow: AppTheme.softShadow,
+          borderRadius: BorderRadius.circular(AppTheme.radiusL),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+          border: Border.all(color: AppTheme.surfaceVariant, width: 1),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -309,7 +316,7 @@ class _GameCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(AppTheme.radiusS),
                   ),
                   child: Text(
-                    '+₹${reward.toStringAsFixed(2)}',
+                    '+$reward Coins',
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                       color: AppTheme.successColor,
                       fontWeight: FontWeight.bold,
@@ -340,17 +347,34 @@ class _ScoreCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ZenCard(
+    return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppTheme.space16,
-        vertical: AppTheme.space12,
+        vertical: AppTheme.space16,
+      ),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceColor,
+        borderRadius: BorderRadius.circular(AppTheme.radiusM),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(color: AppTheme.surfaceVariant, width: 1),
       ),
       child: Row(
         children: [
-          Text(medal, style: const TextStyle(fontSize: 20)),
+          Text(medal, style: const TextStyle(fontSize: 24)),
           const SizedBox(width: AppTheme.space16),
           Expanded(
-            child: Text(name, style: Theme.of(context).textTheme.titleMedium),
+            child: Text(
+              name,
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
           ),
           Text(
             score,

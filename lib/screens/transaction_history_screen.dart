@@ -182,19 +182,21 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                           gradient: LinearGradient(
                             colors: [
                               AppTheme.primaryColor,
-                              AppTheme.secondaryColor,
+                              Color(0xFF8B85FF), // Lighter shade
                             ],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radiusXL,
+                          ),
                           boxShadow: [
                             BoxShadow(
                               color: AppTheme.primaryColor.withValues(
                                 alpha: 0.3,
                               ),
-                              blurRadius: 12,
-                              offset: const Offset(0, 6),
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
                             ),
                           ],
                         ),
@@ -211,7 +213,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    '₹${totalIncome.toStringAsFixed(2)}',
+                                    '${totalIncome.toInt()} Coins',
                                     style: Theme.of(context)
                                         .textTheme
                                         .headlineSmall
@@ -240,7 +242,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    '₹${totalWithdrawal.toStringAsFixed(2)}',
+                                    '${totalWithdrawal.toInt()} Coins',
                                     style: Theme.of(context)
                                         .textTheme
                                         .headlineSmall
@@ -458,15 +460,16 @@ class _TransactionCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        color: AppTheme.surfaceColor,
+        borderRadius: BorderRadius.circular(AppTheme.radiusL),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
+        border: Border.all(color: AppTheme.surfaceVariant, width: 1),
       ),
       child: Row(
         children: [
@@ -512,7 +515,7 @@ class _TransactionCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                '${transaction.type == 'earning' ? '+' : '-'}₹${transaction.amount.toStringAsFixed(2)}',
+                '${transaction.type == 'earning' ? '+' : '-'}${transaction.amount.toInt()} Coins',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: transaction.type == 'earning'
