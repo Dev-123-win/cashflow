@@ -369,6 +369,8 @@ class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
                                   SvgPicture.asset(
                                     AppAssets.emptyTasks,
                                     height: 200,
+                                    fit: BoxFit.contain,
+                                    alignment: Alignment.center,
                                   ),
                                   const SizedBox(height: 16),
                                   Text(

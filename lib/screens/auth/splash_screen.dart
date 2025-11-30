@@ -103,6 +103,8 @@ class _SplashScreenState extends State<SplashScreen> {
                   AppAssets.appLogo,
                   width: 80,
                   height: 80,
+                  fit: BoxFit.contain,
+                  alignment: Alignment.center,
                   colorFilter: const ColorFilter.mode(
                     Colors.white,
                     BlendMode.srcIn,

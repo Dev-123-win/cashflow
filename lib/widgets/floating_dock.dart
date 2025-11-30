@@ -76,6 +76,7 @@ class _FloatingDockState extends State<FloatingDock> {
   Widget _buildNavItem(int index) {
     final isSelected = widget.currentIndex == index;
     final isHovered = _hoveredIndex == index;
+    final isFab = index == 2; // Center item is FAB
 
     return GestureDetector(
       onTap: () {
@@ -94,15 +95,30 @@ class _FloatingDockState extends State<FloatingDock> {
       },
       child: Stack(
         clipBehavior: Clip.none,
+        alignment: Alignment.center,
         children: [
           // Main button
           AnimatedContainer(
             duration: const Duration(milliseconds: 400),
             curve: Curves.easeOutCubic,
-            margin: const EdgeInsets.symmetric(horizontal: AppTheme.space4),
-            padding: EdgeInsets.all(isSelected ? 14.0 : AppTheme.space12),
+            margin: EdgeInsets.symmetric(
+              horizontal: isFab ? AppTheme.space8 : AppTheme.space4,
+            ),
+            padding: EdgeInsets.all(
+              isFab
+                  ? 16.0
+                  : isSelected
+                  ? 14.0
+                  : AppTheme.space12,
+            ),
             decoration: BoxDecoration(
-              gradient: isSelected
+              gradient: isFab
+                  ? LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [AppTheme.primaryColor, AppTheme.secondaryColor],
+                    )
+                  : isSelected
                   ? LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -112,28 +128,44 @@ class _FloatingDockState extends State<FloatingDock> {
                       ],
                     )
                   : null,
-              color: isHovered && !isSelected
+              color: !isFab && isHovered && !isSelected
                   ? Colors.white.withValues(alpha: 0.1)
                   : Colors.transparent,
-              borderRadius: BorderRadius.circular(AppTheme.radiusL),
-              border: isSelected
+              borderRadius: BorderRadius.circular(
+                isFab ? AppTheme.radiusXL : AppTheme.radiusL,
+              ),
+              boxShadow: isFab
+                  ? [
+                      BoxShadow(
+                        color: AppTheme.primaryColor.withValues(alpha: 0.4),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
+                    ]
+                  : null,
+              border: !isFab && isSelected
                   ? Border.all(
                       color: AppTheme.primaryColor.withValues(alpha: 0.3),
                       width: 1,
                     )
                   : null,
             ),
+            transform: isFab
+                ? Matrix4.translationValues(0, -20, 0)
+                : Matrix4.identity(),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 // Icon with animations
                 Icon(
                       widget.icons[index],
-                      color: isSelected
+                      color: isFab
+                          ? Colors.white
+                          : isSelected
                           ? AppTheme.primaryColor
                           : Theme.of(context).colorScheme.onSurfaceVariant
                                 .withValues(alpha: 0.7),
-                      size: isSelected ? 26 : 24,
+                      size: isFab ? 32 : (isSelected ? 26 : 24),
                     )
                     .animate(target: isSelected ? 1 : 0)
                     .scale(
@@ -144,11 +176,13 @@ class _FloatingDockState extends State<FloatingDock> {
                     )
                     .shimmer(
                       duration: 1500.ms,
-                      color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                      color: isFab
+                          ? Colors.white.withValues(alpha: 0.5)
+                          : AppTheme.primaryColor.withValues(alpha: 0.3),
                     ),
 
-                // Active indicator dot
-                if (isSelected)
+                // Active indicator dot (Hidden for FAB)
+                if (isSelected && !isFab)
                   Container(
                         margin: const EdgeInsets.only(top: 6),
                         width: 5,
@@ -187,7 +221,7 @@ class _FloatingDockState extends State<FloatingDock> {
           // Floating label tooltip
           if (isHovered)
             Positioned(
-              bottom: 70,
+              bottom: isFab ? 50 : 70,
               left: 0,
               right: 0,
               child: Center(
@@ -250,12 +284,19 @@ class _FloatingDockState extends State<FloatingDock> {
               child:
                   Container(
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(AppTheme.radiusL),
+                          borderRadius: BorderRadius.circular(
+                            isFab ? AppTheme.radiusXL : AppTheme.radiusL,
+                          ),
                           border: Border.all(
-                            color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                            color: isFab
+                                ? Colors.white.withValues(alpha: 0.3)
+                                : AppTheme.primaryColor.withValues(alpha: 0.3),
                             width: 2,
                           ),
                         ),
+                        transform: isFab
+                            ? Matrix4.translationValues(0, -20, 0)
+                            : Matrix4.identity(),
                       )
                       .animate(onPlay: (controller) => controller.repeat())
                       .fadeOut(duration: 1500.ms)

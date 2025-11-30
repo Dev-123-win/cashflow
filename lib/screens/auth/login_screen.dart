@@ -151,6 +151,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       child: SvgPicture.asset(
                         AppAssets.appLogo,
+                        fit: BoxFit.contain,
+                        alignment: Alignment.center,
                         colorFilter: ColorFilter.mode(
                           AppTheme.primaryColor,
                           BlendMode.srcIn,

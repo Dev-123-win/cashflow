@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'dart:async';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme/app_theme.dart';
-import '../../models/leaderboard_model.dart';
-import '../../widgets/zen_card.dart';
-import '../../widgets/scale_button.dart';
+import '../../providers/user_provider.dart';
 
 class LeaderboardScreen extends StatefulWidget {
   const LeaderboardScreen({super.key});
@@ -12,51 +15,235 @@ class LeaderboardScreen extends StatefulWidget {
 }
 
 class _LeaderboardScreenState extends State<LeaderboardScreen> {
-  late List<LeaderboardEntry> leaderboard;
+  List<dynamic> _leaderboardData = [];
+  bool _isLoading = true;
+  String _errorMessage = '';
+  Timer? _timer;
+  Duration _timeLeft = Duration.zero;
 
   @override
   void initState() {
     super.initState();
-    _loadLeaderboard();
+    _fetchLeaderboard();
+    _startTimer();
   }
 
-  void _loadLeaderboard() {
-    // Mock data for demonstration
-    leaderboard = [
-      LeaderboardEntry(
-        rank: 1,
-        userId: 'user1',
-        displayName: 'Rajesh K.',
-        totalEarnings: 250500, // Coins
-      ),
-      LeaderboardEntry(
-        rank: 2,
-        userId: 'user2',
-        displayName: 'Priya S.',
-        totalEarnings: 180750,
-      ),
-      LeaderboardEntry(
-        rank: 3,
-        userId: 'user3',
-        displayName: 'Amit P.',
-        totalEarnings: 165250,
-      ),
-      LeaderboardEntry(
-        rank: 4,
-        userId: 'user4',
-        displayName: 'Sneha T.',
-        totalEarnings: 142100,
-      ),
-      LeaderboardEntry(
-        rank: 5,
-        userId: 'user5',
-        displayName: 'Vikram R.',
-        totalEarnings: 125500,
-      ),
-    ];
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
-  String _getMedal(int rank) {
+  void _startTimer() {
+    // Calculate time until next midnight (UTC or local? Worker runs at midnight UTC usually)
+    // Let's assume midnight UTC for consistency with Cron "0 0 * * *"
+    final now = DateTime.now().toUtc();
+    final tomorrow = DateTime.utc(now.year, now.month, now.day + 1);
+    _timeLeft = tomorrow.difference(now);
+
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        if (_timeLeft.inSeconds > 0) {
+          _timeLeft = _timeLeft - const Duration(seconds: 1);
+        } else {
+          // Refresh when timer hits zero
+          _fetchLeaderboard();
+          final now = DateTime.now().toUtc();
+          final tomorrow = DateTime.utc(now.year, now.month, now.day + 1);
+          _timeLeft = tomorrow.difference(now);
+        }
+      });
+    });
+  }
+
+  Future<void> _fetchLeaderboard() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
+    });
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cachedData = prefs.getString('leaderboard_data');
+      final cachedTime = prefs.getInt('leaderboard_timestamp');
+
+      // Use cache if less than 1 hour old
+      if (cachedData != null && cachedTime != null) {
+        final now = DateTime.now().millisecondsSinceEpoch;
+        if (now - cachedTime < 3600000) {
+          // 1 hour
+          final data = json.decode(cachedData);
+          if (mounted) {
+            setState(() {
+              _leaderboardData = data;
+              _isLoading = false;
+            });
+          }
+          // Fetch background update if needed, but for now we trust cache
+          // return; // Uncomment to strictly use cache
+        }
+      }
+
+      // Replace with your actual Worker URL
+      const workerUrl =
+          'https://earnquest-worker.supreet-dalawai.workers.dev/api/leaderboard';
+      // Note: In production, use a config file for URLs
+
+      final response = await http.get(Uri.parse(workerUrl));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          final leaderboard = data['leaderboard'] ?? [];
+
+          // Update cache
+          await prefs.setString('leaderboard_data', json.encode(leaderboard));
+          await prefs.setInt(
+            'leaderboard_timestamp',
+            DateTime.now().millisecondsSinceEpoch,
+          );
+
+          if (mounted) {
+            setState(() {
+              _leaderboardData = leaderboard;
+              _isLoading = false;
+            });
+          }
+        } else {
+          throw Exception(data['error'] ?? 'Failed to load leaderboard');
+        }
+      } else {
+        throw Exception('Failed to load leaderboard: ${response.statusCode}');
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          // If we have cache, show it even if expired, but show error snackbar
+          // For now just show error state
+          _errorMessage = e.toString();
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
+    String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
+    return "${twoDigits(duration.inHours)}:$twoDigitMinutes:$twoDigitSeconds";
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Leaderboard'),
+        centerTitle: true,
+        backgroundColor: AppTheme.primaryColor,
+        elevation: 0,
+      ),
+      body: Column(
+        children: [
+          // Timer Banner
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            color: Colors.orange.shade50,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.timer, size: 16, color: Colors.orange),
+                const SizedBox(width: 8),
+                Text(
+                  'Updates in: ${_formatDuration(_timeLeft)}',
+                  style: const TextStyle(
+                    color: Colors.orange,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Leaderboard List
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _errorMessage.isNotEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('Error: $_errorMessage'),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: _fetchLeaderboard,
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  )
+                : _leaderboardData.isEmpty
+                ? const Center(child: Text('No leaderboard data yet'))
+                : ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _leaderboardData.length,
+                    itemBuilder: (context, index) {
+                      final userData = _leaderboardData[index];
+                      final rank = index + 1;
+                      final currentUser = context.read<UserProvider>().user;
+                      final isCurrentUser =
+                          userData['userId'] == currentUser.id;
+
+                      return _LeaderboardCard(
+                        rank: rank,
+                        name: userData['displayName'] ?? 'Unknown',
+                        avatar: userData['profilePicture'],
+                        earnings: (userData['totalEarned'] ?? 0).toDouble(),
+                        isCurrentUser: isCurrentUser,
+                        userId: userData['userId'] ?? '',
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LeaderboardCard extends StatelessWidget {
+  final int rank;
+  final String name;
+  final String? avatar;
+  final double earnings;
+  final bool isCurrentUser;
+  final String userId;
+
+  const _LeaderboardCard({
+    required this.rank,
+    required this.name,
+    this.avatar,
+    required this.earnings,
+    required this.isCurrentUser,
+    required this.userId,
+  });
+
+  Color _getMedalColor() {
+    switch (rank) {
+      case 1:
+        return const Color(0xFFFFD700); // Gold
+      case 2:
+        return const Color(0xFFC0C0C0); // Silver
+      case 3:
+        return const Color(0xFFCD7F32); // Bronze
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String _getMedalEmoji() {
     switch (rank) {
       case 1:
         return '🥇';
@@ -65,260 +252,121 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       case 3:
         return '🥉';
       default:
-        return '${rank.toString()}.';
+        return '#$rank';
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
-      appBar: AppBar(
-        title: const Text('Leaderboard'),
-        elevation: 0,
-        backgroundColor: Colors.transparent,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isCurrentUser
+            ? AppTheme.primaryColor.withValues(alpha: 0.1)
+            : Colors.white,
+        border: Border.all(
+          color: isCurrentUser ? AppTheme.primaryColor : Colors.grey.shade200,
+          width: isCurrentUser ? 2 : 1,
+        ),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppTheme.space16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(AppTheme.space24),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [AppTheme.primaryColor, AppTheme.secondaryColor],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(AppTheme.radiusL),
-                  boxShadow: AppTheme.elevatedShadow,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        children: [
+          // Medal/Rank
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              color: _getMedalColor().withValues(alpha: 0.2),
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(
+                _getMedalEmoji(),
+                style: const TextStyle(fontSize: 24),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          // User Info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    Text(
-                      '🏆 Top Earners',
-                      style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(
+                    Expanded(
+                      child: Text(
+                        name,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: isCurrentUser
+                              ? AppTheme.primaryColor
+                              : Colors.black,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (isCurrentUser)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primaryColor,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Text(
+                          'You',
+                          style: TextStyle(
                             color: Colors.white,
+                            fontSize: 12,
                             fontWeight: FontWeight.bold,
                           ),
-                    ),
-                    const SizedBox(height: AppTheme.space8),
-                    Text(
-                      'Compete with others and earn rewards',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.white.withValues(alpha: 0.9),
+                        ),
                       ),
-                    ),
                   ],
                 ),
-              ),
-              const SizedBox(height: AppTheme.space24),
-
-              // Top 3 Highlighted
-              if (leaderboard.isNotEmpty)
-                SizedBox(
-                  height: 220,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // 2nd place
-                      if (leaderboard.length > 1)
-                        Expanded(
-                          child: _HighlightedRankCard(
-                            rank: leaderboard[1].rank,
-                            name: leaderboard[1].displayName,
-                            earnings: leaderboard[1].totalEarnings,
-                            medal: _getMedal(leaderboard[1].rank),
-                            position: 'second',
-                          ),
-                        ),
-                      const SizedBox(width: AppTheme.space8),
-
-                      // 1st place
-                      Expanded(
-                        flex: 1,
-                        child: _HighlightedRankCard(
-                          rank: leaderboard[0].rank,
-                          name: leaderboard[0].displayName,
-                          earnings: leaderboard[0].totalEarnings,
-                          medal: _getMedal(leaderboard[0].rank),
-                          position: 'first',
-                        ),
-                      ),
-                      const SizedBox(width: AppTheme.space8),
-
-                      // 3rd place
-                      if (leaderboard.length > 2)
-                        Expanded(
-                          child: _HighlightedRankCard(
-                            rank: leaderboard[2].rank,
-                            name: leaderboard[2].displayName,
-                            earnings: leaderboard[2].totalEarnings,
-                            medal: _getMedal(leaderboard[2].rank),
-                            position: 'third',
-                          ),
-                        ),
-                    ],
-                  ),
+                const SizedBox(height: 4),
+                Text(
+                  'Earned: ₹${earnings.toStringAsFixed(2)}',
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                 ),
-              const SizedBox(height: AppTheme.space32),
-
-              // Full Leaderboard
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Earnings Display
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
               Text(
-                'Full Rankings',
-                style: Theme.of(context).textTheme.headlineSmall,
+                '₹${earnings.toStringAsFixed(2)}',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.primaryColor,
+                ),
               ),
-              const SizedBox(height: AppTheme.space16),
-
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: leaderboard.length > 3 ? leaderboard.length - 3 : 0,
-                itemBuilder: (context, index) {
-                  final entry = leaderboard[index + 3];
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: AppTheme.space12),
-                    child: ZenCard(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppTheme.space16,
-                        vertical: AppTheme.space12,
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: AppTheme.surfaceVariant,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Center(
-                              child: Text(
-                                '${entry.rank}',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppTheme.textSecondary,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: AppTheme.space16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  entry.displayName,
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.titleMedium,
-                                ),
-                              ],
-                            ),
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text(
-                                '${entry.totalEarnings.toInt()} Coins',
-                                style: Theme.of(context).textTheme.titleMedium
-                                    ?.copyWith(
-                                      color: AppTheme.successColor,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
+              const SizedBox(height: 2),
+              const Text(
+                'Total',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _HighlightedRankCard extends StatelessWidget {
-  final int rank;
-  final String name;
-  final double earnings;
-  final String medal;
-  final String position;
-
-  const _HighlightedRankCard({
-    required this.rank,
-    required this.name,
-    required this.earnings,
-    required this.medal,
-    required this.position,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isFirst = position == 'first';
-
-    return ScaleButton(
-      onTap: () {},
-      child: Container(
-        height: isFirst ? 200 : 160,
-        padding: const EdgeInsets.all(AppTheme.space12),
-        decoration: BoxDecoration(
-          color: AppTheme.surfaceColor,
-          borderRadius: BorderRadius.circular(AppTheme.radiusM),
-          boxShadow: isFirst ? AppTheme.elevatedShadow : AppTheme.softShadow,
-          border: isFirst
-              ? Border.all(
-                  color: AppTheme.tertiaryColor.withValues(alpha: 0.3),
-                  width: 2,
-                )
-              : null,
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(medal, style: TextStyle(fontSize: isFirst ? 40 : 32)),
-            const SizedBox(height: AppTheme.space8),
-            Text(
-              name,
-              style: Theme.of(
-                context,
-              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: AppTheme.space4),
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppTheme.space8,
-                vertical: AppTheme.space2,
-              ),
-              decoration: BoxDecoration(
-                color: AppTheme.successColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(AppTheme.radiusS),
-              ),
-              child: Text(
-                '${earnings.toInt()} Coins',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: AppTheme.successColor,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }

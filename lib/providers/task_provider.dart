@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/task_model.dart';
-import '../services/firestore_service.dart';
+import '../services/cloudflare_workers_service.dart';
+import '../services/device_fingerprint_service.dart';
 import '../core/di/service_locator.dart';
 
 class TaskProvider extends ChangeNotifier {
@@ -20,7 +21,8 @@ class TaskProvider extends ChangeNotifier {
   int get completedTasks =>
       completedTasksCount; // Alias for backwards compatibility
 
-  final _firestoreService = getIt<FirestoreService>();
+  final _cloudflareService = getIt<CloudflareWorkersService>();
+  final _fingerprintService = getIt<DeviceFingerprintService>();
 
   void setLoading(bool loading) {
     _isLoading = loading;
@@ -38,13 +40,13 @@ class TaskProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Complete task and record in Firestore
+  /// Complete task and record in Cloudflare Worker
   Future<void> completeTask(String userId, String taskId, int reward) async {
     try {
       _isLoading = true;
       notifyListeners();
 
-      // ✅ CRITICAL: Check daily cap BEFORE recording (client-side validation)
+      // Client-side daily cap check (pre-validation)
       if (_dailyEarnings + reward > _dailyCap) {
         _error = 'Daily limit reached. You can only earn $_dailyCap Coins/day.';
         notifyListeners();
@@ -53,19 +55,30 @@ class TaskProvider extends ChangeNotifier {
         );
       }
 
-      // Record task completion in Firestore (atomically)
-      // ⚠️ Server also validates daily cap - if fails, UI is NOT updated
-      await _firestoreService.recordTaskCompletion(userId, taskId, reward);
+      final deviceId = await _fingerprintService.getDeviceFingerprint();
+      final requestId = 'task_${DateTime.now().millisecondsSinceEpoch}_$taskId';
 
-      // Update local task state
-      final index = _tasks.indexWhere((t) => t.taskId == taskId);
-      if (index != -1) {
-        _tasks[index] = _tasks[index].copyWith(completed: true);
+      // Record task completion in Cloudflare Worker
+      final result = await _cloudflareService.recordTaskEarning(
+        userId: userId,
+        taskId: taskId,
+        deviceId: deviceId,
+        requestId: requestId,
+      );
+
+      if (result['success'] == true) {
+        // Update local task state
+        final index = _tasks.indexWhere((t) => t.taskId == taskId);
+        if (index != -1) {
+          _tasks[index] = _tasks[index].copyWith(completed: true);
+        }
+
+        // Update daily earnings locally
+        _dailyEarnings += reward;
+        _error = null;
+      } else {
+        throw Exception(result['error'] ?? 'Unknown error');
       }
-
-      // Update daily earnings locally
-      _dailyEarnings += reward;
-      _error = null;
     } catch (e) {
       _error = 'Failed to complete task: $e';
     } finally {
@@ -74,7 +87,7 @@ class TaskProvider extends ChangeNotifier {
     }
   }
 
-  /// Record game result in Firestore
+  /// Record game result in Cloudflare Worker
   Future<void> recordGameResult(
     String userId,
     String gameId,
@@ -85,7 +98,7 @@ class TaskProvider extends ChangeNotifier {
       _isLoading = true;
       notifyListeners();
 
-      // ✅ CRITICAL: Check daily cap BEFORE recording
+      // Client-side daily cap check
       if (won && _dailyEarnings + reward > _dailyCap) {
         _error = 'Daily limit reached. Come back tomorrow to earn more!';
         notifyListeners();
@@ -94,13 +107,27 @@ class TaskProvider extends ChangeNotifier {
         );
       }
 
-      // Record game result in Firestore
-      await _firestoreService.recordGameResult(userId, gameId, won, reward);
+      final deviceId = await _fingerprintService.getDeviceFingerprint();
+      final requestId = 'game_${DateTime.now().millisecondsSinceEpoch}_$gameId';
 
-      if (won) {
-        _dailyEarnings += reward;
+      // Record game result
+      final result = await _cloudflareService.recordGameResult(
+        userId: userId,
+        gameId: gameId,
+        won: won,
+        score: reward, // Using reward as score/value
+        deviceId: deviceId,
+        requestId: requestId,
+      );
+
+      if (result['success'] == true) {
+        if (won) {
+          _dailyEarnings += reward;
+        }
+        _error = null;
+      } else {
+        throw Exception(result['error'] ?? 'Unknown error');
       }
-      _error = null;
     } catch (e) {
       _error = 'Failed to record game result: $e';
     } finally {
@@ -109,13 +136,13 @@ class TaskProvider extends ChangeNotifier {
     }
   }
 
-  /// Record spin result in Firestore
+  /// Record spin result in Cloudflare Worker
   Future<int> recordSpinResult(String userId, int reward) async {
     try {
       _isLoading = true;
       notifyListeners();
 
-      // ✅ CRITICAL: Check daily cap BEFORE recording
+      // Client-side daily cap check
       if (_dailyEarnings + reward > _dailyCap) {
         _error = 'Daily limit reached! Maximum $_dailyCap Coins per day.';
         notifyListeners();
@@ -124,12 +151,31 @@ class TaskProvider extends ChangeNotifier {
         );
       }
 
-      // Record spin in Firestore
-      await _firestoreService.recordSpinResult(userId, reward);
+      final deviceId = await _fingerprintService.getDeviceFingerprint();
+      final requestId = 'spin_${DateTime.now().millisecondsSinceEpoch}';
 
-      _dailyEarnings += reward;
-      _error = null;
-      return reward;
+      // Record spin
+      final result = await _cloudflareService.executeSpin(
+        userId: userId,
+        deviceId: deviceId,
+        requestId: requestId,
+      );
+
+      if (result['success'] == true) {
+        // Backend determines reward, but we passed 'reward' as expected?
+        // Wait, executeSpin doesn't take 'reward'. Backend calculates it.
+        // So the 'reward' passed here is client-side estimation?
+        // Or did I change executeSpin to accept reward? No.
+        // The backend determines spin result.
+        // So we should use the result from backend.
+        final earned = result['reward'] as int? ?? 0;
+
+        _dailyEarnings += earned;
+        _error = null;
+        return earned;
+      } else {
+        throw Exception(result['error'] ?? 'Unknown error');
+      }
     } catch (e) {
       _error = 'Failed to record spin: $e';
       rethrow;
@@ -139,13 +185,13 @@ class TaskProvider extends ChangeNotifier {
     }
   }
 
-  /// Record ad view in Firestore
+  /// Record ad view in Cloudflare Worker
   Future<void> recordAdView(String userId, String adType, int reward) async {
     try {
       _isLoading = true;
       notifyListeners();
 
-      // ✅ CRITICAL: Check daily cap BEFORE recording ad reward
+      // Client-side daily cap check
       if (_dailyEarnings + reward > _dailyCap) {
         _error = 'You\'ve reached today\'s earning limit.';
         notifyListeners();
@@ -154,11 +200,23 @@ class TaskProvider extends ChangeNotifier {
         );
       }
 
-      // Record ad view in Firestore
-      await _firestoreService.recordAdView(userId, adType, reward);
+      final deviceId = await _fingerprintService.getDeviceFingerprint();
+      final requestId = 'ad_${DateTime.now().millisecondsSinceEpoch}_$adType';
 
-      _dailyEarnings += reward;
-      _error = null;
+      // Record ad view
+      final result = await _cloudflareService.recordAdView(
+        userId: userId,
+        adType: adType,
+        deviceId: deviceId,
+        requestId: requestId,
+      );
+
+      if (result['success'] == true) {
+        _dailyEarnings += reward;
+        _error = null;
+      } else {
+        throw Exception(result['error'] ?? 'Unknown error');
+      }
     } catch (e) {
       _error = 'Failed to record ad view: $e';
     } finally {

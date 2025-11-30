@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:crypto/crypto.dart';
 
 /// CloudflareWorkersService
 ///
@@ -14,6 +16,9 @@ class CloudflareWorkersService {
       'https://earnquest-worker.earnplay12345.workers.dev';
   static const Duration _timeout = Duration(seconds: 30);
 
+  // TODO: In production, use a more secure way to manage secrets (e.g. obfuscation)
+  static const String _requestSecret = "dev-secret-key-12345";
+
   // Singleton instance
   static final CloudflareWorkersService _instance =
       CloudflareWorkersService._internal();
@@ -24,18 +29,42 @@ class CloudflareWorkersService {
 
   CloudflareWorkersService._internal();
 
+  /// Generate secure headers with Auth Token and HMAC Signature
+  Future<Map<String, String>> _getAuthHeaders(String body) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      throw Exception('User not authenticated');
+    }
+
+    // 1. Get Firebase ID Token
+    final token = await user.getIdToken();
+    if (token == null) {
+      throw Exception('Failed to get ID token');
+    }
+
+    // 2. Generate Timestamp
+    final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
+
+    // 3. Generate HMAC-SHA256 Signature
+    final hmac = Hmac(sha256, utf8.encode(_requestSecret));
+    final message = body + timestamp;
+    final signature = hmac.convert(utf8.encode(message)).toString();
+
+    return {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $token',
+      'X-Request-Signature': signature,
+      'X-Request-Timestamp': timestamp,
+    };
+  }
+
   /// Record task completion
-  ///
-  /// Parameters:
-  /// - userId: User ID from Firebase Auth
-  /// - taskId: Task identifier
-  /// - deviceId: Device fingerprint
-  ///
-  /// Returns: Earnings record with new balance
   Future<Map<String, dynamic>> recordTaskEarning({
     required String userId,
     required String taskId,
     required String deviceId,
+    String? requestId,
   }) async {
     try {
       final url = '$_baseUrl/api/earn/task';
@@ -43,19 +72,16 @@ class CloudflareWorkersService {
         'userId': userId,
         'taskId': taskId,
         'deviceId': deviceId,
+        'requestId':
+            requestId ??
+            'task_${DateTime.now().millisecondsSinceEpoch}_$taskId',
       });
 
+      final headers = await _getAuthHeaders(body);
       _logRequest('POST', url, body: body);
 
       final response = await http
-          .post(
-            Uri.parse(url),
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-            },
-            body: body,
-          )
+          .post(Uri.parse(url), headers: headers, body: body)
           .timeout(_timeout);
 
       return _handleResponse(response);
@@ -66,21 +92,13 @@ class CloudflareWorkersService {
   }
 
   /// Record game result
-  ///
-  /// Parameters:
-  /// - userId: User ID from Firebase Auth
-  /// - gameId: Game identifier
-  /// - won: Whether game was won
-  /// - score: Game score (optional)
-  /// - deviceId: Device fingerprint
-  ///
-  /// Returns: Game result with earnings
   Future<Map<String, dynamic>> recordGameResult({
     required String userId,
     required String gameId,
     required bool won,
     int score = 0,
     required String deviceId,
+    String? requestId,
   }) async {
     try {
       final url = '$_baseUrl/api/earn/game';
@@ -90,19 +108,16 @@ class CloudflareWorkersService {
         'won': won,
         'score': score,
         'deviceId': deviceId,
+        'requestId':
+            requestId ??
+            'game_${DateTime.now().millisecondsSinceEpoch}_$gameId',
       });
 
+      final headers = await _getAuthHeaders(body);
       _logRequest('POST', url, body: body);
 
       final response = await http
-          .post(
-            Uri.parse(url),
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-            },
-            body: body,
-          )
+          .post(Uri.parse(url), headers: headers, body: body)
           .timeout(_timeout);
 
       return _handleResponse(response);
@@ -113,17 +128,11 @@ class CloudflareWorkersService {
   }
 
   /// Record ad view and earning
-  ///
-  /// Parameters:
-  /// - userId: User ID from Firebase Auth
-  /// - adType: Type of ad (rewarded, interstitial, etc.)
-  /// - deviceId: Device fingerprint
-  ///
-  /// Returns: Ad earning record
   Future<Map<String, dynamic>> recordAdView({
     required String userId,
     required String adType,
     required String deviceId,
+    String? requestId,
   }) async {
     try {
       final url = '$_baseUrl/api/earn/ad';
@@ -131,19 +140,15 @@ class CloudflareWorkersService {
         'userId': userId,
         'adType': adType,
         'deviceId': deviceId,
+        'requestId':
+            requestId ?? 'ad_${DateTime.now().millisecondsSinceEpoch}_$adType',
       });
 
+      final headers = await _getAuthHeaders(body);
       _logRequest('POST', url, body: body);
 
       final response = await http
-          .post(
-            Uri.parse(url),
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-            },
-            body: body,
-          )
+          .post(Uri.parse(url), headers: headers, body: body)
           .timeout(_timeout);
 
       return _handleResponse(response);
@@ -154,31 +159,25 @@ class CloudflareWorkersService {
   }
 
   /// Execute daily spin
-  ///
-  /// Parameters:
-  /// - userId: User ID from Firebase Auth
-  /// - deviceId: Device fingerprint
-  ///
-  /// Returns: Spin result with reward amount
   Future<Map<String, dynamic>> executeSpin({
     required String userId,
     required String deviceId,
+    String? requestId,
   }) async {
     try {
       final url = '$_baseUrl/api/spin';
-      final body = jsonEncode({'userId': userId, 'deviceId': deviceId});
+      final body = jsonEncode({
+        'userId': userId,
+        'deviceId': deviceId,
+        'requestId':
+            requestId ?? 'spin_${DateTime.now().millisecondsSinceEpoch}',
+      });
 
+      final headers = await _getAuthHeaders(body);
       _logRequest('POST', url, body: body);
 
       final response = await http
-          .post(
-            Uri.parse(url),
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-            },
-            body: body,
-          )
+          .post(Uri.parse(url), headers: headers, body: body)
           .timeout(_timeout);
 
       return _handleResponse(response);
@@ -189,19 +188,13 @@ class CloudflareWorkersService {
   }
 
   /// Fetch top leaderboard
-  ///
-  /// Parameters:
-  /// - limit: Number of top users to fetch (1-100, default 50)
-  ///
-  /// Returns: List of leaderboard entries
   Future<List<Map<String, dynamic>>> getLeaderboard({int limit = 50}) async {
     try {
-      // Clamp limit
       limit = limit.clamp(1, 100);
-
       final url = '$_baseUrl/api/leaderboard?limit=$limit';
       _logRequest('GET', url);
 
+      // Public endpoint, no auth required (or optional)
       final response = await http
           .get(Uri.parse(url), headers: {'Accept': 'application/json'})
           .timeout(_timeout);
@@ -217,22 +210,14 @@ class CloudflareWorkersService {
   }
 
   /// Request withdrawal
-  ///
-  /// Parameters:
-  /// - userId: User ID from Firebase Auth
-  /// - amount: Withdrawal amount in rupees (50-5000)
-  /// - upiId: UPI ID for payment (e.g., user@bank)
-  /// - deviceId: Device fingerprint
-  ///
-  /// Returns: Withdrawal request confirmation
   Future<Map<String, dynamic>> requestWithdrawal({
     required String userId,
     required int coins,
     required String upiId,
     required String deviceId,
+    String? requestId,
   }) async {
     try {
-      // Validate UPI format
       if (!_isValidUPI(upiId)) {
         throw ArgumentError('Invalid UPI ID format');
       }
@@ -240,22 +225,18 @@ class CloudflareWorkersService {
       final url = '$_baseUrl/api/withdrawal/request';
       final body = jsonEncode({
         'userId': userId,
-        'amount': coins, // Backend expects coins in 'amount' field
+        'amount': coins,
         'upiId': upiId,
         'deviceId': deviceId,
+        'requestId':
+            requestId ?? 'withdrawal_${DateTime.now().millisecondsSinceEpoch}',
       });
 
+      final headers = await _getAuthHeaders(body);
       _logRequest('POST', url, body: body);
 
       final response = await http
-          .post(
-            Uri.parse(url),
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-            },
-            body: body,
-          )
+          .post(Uri.parse(url), headers: headers, body: body)
           .timeout(_timeout);
 
       return _handleResponse(response);
@@ -266,18 +247,22 @@ class CloudflareWorkersService {
   }
 
   /// Get user statistics
-  ///
-  /// Parameters:
-  /// - userId: User ID from Firebase Auth
-  ///
-  /// Returns: User daily/monthly stats and earning limits
   Future<Map<String, dynamic>> getUserStats({required String userId}) async {
     try {
       final url = '$_baseUrl/api/user/stats?userId=$userId';
       _logRequest('GET', url);
 
+      // Use auth header if user is logged in
+      Map<String, String> headers = {'Accept': 'application/json'};
+      if (FirebaseAuth.instance.currentUser != null) {
+        final token = await FirebaseAuth.instance.currentUser!.getIdToken();
+        if (token != null) {
+          headers['Authorization'] = 'Bearer $token';
+        }
+      }
+
       final response = await http
-          .get(Uri.parse(url), headers: {'Accept': 'application/json'})
+          .get(Uri.parse(url), headers: headers)
           .timeout(_timeout);
 
       return _handleResponse(response);
@@ -288,14 +273,6 @@ class CloudflareWorkersService {
   }
 
   /// Create a new user
-  ///
-  /// Parameters:
-  /// - userId: User ID from Firebase Auth
-  /// - email: User email
-  /// - displayName: User display name
-  /// - referralCode: Optional referral code
-  ///
-  /// Returns: Created user data
   Future<Map<String, dynamic>> createUser({
     required String userId,
     required String email,
@@ -311,17 +288,12 @@ class CloudflareWorkersService {
         'referralCode': referralCode,
       });
 
+      // Auth is required for creation too
+      final headers = await _getAuthHeaders(body);
       _logRequest('POST', url, body: body);
 
       final response = await http
-          .post(
-            Uri.parse(url),
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-            },
-            body: body,
-          )
+          .post(Uri.parse(url), headers: headers, body: body)
           .timeout(_timeout);
 
       return _handleResponse(response);
@@ -332,27 +304,16 @@ class CloudflareWorkersService {
   }
 
   /// Check and unlock achievements
-  ///
-  /// Parameters:
-  /// - userId: User ID from Firebase Auth
-  ///
-  /// Returns: List of newly unlocked achievement IDs
   Future<List<String>> checkAchievements({required String userId}) async {
     try {
       final url = '$_baseUrl/api/achievements/check';
       final body = jsonEncode({'userId': userId});
 
+      final headers = await _getAuthHeaders(body);
       _logRequest('POST', url, body: body);
 
       final response = await http
-          .post(
-            Uri.parse(url),
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-            },
-            body: body,
-          )
+          .post(Uri.parse(url), headers: headers, body: body)
           .timeout(_timeout);
 
       final result = _handleResponse(response);
@@ -360,20 +321,11 @@ class CloudflareWorkersService {
       return newAchievements.cast<String>().toList();
     } catch (e) {
       debugPrint('Check achievements error: $e');
-      // Return empty list on error to avoid blocking UI
       return [];
     }
   }
 
   /// Record generic transaction
-  ///
-  /// Parameters:
-  /// - userId: User ID from Firebase Auth
-  /// - type: Transaction type
-  /// - amount: Amount
-  /// - description: Description
-  ///
-  /// Returns: Transaction record
   Future<Map<String, dynamic>> recordTransaction({
     required String userId,
     required String type,
@@ -391,17 +343,11 @@ class CloudflareWorkersService {
         'gameType': gameType,
       });
 
+      final headers = await _getAuthHeaders(body);
       _logRequest('POST', url, body: body);
 
       final response = await http
-          .post(
-            Uri.parse(url),
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-            },
-            body: body,
-          )
+          .post(Uri.parse(url), headers: headers, body: body)
           .timeout(_timeout);
 
       return _handleResponse(response);
@@ -417,8 +363,6 @@ class CloudflareWorkersService {
   static const Duration _healthCheckCacheDuration = Duration(seconds: 30);
 
   /// Check API health (with 30-second caching)
-  ///
-  /// Returns: Health status (cached for 30 seconds)
   Future<bool> healthCheck() async {
     try {
       // Return cached result if still valid

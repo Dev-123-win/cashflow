@@ -7,6 +7,7 @@ import 'home/home_screen.dart';
 import 'earn_screen.dart';
 import 'wallet_screen.dart';
 import 'profile/profile_screen.dart';
+import 'referral/referral_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -21,6 +22,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   final List<Widget> _screens = [
     const HomeScreen(),
     const EarnScreen(),
+    const ReferralScreen(), // Moved to center
     const WalletScreen(),
     const ProfileScreen(),
   ];
@@ -28,11 +30,12 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   final List<IconData> _icons = [
     Iconsax.home_2,
     Iconsax.money_tick,
+    Icons.person_add_outlined, // Invite icon
     Iconsax.wallet_2,
     Iconsax.user,
   ];
 
-  final List<String> _labels = ['Home', 'Earn', 'Wallet', 'Profile'];
+  final List<String> _labels = ['Home', 'Earn', 'Invite', 'Wallet', 'Profile'];
 
   DateTime? _lastPressedAt;
 

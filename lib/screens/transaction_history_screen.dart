@@ -146,7 +146,12 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        SvgPicture.asset(AppAssets.emptyHistory, height: 200),
+                        SvgPicture.asset(
+                          AppAssets.emptyHistory,
+                          height: 200,
+                          fit: BoxFit.contain,
+                          alignment: Alignment.center,
+                        ),
                         const SizedBox(height: 16),
                         Text(
                           'No transactions found',

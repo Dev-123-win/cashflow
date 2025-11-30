@@ -30,8 +30,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     OnboardingPage(
       assetPath: AppAssets.onboardingPlay,
       title: 'Daily Rewards',
-      description:
-          'Spin the wheel daily and build streaks for bonus rewards.',
+      description: 'Spin the wheel daily and build streaks for bonus rewards.',
       details: ['Daily free spin', 'Streak bonuses', 'Referral rewards'],
       color: const Color(0xFF8B5CF6),
     ),
@@ -181,7 +180,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               height: 280,
               width: double.infinity,
               padding: const EdgeInsets.all(AppTheme.space24),
-              child: SvgPicture.asset(page.assetPath, fit: BoxFit.contain),
+              child: SvgPicture.asset(
+                page.assetPath,
+                fit: BoxFit.contain,
+                alignment: Alignment.center,
+              ),
             ),
             const SizedBox(height: AppTheme.space48),
             Text(

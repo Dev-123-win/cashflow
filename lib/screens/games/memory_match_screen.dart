@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 
 import '../../core/theme/app_theme.dart';
 import '../../services/game_service.dart';
 import '../../services/cooldown_service.dart';
 import '../../services/cloudflare_workers_service.dart';
 import '../../services/ad_service.dart';
+import '../../services/device_fingerprint_service.dart';
 import '../../providers/user_provider.dart';
 import '../../widgets/custom_dialog.dart';
 import '../../widgets/error_states.dart';
@@ -34,6 +36,9 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
 
   bool _isGameCompleted = false;
 
+  // Idempotency
+  String? _currentRequestId;
+
   @override
   void initState() {
     super.initState();
@@ -42,6 +47,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
     _adService = AdService();
     _game = _gameService.createMemoryMatchGame();
     _isGameCompleted = false;
+    _currentRequestId = null;
 
     _matchAnimation = AnimationController(
       duration: const Duration(milliseconds: 300),
@@ -125,6 +131,9 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
 
         if (_game.isGameOver()) {
           _isGameCompleted = true;
+          // Generate Request ID ONCE for this win
+          _currentRequestId = 'memory_${DateTime.now().millisecondsSinceEpoch}';
+
           if (mounted) {
             _showClaimRewardDialog();
           }
@@ -202,12 +211,24 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
     );
   }
 
-  bool _isClaiming = false;
+  Future<void>? _claimFuture;
 
   Future<void> _watchAdToClaim() async {
-    if (_isClaiming) return;
-    setState(() => _isClaiming = true);
+    if (_claimFuture != null) return;
 
+    _claimFuture = _executeWatchAdToClaim();
+    try {
+      await _claimFuture;
+    } finally {
+      if (mounted) {
+        setState(() {
+          _claimFuture = null;
+        });
+      }
+    }
+  }
+
+  Future<void> _executeWatchAdToClaim() async {
     try {
       await _adService.showRewardedAd(
         onRewardEarned: (rewardItem) async {
@@ -219,7 +240,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
           );
           final accuracy = _game.getAccuracy();
 
-          // Calculate reward based on accuracy
+          // Calculate reward based on accuracy (Client side estimation for optimistic UI)
           int reward = 500; // Base 500 Coins
           if (accuracy >= 90) {
             reward = 750;
@@ -237,8 +258,8 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
 
           // 2. Call Backend with Timeout
           try {
-            await _recordGameWin(reward).timeout(
-              const Duration(seconds: 10),
+            await _recordGameWin(reward, accuracy.toInt()).timeout(
+              const Duration(seconds: 15),
               onTimeout: () {
                 throw Exception('Request timed out');
               },
@@ -255,75 +276,55 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
           }
         },
       );
-    } finally {
-      if (mounted) {
-        setState(() => _isClaiming = false);
-      }
+    } catch (e) {
+      debugPrint('Error in watch ad to claim: $e');
     }
   }
 
-  Future<void> _recordGameWin(int reward) async {
+  Future<void> _recordGameWin(int estimatedReward, int accuracy) async {
     try {
+      final user = fb_auth.FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+
       final userProvider = Provider.of<UserProvider>(context, listen: false);
+      final fingerprint = Provider.of<DeviceFingerprintService>(
+        context,
+        listen: false,
+      );
 
       // Check backend health
       final cloudflareService = CloudflareWorkersService();
-      final isBackendHealthy = await cloudflareService.healthCheck();
-      if (!isBackendHealthy) {
-        throw Exception('Backend unreachable');
+
+      // Get device fingerprint
+      final deviceFingerprint = await fingerprint.getDeviceFingerprint();
+
+      // Use Idempotent Request ID
+      final requestId =
+          _currentRequestId ??
+          'memory_${DateTime.now().millisecondsSinceEpoch}';
+
+      final result = await cloudflareService.recordGameResult(
+        userId: user.uid,
+        gameId: 'memory_match',
+        won: true,
+        score: accuracy, // Pass accuracy as score
+        deviceId: deviceFingerprint,
+        requestId: requestId,
+      );
+
+      // Update Local State from Backend Response
+      if (result['success'] == true) {
+        final newBalance = result['newBalance'];
+        if (newBalance != null) {
+          userProvider.updateLocalState(coins: newBalance);
+          userProvider.confirmOptimisticCoins(estimatedReward);
+        }
+
+        // Update Cooldown locally
+        _cooldownService.startCooldown(user.uid, 'game_memory', 300);
+
+        debugPrint('✅ Game win recorded: ${result['transaction']['id']}');
       }
-
-      await _gameService.recordGameWin(
-        userProvider.user.userId,
-        'memory_match',
-        customReward: reward,
-      );
-
-      // We don't need to update local state here as optimistic update handled it.
-      // But we might want to sync other stats like gamesPlayedToday.
-      // Actually, let's update stats but NOT coins (since we already did).
-      // Or better, update everything to be safe and confirm.
-
-      // Since addOptimisticCoins adds to a separate buffer, and updateLocalState updates the base user,
-      // we need to be careful.
-      // Ideally:
-      // 1. Optimistic: _optimisticCoins += 500
-      // 2. Backend Success: Returns new total coins (e.g. 10500).
-      // 3. We update User.coins = 10500.
-      // 4. We clear _optimisticCoins = 0.
-
-      // For now, let's just rely on the optimistic update for the visual
-      // and let the next refresh sync the real state.
-      // But to be correct with `gamesPlayedToday`, we should update it.
-
-      userProvider.updateLocalState(
-        gamesPlayedToday: userProvider.user.gamesPlayedToday + 1,
-        // Don't update coins here to avoid double counting if we don't clear optimistic
-        // But wait, if we don't update base coins, and we clear optimistic, it flickers back.
-        // We need a way to "commit" the optimistic coins.
-        // For this iteration, let's just leave optimistic coins as is until next refresh?
-        // No, that's risky.
-        // Let's use `confirmOptimisticCoins` if we had it, or just:
-        // userProvider.confirmOptimisticCoins(reward); // We added this method!
-      );
-
-      // Commit the optimistic coins
-      userProvider.confirmOptimisticCoins(reward);
-      // And update the base user with the new total (approximate or wait for refresh)
-      // Actually, confirmOptimisticCoins just subtracts from optimistic.
-      // We need to ADD to base user at the same time.
-      userProvider.updateLocalState(
-        coins: userProvider.user.coins + reward,
-        gamesPlayedToday: userProvider.user.gamesPlayedToday + 1,
-      );
-
-      _cooldownService.startCooldown(
-        userProvider.user.userId,
-        'game_memory',
-        300,
-      );
-
-      debugPrint('✅ Game win recorded');
     } catch (e) {
       debugPrint('Error recording game: $e');
       rethrow;
@@ -356,7 +357,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
             ),
             const SizedBox(height: AppTheme.space24),
             Text(
-              '${(reward * 1000).toInt()} Coins added to wallet!',
+              '${(reward).toInt()} Coins added to wallet!',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 color: Colors.green,
                 fontWeight: FontWeight.bold,
@@ -410,6 +411,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
       _isProcessing = false;
       _isPreviewMode = true;
       _isGameCompleted = false;
+      _currentRequestId = null;
     });
 
     Future.delayed(Duration(seconds: _previewSeconds), () {
@@ -796,11 +798,9 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
                           '• Complete all 4 pairs to win\n'
                           '• Watch ad to claim reward\n'
                           '• 90%+ accuracy: 750 Coins | 70%+: 600 Coins | Base: 500 Coins',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: AppTheme.textSecondary,
-                                height: 1.6,
-                              ),
+                          style: Theme.of(
+                            context,
+                          ).textTheme.bodySmall?.copyWith(height: 1.5),
                         ),
                       ],
                     ),

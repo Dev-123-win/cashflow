@@ -63,8 +63,6 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
     super.dispose();
   }
 
-  // ... (keep existing methods)
-
   Future<void> _submitWithdrawal() async {
     final user = fb_auth.FirebaseAuth.instance.currentUser;
     if (user == null) {
@@ -162,12 +160,19 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
     }
 
     try {
+      // Generate request ID if not exists (or regenerate if needed, but here we keep it for retry logic if we implemented it)
+      // For now, generate new one for each submit attempt to avoid 409 if previous one failed before reaching backend?
+      // Actually, if we want to support retry of SAME request, we should persist ID.
+      // But here we just generate one.
+      final requestId = 'withdrawal_${DateTime.now().millisecondsSinceEpoch}';
+
       // Request withdrawal via API
       final result = await _api.requestWithdrawal(
         userId: user.uid,
         coins: coins.toInt(),
         upiId: _upiController.text,
         deviceId: _deviceId!,
+        requestId: requestId,
       );
 
       // Save UPI ID

@@ -23,7 +23,7 @@ import '../games/games_screen.dart';
 import '../games/spin_screen.dart';
 import '../ads/watch_ads_screen.dart';
 import '../withdrawal/withdrawal_screen.dart';
-import '../referral/referral_screen.dart';
+
 import '../notification_screen.dart';
 import '../../widgets/shimmer_loading.dart';
 
@@ -517,20 +517,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 60), // Space for Banner Ad
-        child: FloatingActionButton.extended(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const ReferralScreen()),
-            );
-          },
-          label: const Text('Invite'),
-          icon: const Icon(Icons.person_add_outlined),
-          backgroundColor: AppTheme.tertiaryColor,
-        ),
-      ),
+      floatingActionButton: null,
     );
   }
 

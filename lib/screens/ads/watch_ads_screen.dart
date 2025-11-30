@@ -3,8 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import '../../core/theme/app_theme.dart';
 import '../../services/ad_service.dart';
-import '../../services/firestore_service.dart';
-import '../../services/request_deduplication_service.dart';
+import '../../services/cloudflare_workers_service.dart';
 import '../../services/device_fingerprint_service.dart';
 import '../../core/constants/app_constants.dart';
 import '../../widgets/error_states.dart';
@@ -37,7 +36,7 @@ class _WatchAdsScreenState extends State<WatchAdsScreen> {
     super.dispose();
   }
 
-  bool _isClaiming = false;
+  Future<void>? _claimFuture;
 
   Future<void> _watchRewardedAd() async {
     if (_adsWatchedToday >= _maxAdsPerDay) {
@@ -50,10 +49,23 @@ class _WatchAdsScreenState extends State<WatchAdsScreen> {
       return;
     }
 
-    if (_isClaiming) return;
+    if (_claimFuture != null) return;
+
+    _claimFuture = _executeWatchRewardedAd();
+    try {
+      await _claimFuture;
+    } finally {
+      if (mounted) {
+        setState(() {
+          _claimFuture = null;
+        });
+      }
+    }
+  }
+
+  Future<void> _executeWatchRewardedAd() async {
     setState(() {
       _isLoadingAd = true;
-      _isClaiming = true;
     });
 
     try {
@@ -79,77 +91,54 @@ class _WatchAdsScreenState extends State<WatchAdsScreen> {
           userProvider.addOptimisticCoins(reward);
 
           try {
-            // Get deduplication and fingerprinting services
-            final dedup = Provider.of<RequestDeduplicationService>(
-              context,
-              listen: false,
-            );
             final fingerprint = Provider.of<DeviceFingerprintService>(
               context,
               listen: false,
             );
-            final firestore = FirestoreService();
+            final cloudflareService = CloudflareWorkersService();
 
             // Get device fingerprint
             final deviceFingerprint = await fingerprint.getDeviceFingerprint();
 
             // Generate unique request ID for deduplication
-            final requestId = dedup.generateRequestId(
-              user.uid,
-              'ad_view_rewarded',
-              {
-                'timestamp': DateTime.now().millisecondsSinceEpoch,
-                'reward': reward,
-              },
-            );
+            final requestId =
+                'ad_rewarded_${DateTime.now().millisecondsSinceEpoch}';
 
-            // Check if already processed (prevents duplicate earnings)
-            final cachedRecord = dedup.getFromLocalCache(requestId);
-            if (cachedRecord != null && cachedRecord.success) {
-              // Rollback if duplicate
-              userProvider.rollbackOptimisticCoins(reward);
-              if (mounted) {
-                StateSnackbar.showWarning(context, 'Ad reward already claimed');
-              }
-              return;
-            }
-
-            // Record ad view via Firestore with deduplication fields and timeout
-            await firestore
+            // Record ad view via Cloudflare Worker
+            final result = await cloudflareService
                 .recordAdView(
-                  user.uid,
-                  'rewarded',
-                  reward,
+                  userId: user.uid,
+                  adType: 'rewarded',
+                  deviceId: deviceFingerprint,
                   requestId: requestId,
-                  deviceFingerprint: deviceFingerprint,
                 )
                 .timeout(
-                  const Duration(seconds: 10),
+                  const Duration(seconds: 15),
                   onTimeout: () {
                     throw Exception('Request timed out');
                   },
                 );
 
-            // Mark as processed in deduplication cache
-            await dedup.recordRequest(
-              requestId: requestId,
-              requestHash: requestId.hashCode.toString(),
-              success: true,
-              transactionId: 'ad_${DateTime.now().millisecondsSinceEpoch}',
-            );
+            // Update UI from Backend Response
+            if (result['success'] == true) {
+              final newBalance = result['newBalance'];
+              if (newBalance != null) {
+                userProvider.updateLocalState(coins: newBalance);
+                userProvider.confirmOptimisticCoins(reward);
+              }
 
-            // Update UI
-            if (mounted) {
-              setState(() {
-                _adsWatchedToday++;
-                _totalEarned += reward;
-              });
+              if (mounted) {
+                setState(() {
+                  _adsWatchedToday++;
+                  _totalEarned += reward;
+                });
 
-              // Show success message
-              StateSnackbar.showSuccess(
-                context,
-                'Great! You earned $reward Coins',
-              );
+                // Show success message
+                StateSnackbar.showSuccess(
+                  context,
+                  'Great! You earned $reward Coins',
+                );
+              }
             }
           } catch (e) {
             debugPrint('Error recording ad view: $e');
@@ -178,7 +167,6 @@ class _WatchAdsScreenState extends State<WatchAdsScreen> {
       if (mounted) {
         setState(() {
           _isLoadingAd = false;
-          _isClaiming = false;
         });
       }
     }

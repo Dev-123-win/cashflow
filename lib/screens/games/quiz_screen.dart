@@ -131,6 +131,7 @@ class _QuizScreenState extends State<QuizScreen> {
       // Record result to backend with timeout
       await _quizService
           .recordQuizResult(
+            context,
             userProvider.user.userId,
             score['correct'],
             score['total'],

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'firestore_service.dart';
+import 'cloudflare_workers_service.dart';
+import 'device_fingerprint_service.dart';
+import 'package:provider/provider.dart';
 
 /// Quiz question model (Top-level class)
 class QuizQuestion {
@@ -28,7 +30,8 @@ class QuizService {
 
   QuizService._internal();
 
-  final FirestoreService _firestoreService = FirestoreService();
+  final CloudflareWorkersService _cloudflareService =
+      CloudflareWorkersService();
 
   // Quiz configuration
   static const int questionsPerQuiz = 5;
@@ -163,22 +166,36 @@ class QuizService {
   }
 
   /// Record quiz result
-  Future<void> recordQuizResult(
+  Future<Map<String, dynamic>> recordQuizResult(
+    BuildContext context,
     String userId,
     int correctAnswers,
     int totalQuestions,
     int reward,
   ) async {
     try {
-      await _firestoreService.recordGameResult(
-        userId,
-        'quiz',
-        correctAnswers >= (totalQuestions ~/ 2),
-        reward,
+      final fingerprint = Provider.of<DeviceFingerprintService>(
+        context,
+        listen: false,
       );
+      final deviceFingerprint = await fingerprint.getDeviceFingerprint();
+
+      // Generate unique request ID
+      final requestId = 'quiz_${DateTime.now().millisecondsSinceEpoch}';
+
+      final result = await _cloudflareService.recordGameResult(
+        userId: userId,
+        gameId: 'quiz',
+        won: correctAnswers >= (totalQuestions ~/ 2), // Win if >= 50%
+        score: correctAnswers,
+        deviceId: deviceFingerprint,
+        requestId: requestId,
+      );
+
       debugPrint(
         '✅ Quiz result recorded: $userId ($correctAnswers/$totalQuestions)',
       );
+      return result;
     } catch (e) {
       debugPrint('❌ Error recording quiz result: $e');
       rethrow;

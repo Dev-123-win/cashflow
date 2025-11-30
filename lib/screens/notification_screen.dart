@@ -90,7 +90,12 @@ class _NotificationScreenState extends State<NotificationScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  SvgPicture.asset(AppAssets.emptyNotifications, height: 200),
+                  SvgPicture.asset(
+                    AppAssets.emptyNotifications,
+                    height: 200,
+                    fit: BoxFit.contain,
+                    alignment: Alignment.center,
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'No notifications yet',

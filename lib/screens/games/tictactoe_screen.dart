@@ -3,18 +3,17 @@ import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:provider/provider.dart';
 import 'dart:math' as math;
 import 'package:flutter_animate/flutter_animate.dart';
+
 import '../../core/theme/app_theme.dart';
 import '../../services/game_service.dart';
 import '../../services/cooldown_service.dart';
-import '../../services/request_deduplication_service.dart';
-import '../../services/device_fingerprint_service.dart';
-import '../../services/firestore_service.dart';
-import '../../services/cloudflare_workers_service.dart';
 import '../../services/ad_service.dart';
+import '../../services/device_fingerprint_service.dart';
+import '../../services/cloudflare_workers_service.dart';
 import '../../providers/user_provider.dart';
+import '../../widgets/custom_dialog.dart';
 import '../../widgets/error_states.dart';
 import '../../widgets/banner_ad_widget.dart';
-import '../../widgets/custom_dialog.dart';
 
 class TicTacToeScreen extends StatefulWidget {
   const TicTacToeScreen({super.key});
@@ -33,6 +32,10 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
   bool _isGameCompleted = false;
   double _difficulty = 0.3; // Start easy
 
+  // Idempotency and Race Condition Handling
+  String? _currentRequestId;
+  Future<void>? _claimFuture;
+
   @override
   void initState() {
     super.initState();
@@ -47,6 +50,7 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
     _game = _gameService.createTicTacToeGame();
     _game.setDifficulty(_difficulty);
     _isGameCompleted = false;
+    _currentRequestId = null; // Reset request ID for new game
   }
 
   // Show pre-game interstitial ad with 40% probability
@@ -140,6 +144,10 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
         _isGameCompleted = true;
         // Game ended
         if (_game.playerWon()) {
+          // Generate Request ID ONCE for this win to ensure idempotency
+          _currentRequestId =
+              'tictactoe_${DateTime.now().millisecondsSinceEpoch}';
+
           // Don't record win yet - wait for ad claim
           if (mounted) {
             _showGameResult(
@@ -186,12 +194,22 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
     }
   }
 
-  bool _isClaiming = false;
-
   Future<void> _claimReward() async {
-    if (_isClaiming) return;
-    setState(() => _isClaiming = true);
+    if (_claimFuture != null) return;
 
+    _claimFuture = _executeClaimReward();
+    try {
+      await _claimFuture;
+    } finally {
+      if (mounted) {
+        setState(() {
+          _claimFuture = null;
+        });
+      }
+    }
+  }
+
+  Future<void> _executeClaimReward() async {
     try {
       // Show Rewarded Ad
       await _adService.showRewardedAd(
@@ -209,12 +227,12 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
           // 2. Call Backend with Timeout
           try {
             await _recordGameWin().timeout(
-              const Duration(seconds: 10),
+              const Duration(seconds: 15),
               onTimeout: () {
                 throw Exception('Request timed out');
               },
             );
-            // If successful, we confirm (or just leave it as server state will eventually sync)
+            // Success handled in _recordGameWin
           } catch (e) {
             // 3. Rollback on failure
             userProvider.rollbackOptimisticCoins(80);
@@ -227,10 +245,8 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
           }
         },
       );
-    } finally {
-      if (mounted) {
-        setState(() => _isClaiming = false);
-      }
+    } catch (e) {
+      debugPrint('Error in claim reward: $e');
     }
   }
 
@@ -239,59 +255,49 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
       final user = fb_auth.FirebaseAuth.instance.currentUser;
       if (user == null) return;
 
-      // Get providers before async gap
-      final dedup = Provider.of<RequestDeduplicationService>(
-        context,
-        listen: false,
-      );
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
       final fingerprint = Provider.of<DeviceFingerprintService>(
         context,
         listen: false,
       );
-      final firestore = FirestoreService();
 
-      // Check backend health
+      // Use Cloudflare Service
       final cloudflareService = CloudflareWorkersService();
-      final isBackendHealthy = await cloudflareService.healthCheck();
-      if (!isBackendHealthy) {
-        throw Exception('Backend unreachable');
-      }
 
       // Get device fingerprint
       final deviceFingerprint = await fingerprint.getDeviceFingerprint();
 
-      // Generate unique request ID for deduplication
-      final requestId = dedup.generateRequestId(user.uid, 'game_result', {
-        'gameId': 'tictactoe',
-        'won': true,
-        'reward': 80,
-      });
+      // Use the ID generated when game ended, or fallback (shouldn't happen)
+      final requestId =
+          _currentRequestId ??
+          'tictactoe_${DateTime.now().millisecondsSinceEpoch}';
 
-      // Record game result via Firestore with deduplication fields
-      await firestore.recordGameResult(
-        user.uid,
-        'tictactoe',
-        true,
-        80, // 80 Coins
+      // Call Backend API
+      final result = await cloudflareService.recordGameResult(
+        userId: user.uid,
+        gameId: 'tictactoe',
+        won: true,
+        score: 0,
+        deviceId: deviceFingerprint,
         requestId: requestId,
-        deviceFingerprint: deviceFingerprint,
       );
 
-      // Mark as processed in deduplication cache
-      await dedup.recordRequest(
-        requestId: requestId,
-        requestHash: requestId.hashCode.toString(),
-        success: true,
-        transactionId: 'game:${DateTime.now().millisecondsSinceEpoch}',
-      );
+      // Update Local State from Backend Response
+      if (result['success'] == true) {
+        final newBalance = result['newBalance'];
+        if (newBalance != null) {
+          userProvider.updateLocalState(coins: newBalance);
+          userProvider.confirmOptimisticCoins(80);
+        }
 
-      // Set cooldown
-      _cooldownService.startCooldown(user.uid, 'game_tictactoe', 300);
+        // Update Cooldown locally
+        _cooldownService.startCooldown(user.uid, 'game_tictactoe', 300);
 
-      debugPrint('✅ Game win recorded for ${user.uid}: tictactoe');
+        debugPrint('✅ Game win recorded: ${result['transaction']['id']}');
+      }
     } catch (e) {
       debugPrint('Error recording game: $e');
-      rethrow; // Propagate error to _claimReward for rollback
+      rethrow;
     }
   }
 
@@ -344,14 +350,6 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
       ),
     );
   }
-
-  // Watch rewarded ad for bonus +₹0.10 - DEPRECATED / REMOVED
-  // Merged into main claim flow
-  /*
-  Future<void> _watchBonusAd() async {
-    ...
-  }
-  */
 
   void _resetGame() {
     setState(() {
