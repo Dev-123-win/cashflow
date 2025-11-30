@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:async';
 import 'cloudflare_workers_service.dart';
+import 'device_fingerprint_service.dart';
 
 class AuthService {
   static final AuthService _instance = AuthService._internal();
@@ -97,6 +98,11 @@ class AuthService {
       await _prefs.setString('userEmail', email);
       await _prefs.setString('displayName', displayName);
 
+      // Register device fingerprint
+      await DeviceFingerprintService().registerFingerprint(
+        userCredential.user!.uid,
+      );
+
       return userCredential;
     } on FirebaseAuthException catch (e) {
       throw Exception(_handleAuthException(e));
@@ -118,11 +124,21 @@ class AuthService {
           .signInWithEmailAndPassword(email: email, password: password);
 
       // Ensure user exists in Firestore (self-healing)
-      await ensureUserExists(userCredential.user!);
+      try {
+        await ensureUserExists(userCredential.user!);
+      } catch (e) {
+        await signOut(); // Rollback auth if profile fails
+        throw Exception('Failed to load user profile. Please try again.');
+      }
 
       // Store locally
       await _prefs.setString('userId', userCredential.user!.uid);
       await _prefs.setString('userEmail', email);
+
+      // Register device fingerprint
+      await DeviceFingerprintService().registerFingerprint(
+        userCredential.user!.uid,
+      );
 
       return userCredential;
     } on FirebaseAuthException catch (e) {
@@ -149,7 +165,12 @@ class AuthService {
       );
 
       // Ensure user exists in Firestore (self-healing)
-      await ensureUserExists(userCredential.user!);
+      try {
+        await ensureUserExists(userCredential.user!);
+      } catch (e) {
+        await signOut(); // Rollback auth if profile fails
+        throw Exception('Failed to load user profile. Please try again.');
+      }
 
       // Store locally
       await _prefs.setString('userId', userCredential.user!.uid);
@@ -157,6 +178,11 @@ class AuthService {
       await _prefs.setString(
         'displayName',
         userCredential.user!.displayName ?? 'User',
+      );
+
+      // Register device fingerprint
+      await DeviceFingerprintService().registerFingerprint(
+        userCredential.user!.uid,
       );
 
       return userCredential;
@@ -221,6 +247,7 @@ class AuthService {
       }
     } catch (e) {
       debugPrint('Error ensuring user exists: $e');
+      rethrow; // Critical: Fail if profile cannot be verified
     }
   }
 

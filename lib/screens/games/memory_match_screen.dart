@@ -11,6 +11,8 @@ import '../../services/device_fingerprint_service.dart';
 import '../../providers/user_provider.dart';
 import '../../widgets/custom_dialog.dart';
 import '../../widgets/error_states.dart';
+import '../../widgets/zen_card.dart';
+import '../../widgets/scale_button.dart';
 
 class MemoryMatchScreen extends StatefulWidget {
   const MemoryMatchScreen({super.key});
@@ -170,19 +172,22 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.green.withValues(alpha: 0.1),
+                color: AppTheme.successColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.green),
+                border: Border.all(color: AppTheme.successColor),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.play_circle_filled, color: Colors.green),
-                  SizedBox(width: 8),
+                  const Icon(
+                    Icons.play_circle_filled,
+                    color: AppTheme.successColor,
+                  ),
+                  const SizedBox(width: 8),
                   Text(
                     'Claim Reward 📺',
                     style: TextStyle(
-                      color: Colors.green,
+                      color: AppTheme.successColor,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -240,13 +245,8 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
           );
           final accuracy = _game.getAccuracy();
 
-          // Calculate reward based on accuracy (Client side estimation for optimistic UI)
-          int reward = 500; // Base 500 Coins
-          if (accuracy >= 90) {
-            reward = 750;
-          } else if (accuracy >= 70) {
-            reward = 600;
-          }
+          // Fixed reward (matches backend)
+          int reward = 60; // 60 Coins
 
           // 1. Optimistic Update
           userProvider.addOptimisticCoins(reward);
@@ -351,7 +351,9 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
                   context,
                   'Accuracy',
                   '${accuracy.toStringAsFixed(1)}%',
-                  color: accuracy >= 80 ? Colors.green : Colors.orange,
+                  color: accuracy >= 80
+                      ? AppTheme.successColor
+                      : AppTheme.warningColor,
                 ),
               ],
             ),
@@ -359,7 +361,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
             Text(
               '${(reward).toInt()} Coins added to wallet!',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Colors.green,
+                color: AppTheme.successColor,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -430,12 +432,12 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
       child: Scaffold(
         backgroundColor: AppTheme.backgroundColor,
         appBar: AppBar(
-          backgroundColor: AppTheme.backgroundColor,
+          backgroundColor: Colors.transparent,
           elevation: 0,
           title: const Text('Memory Match'),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.pop(context),
+          leading: ScaleButton(
+            onTap: () => Navigator.pop(context),
+            child: const Icon(Icons.arrow_back),
           ),
         ),
         body: Consumer<UserProvider>(
@@ -445,13 +447,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
               child: Column(
                 children: [
                   // Game Info Card
-                  Container(
-                    padding: const EdgeInsets.all(AppTheme.space16),
-                    decoration: BoxDecoration(
-                      color: AppTheme.surfaceColor,
-                      borderRadius: BorderRadius.circular(AppTheme.radiusM),
-                      boxShadow: AppTheme.cardShadow,
-                    ),
+                  ZenCard(
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -515,7 +511,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
                                 style: Theme.of(context).textTheme.headlineSmall
                                     ?.copyWith(
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.green,
+                                      color: AppTheme.successColor,
                                     ),
                               ),
                             ],
@@ -602,7 +598,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
                                     ),
                                     border: Border.all(
                                       color: isMatched
-                                          ? Colors.green
+                                          ? AppTheme.successColor
                                           : isSelected
                                           ? AppTheme.primaryColor.withValues(
                                               alpha: 0.8,
@@ -659,13 +655,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
                   const SizedBox(height: AppTheme.space32),
 
                   // Progress Bar
-                  Container(
-                    padding: const EdgeInsets.all(AppTheme.space16),
-                    decoration: BoxDecoration(
-                      color: AppTheme.surfaceColor,
-                      borderRadius: BorderRadius.circular(AppTheme.radiusM),
-                      boxShadow: AppTheme.cardShadow,
-                    ),
+                  ZenCard(
                     child: Column(
                       children: [
                         Row(
@@ -736,15 +726,21 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
                         return Container(
                           padding: const EdgeInsets.all(AppTheme.space16),
                           decoration: BoxDecoration(
-                            color: Colors.orange.withValues(alpha: 0.1),
+                            color: AppTheme.warningColor.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(
                               AppTheme.radiusM,
                             ),
-                            border: Border.all(color: Colors.orange, width: 1),
+                            border: Border.all(
+                              color: AppTheme.warningColor,
+                              width: 1,
+                            ),
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.timer, color: Colors.orange),
+                              const Icon(
+                                Icons.timer,
+                                color: AppTheme.warningColor,
+                              ),
                               const SizedBox(width: AppTheme.space12),
                               Expanded(
                                 child: Column(
@@ -777,13 +773,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
                   const SizedBox(height: AppTheme.space32),
 
                   // How to Play
-                  Container(
-                    padding: const EdgeInsets.all(AppTheme.space16),
-                    decoration: BoxDecoration(
-                      color: AppTheme.surfaceColor,
-                      borderRadius: BorderRadius.circular(AppTheme.radiusM),
-                      boxShadow: AppTheme.cardShadow,
-                    ),
+                  ZenCard(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -797,10 +787,12 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
                           '• Match pairs of identical emojis\n'
                           '• Complete all 4 pairs to win\n'
                           '• Watch ad to claim reward\n'
-                          '• 90%+ accuracy: 750 Coins | 70%+: 600 Coins | Base: 500 Coins',
-                          style: Theme.of(
-                            context,
-                          ).textTheme.bodySmall?.copyWith(height: 1.5),
+                          '• Win reward: 60 Coins',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                height: 1.5,
+                                color: AppTheme.textSecondary,
+                              ),
                         ),
                       ],
                     ),

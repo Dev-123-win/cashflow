@@ -3,6 +3,8 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'package:safe_device/safe_device.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 
 /// SECURITY SERVICE: Device fingerprinting for fraud detection
 ///
@@ -217,6 +219,38 @@ class DeviceFingerprintService {
     if (status['isOnExternalStorage'] == true) score += 5;
 
     return score;
+  }
+
+  /// Register device fingerprint in Firestore
+  Future<void> registerFingerprint(String userId) async {
+    try {
+      final fingerprint = await getDeviceFingerprint();
+      final docRef = FirebaseFirestore.instance
+          .collection('deviceFingerprints')
+          .doc(fingerprint);
+
+      final doc = await docRef.get();
+      if (!doc.exists) {
+        final deviceInfo = await getDeviceInfo();
+        await docRef.set({
+          'fingerprint': fingerprint,
+          'firstSeen': FieldValue.serverTimestamp(),
+          'lastSeen': FieldValue.serverTimestamp(),
+          'deviceInfo': deviceInfo,
+          'userIds': [userId], // Track users associated with this device
+        });
+        debugPrint('✅ Device fingerprint registered: $fingerprint');
+      } else {
+        // Update last seen and add user if new
+        await docRef.update({
+          'lastSeen': FieldValue.serverTimestamp(),
+          'userIds': FieldValue.arrayUnion([userId]),
+        });
+        debugPrint('✅ Device fingerprint updated: $fingerprint');
+      }
+    } catch (e) {
+      debugPrint('⚠️ Failed to register device fingerprint: $e');
+    }
   }
 
   /// Clears cached fingerprint (useful for testing)

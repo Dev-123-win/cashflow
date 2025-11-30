@@ -21,11 +21,6 @@ class AppAssets {
   static const String noInternet = 'assets/illustrations/no_internet.svg';
   static const String errorGeneric = 'assets/illustrations/error_generic.svg';
 
-  // Images (Backgrounds/Patterns)
-  static const String minimalistDotGrid =
-      'assets/images/Minimalist Dot Grid.svg';
-  static const String topographicLines = 'assets/images/Topographic Lines.svg';
-
   // Animations
   static const String giftBoxOpen = 'assets/animations/gift_box_open.json';
   static const String streakFire = 'assets/animations/streak_fire.json';

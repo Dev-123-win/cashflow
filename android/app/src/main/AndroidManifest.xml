@@ -7,7 +7,7 @@
     <application
         android:label="earnplay"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/launcher_icon">
         <property
             android:name="android.adservices.AD_SERVICES_CONFIG"
             android:resource="@xml/gma_ad_services_config"

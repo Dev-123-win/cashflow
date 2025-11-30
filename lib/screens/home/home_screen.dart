@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:confetti/confetti.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+
 import 'package:lottie/lottie.dart';
 import '../../core/constants/app_assets.dart';
 import '../../core/theme/app_theme.dart';
@@ -108,15 +108,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 title: Text(
                   'EarnQuest',
                   style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                flexibleSpace: FlexibleSpaceBar(
-                  background: Opacity(
-                    opacity: 0.1,
-                    child: SvgPicture.asset(
-                      AppAssets.topographicLines,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
                 ),
                 actions: [
                   ScaleButton(

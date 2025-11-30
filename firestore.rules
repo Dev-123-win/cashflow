@@ -144,11 +144,9 @@ service cloud.firestore {
     // Request deduplication cache
     match /requestCache/{requestId} {
       allow read: if isAuthenticated();
-      allow create: if isAuthenticated(); // Keep client write for local dedup if needed, or move to backend?
-      // Plan says "Update RequestDeduplicationService".
-      // If we move dedup to backend entirely, we can block this.
-      // But client might use it for immediate UI feedback?
-      // Let's allow client write for now but strictly validate.
+      allow create: if isAuthenticated() &&
+                       request.resource.data.keys().hasAll(['requestId', 'requestHash', 'timestamp', 'success']) &&
+                       request.resource.data.requestId == requestId;
       allow update, delete: if false;
     }
     
@@ -162,8 +160,9 @@ service cloud.firestore {
     // Device fingerprints
     match /deviceFingerprints/{fingerprintId} {
       allow read: if isAuthenticated();
-      allow create: if isAuthenticated(); // Client needs to write this on startup
-      allow update, delete: if false;
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated(); // Allow adding new users to device
+      allow delete: if false;
     }
     
     // Analytics collection

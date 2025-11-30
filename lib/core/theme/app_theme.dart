@@ -1,233 +1,298 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class AppTheme {
-  // Seed Color
-  static const Color seedColor = Color(0xFF6C63FF);
+  // ---------------------------------------------------------------------------
+  // 🎨 COLOR PALETTE (PREMIUM)
+  // ---------------------------------------------------------------------------
 
-  // Primary Colors (Restored for backward compatibility)
-  static const Color primaryColor = Color(0xFF6C63FF);
-  static const Color secondaryColor = Color(0xFF00D9C0);
-  static const Color tertiaryColor = Color(0xFFFFB800);
-  static const Color errorColor = Color(0xFFFF5252);
+  // Brand Colors
+  static const Color primaryColor = Color(0xFF6C63FF); // Deep Purple
+  static const Color primaryVariant = Color(0xFF5A52D5);
+  static const Color secondaryColor = Color(0xFF00D9C0); // Teal/Cyan
+  static const Color accentColor = Color(0xFFFFB800); // Gold
+  static const Color accentVariant = Color(0xFFFFD600);
+
+  // Semantic Colors
   static const Color successColor = Color(0xFF00E676);
-  static const Color warningColor = Color(0xFFFFA726);
+  static const Color errorColor = Color(0xFFFF5252);
+  static const Color warningColor = Color(0xFFFF9800);
+  static const Color infoColor = Color(0xFF2196F3);
 
-  // Light Theme Background Colors
-  static const Color backgroundColor = Color(0xFFFAFAFC);
-  static const Color surfaceColor = Color(0xFFFFFFFF);
-  static const Color surfaceVariant = Color(0xFFF5F5F7);
+  // Neutral Colors (Light Mode)
+  static const Color backgroundLight = Color(
+    0xFFF8F9FC,
+  ); // Very light grey-blue
+  static const Color surfaceLight = Color(0xFFFFFFFF);
+  static const Color surfaceVariantLight = Color(0xFFF0F2F5);
+  static const Color textPrimaryLight = Color(0xFF1A1D1E);
+  static const Color textSecondaryLight = Color(0xFF6C7278);
+  static const Color textTertiaryLight = Color(0xFF9AA0A6);
 
-  // Dark Theme Background Colors
-  static const Color darkBackgroundColor = Color(0xFF121212);
-  static const Color darkSurfaceColor = Color(0xFF1E1E1E);
-  static const Color darkSurfaceVariant = Color(0xFF2A2A2A);
+  // Neutral Colors (Dark Mode)
+  static const Color backgroundDark = Color(0xFF0F1115); // Deep almost-black
+  static const Color surfaceDark = Color(0xFF181A20);
+  static const Color surfaceVariantDark = Color(0xFF262A34);
+  static const Color textPrimaryDark = Color(0xFFFFFFFF);
+  static const Color textSecondaryDark = Color(0xFFB0B3B8);
+  static const Color textTertiaryDark = Color(0xFF6E7179);
 
-  // Light Theme Text Colors
-  static const Color textPrimary = Color(0xFF1A1A1A);
-  static const Color textSecondary = Color(0xFF666666);
-  static const Color textTertiary = Color(0xFF999999);
+  // Gradients
+  static const LinearGradient primaryGradient = LinearGradient(
+    colors: [Color(0xFF6C63FF), Color(0xFF8B85FF)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
 
-  // Dark Theme Text Colors
-  static const Color darkTextPrimary = Color(0xFFFFFFFF);
-  static const Color darkTextSecondary = Color(0xFFB0B0B0);
-  static const Color darkTextTertiary = Color(0xFF808080);
+  static const LinearGradient goldGradient = LinearGradient(
+    colors: [Color(0xFFFFB800), Color(0xFFFFD600)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
 
-  // Spacing
-  static const double space2 = 2.0;
+  static const LinearGradient darkGradient = LinearGradient(
+    colors: [Color(0xFF181A20), Color(0xFF262A34)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  // ---------------------------------------------------------------------------
+  // 📐 SPACING & RADIUS
+  // ---------------------------------------------------------------------------
+
   static const double space4 = 4.0;
   static const double space8 = 8.0;
   static const double space12 = 12.0;
   static const double space16 = 16.0;
   static const double space20 = 20.0;
   static const double space24 = 24.0;
-  static const double space28 = 28.0;
   static const double space32 = 32.0;
-  static const double space40 = 40.0;
   static const double space48 = 48.0;
-  static const double space56 = 56.0;
 
-  // Border Radius
   static const double radiusS = 8.0;
-  static const double radiusM = 12.0;
-  static const double radiusL = 16.0;
-  static const double radiusXL = 24.0;
+  static const double radiusM = 16.0;
+  static const double radiusL = 24.0;
+  static const double radiusXL = 32.0;
 
-  // Light Theme
-  static ThemeData get lightTheme {
-    return _buildTheme(Brightness.light);
-  }
+  // ---------------------------------------------------------------------------
+  // 🌓 THEME DATA BUILDERS
+  // ---------------------------------------------------------------------------
 
-  // Dark Theme
-  static ThemeData get darkTheme {
-    return _buildTheme(Brightness.dark);
-  }
+  static ThemeData get lightTheme => _buildTheme(Brightness.light);
+  static ThemeData get darkTheme => _buildTheme(Brightness.dark);
 
   static ThemeData _buildTheme(Brightness brightness) {
-    final colorScheme = ColorScheme.fromSeed(
-      seedColor: seedColor,
+    final isLight = brightness == Brightness.light;
+    final colorScheme = ColorScheme(
       brightness: brightness,
-      surface: brightness == Brightness.light
-          ? backgroundColor
-          : darkBackgroundColor,
+      primary: primaryColor,
+      onPrimary: Colors.white,
+      secondary: secondaryColor,
+      onSecondary: Colors.black,
+      error: errorColor,
+      onError: Colors.white,
+      surface: isLight ? surfaceLight : surfaceDark,
+      onSurface: isLight ? textPrimaryLight : textPrimaryDark,
+      surfaceContainerHighest: isLight
+          ? surfaceVariantLight
+          : surfaceVariantDark,
     );
 
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
       colorScheme: colorScheme,
-      scaffoldBackgroundColor: colorScheme.surface,
+      scaffoldBackgroundColor: isLight ? backgroundLight : backgroundDark,
       fontFamily: 'Manrope',
+
+      // AppBar
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
+        systemOverlayStyle: isLight
+            ? SystemUiOverlayStyle.dark
+            : SystemUiOverlayStyle.light,
         titleTextStyle: TextStyle(
+          fontFamily: 'Manrope',
           fontSize: 20,
-          fontWeight: FontWeight.w600,
-          color: colorScheme.onSurface,
-          fontFamily: 'Manrope',
+          fontWeight: FontWeight.w700,
+          color: isLight ? textPrimaryLight : textPrimaryDark,
+        ),
+        iconTheme: IconThemeData(
+          color: isLight ? textPrimaryLight : textPrimaryDark,
         ),
       ),
-      cardTheme: CardThemeData(
-        color: brightness == Brightness.light ? surfaceColor : darkSurfaceColor,
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(radiusM),
-        ),
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: brightness == Brightness.light
-            ? surfaceVariant
-            : darkSurfaceVariant,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(radiusM),
-          borderSide: BorderSide.none,
-        ),
-        contentPadding: const EdgeInsets.all(space16),
-        hintStyle: TextStyle(
-          color: brightness == Brightness.light
-              ? textSecondary
-              : darkTextSecondary,
-          fontFamily: 'Manrope',
-        ),
-      ),
+
+      // Buttons
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: primaryColor,
           foregroundColor: Colors.white,
+          elevation: 0,
           padding: const EdgeInsets.symmetric(
             horizontal: space24,
-            vertical: space12,
+            vertical: space16,
           ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(radiusM),
           ),
           textStyle: const TextStyle(
+            fontFamily: 'Manrope',
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            fontFamily: 'Manrope',
           ),
         ),
       ),
-      textTheme: _buildTextTheme(colorScheme),
+
+      // Text Theme
+      textTheme: TextTheme(
+        displayLarge: TextStyle(
+          fontSize: 32,
+          fontWeight: FontWeight.w800,
+          letterSpacing: -1.0,
+          color: isLight ? textPrimaryLight : textPrimaryDark,
+        ),
+        displayMedium: TextStyle(
+          fontSize: 28,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.5,
+          color: isLight ? textPrimaryLight : textPrimaryDark,
+        ),
+        headlineSmall: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
+          color: isLight ? textPrimaryLight : textPrimaryDark,
+        ),
+        titleMedium: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: isLight ? textPrimaryLight : textPrimaryDark,
+        ),
+        bodyLarge: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w400,
+          height: 1.5,
+          color: isLight ? textSecondaryLight : textSecondaryDark,
+        ),
+        bodyMedium: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w400,
+          height: 1.5,
+          color: isLight ? textSecondaryLight : textSecondaryDark,
+        ),
+        labelSmall: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.5,
+          color: isLight ? textTertiaryLight : textTertiaryDark,
+        ),
+      ),
+
+      // Inputs
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: isLight ? surfaceVariantLight : surfaceVariantDark,
+        contentPadding: const EdgeInsets.all(space16),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(radiusM),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(radiusM),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(radiusM),
+          borderSide: const BorderSide(color: primaryColor, width: 1.5),
+        ),
+        hintStyle: TextStyle(
+          color: isLight ? textTertiaryLight : textTertiaryDark,
+          fontSize: 14,
+        ),
+      ),
+
+      // Divider
+      dividerTheme: DividerThemeData(
+        color: isLight
+            ? Colors.black.withValues(alpha: 0.05)
+            : Colors.white.withValues(alpha: 0.05),
+        thickness: 1,
+        space: 1,
+      ),
     );
   }
 
-  static TextTheme _buildTextTheme(ColorScheme colorScheme) {
-    return TextTheme(
-      headlineLarge: TextStyle(
-        fontSize: 32,
-        fontWeight: FontWeight.w800,
-        color: colorScheme.onSurface,
-        fontFamily: 'Manrope',
-        letterSpacing: -1.0, // Tight tracking for Balance
-        height: 1.2,
-      ),
-      headlineMedium: TextStyle(
-        fontSize: 24,
-        fontWeight: FontWeight.w700,
-        color: colorScheme.onSurface,
-        fontFamily: 'Manrope',
-        height: 1.3,
-      ),
-      headlineSmall: TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.w600,
-        color: colorScheme.onSurface,
-        fontFamily: 'Manrope',
-        height: 1.3,
-      ),
-      titleLarge: TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.w600,
-        color: colorScheme.onSurface,
-        fontFamily: 'Manrope',
-      ),
-      bodyLarge: TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.w400,
-        color: colorScheme.onSurface,
-        fontFamily: 'Manrope',
-        height: 1.5,
-      ),
-      bodyMedium: TextStyle(
-        fontSize: 14,
-        fontWeight: FontWeight.w400,
-        color: colorScheme.onSurfaceVariant,
-        fontFamily: 'Manrope',
-        height: 1.5,
-      ),
-      labelLarge: TextStyle(
-        fontSize: 12,
-        fontWeight: FontWeight.w600,
-        color: colorScheme.onSurface,
-        fontFamily: 'Manrope',
-        letterSpacing: 1.5, // Wide tracking for Labels
-      ),
-    ).apply(
-      fontFamily: 'Manrope',
-      displayColor: colorScheme.onSurface,
-      bodyColor: colorScheme.onSurface,
-    );
-  }
+  // ---------------------------------------------------------------------------
+  // 🔄 BACKWARD COMPATIBILITY & ALIASES
+  // ---------------------------------------------------------------------------
 
-  // Helper for tabular figures
-  static TextStyle get currencyStyle => const TextStyle(
-    fontFamily: 'Manrope',
-    fontFeatures: [FontFeature.tabularFigures()],
-  );
+  // Background Colors
+  static const Color backgroundColor = backgroundLight;
+  static const Color surfaceColor = surfaceLight;
+  static const Color surfaceVariant = surfaceVariantLight;
 
-  // Glass Morphism
-  static BoxDecoration glassMorphism(
-    BuildContext context, {
-    double opacity = 0.1,
-  }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return BoxDecoration(
-      color: (isDark ? Colors.white : Colors.black).withValues(alpha: opacity),
-      borderRadius: BorderRadius.circular(radiusM),
-      border: Border.all(
-        color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.1),
-        width: 1.0,
-      ),
-    );
-  }
+  // Dark Mode Colors (Legacy)
+  static const Color darkBackgroundColor = backgroundDark;
+  static const Color darkSurfaceColor = surfaceDark;
+  static const Color darkSurfaceVariant = surfaceVariantDark;
+  static const Color darkTextPrimary = textPrimaryDark;
+  static const Color darkTextSecondary = textSecondaryDark;
+  static const Color darkTextTertiary = textTertiaryDark;
+
+  // Text Colors
+  static const Color textPrimary = textPrimaryLight;
+  static const Color textSecondary = textSecondaryLight;
+  static const Color textTertiary = textTertiaryLight;
+
+  // Legacy Colors
+  static const Color tertiaryColor = accentColor;
+
+  // Spacing
+  static const double space2 = 2.0;
+  static const double space28 = 28.0;
+  static const double space40 = 40.0;
+  static const double space56 = 56.0;
 
   // Shadows
+  static List<BoxShadow> get cardShadow => softShadow;
+  static List<BoxShadow> get elevatedShadow => glowShadow;
+
+  // ---------------------------------------------------------------------------
+  // 🛠 UTILITIES
+  // ---------------------------------------------------------------------------
+
   static List<BoxShadow> get softShadow => [
     BoxShadow(
-      color: Colors.black.withValues(alpha: 0.05),
+      color: const Color(0xFF000000).withValues(alpha: 0.05),
       blurRadius: 10,
       offset: const Offset(0, 4),
     ),
   ];
 
-  static const List<BoxShadow> cardShadow = [
-    BoxShadow(color: Color(0x1F000000), blurRadius: 8, offset: Offset(0, 2)),
+  static List<BoxShadow> get glowShadow => [
+    BoxShadow(
+      color: primaryColor.withValues(alpha: 0.3),
+      blurRadius: 20,
+      offset: const Offset(0, 8),
+    ),
   ];
 
-  static const List<BoxShadow> elevatedShadow = [
-    BoxShadow(color: Color(0x2F000000), blurRadius: 16, offset: Offset(0, 4)),
-  ];
+  static BoxDecoration glassMorphism(
+    BuildContext context, {
+    double opacity = 0.1,
+  }) {
+    return glassDecoration(context);
+  }
+
+  static BoxDecoration glassDecoration(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return BoxDecoration(
+      color: (isDark ? Colors.black : Colors.white).withValues(alpha: 0.7),
+      borderRadius: BorderRadius.circular(radiusM),
+      border: Border.all(
+        color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.05),
+      ),
+    );
+  }
 }

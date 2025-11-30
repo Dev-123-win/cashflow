@@ -199,7 +199,7 @@ class _AuthenticationWrapperState extends State<AuthenticationWrapper> {
 
       showDialog(
         context: context,
-        barrierDismissible: false,
+        barrierDismissible: riskScore < 40,
         builder: (context) => AlertDialog(
           title: Row(
             children: [
@@ -230,17 +230,23 @@ class _AuthenticationWrapperState extends State<AuthenticationWrapper> {
               const SizedBox(height: 12),
               Text(
                 riskScore >= 40
-                    ? 'Your account may be flagged or restricted due to high security risk.'
+                    ? 'For security reasons, this app cannot run on this device.'
                     : 'Some features may not work correctly. Your account may be subject to additional verification.',
                 style: TextStyle(fontSize: 12, color: Colors.grey[600]),
               ),
             ],
           ),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('I Understand'),
-            ),
+            if (riskScore < 40)
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('I Understand'),
+              )
+            else
+              TextButton(
+                onPressed: () => SystemNavigator.pop(),
+                child: const Text('Exit App'),
+              ),
           ],
         ),
       );

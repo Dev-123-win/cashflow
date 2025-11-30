@@ -6,6 +6,8 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/user_provider.dart';
+import '../../widgets/zen_card.dart';
+import '../../widgets/scale_button.dart';
 
 class LeaderboardScreen extends StatefulWidget {
   const LeaderboardScreen({super.key});
@@ -35,8 +37,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   }
 
   void _startTimer() {
-    // Calculate time until next midnight (UTC or local? Worker runs at midnight UTC usually)
-    // Let's assume midnight UTC for consistency with Cron "0 0 * * *"
     final now = DateTime.now().toUtc();
     final tomorrow = DateTime.utc(now.year, now.month, now.day + 1);
     _timeLeft = tomorrow.difference(now);
@@ -46,7 +46,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         if (_timeLeft.inSeconds > 0) {
           _timeLeft = _timeLeft - const Duration(seconds: 1);
         } else {
-          // Refresh when timer hits zero
           _fetchLeaderboard();
           final now = DateTime.now().toUtc();
           final tomorrow = DateTime.utc(now.year, now.month, now.day + 1);
@@ -67,11 +66,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       final cachedData = prefs.getString('leaderboard_data');
       final cachedTime = prefs.getInt('leaderboard_timestamp');
 
-      // Use cache if less than 1 hour old
       if (cachedData != null && cachedTime != null) {
         final now = DateTime.now().millisecondsSinceEpoch;
         if (now - cachedTime < 3600000) {
-          // 1 hour
           final data = json.decode(cachedData);
           if (mounted) {
             setState(() {
@@ -79,15 +76,11 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               _isLoading = false;
             });
           }
-          // Fetch background update if needed, but for now we trust cache
-          // return; // Uncomment to strictly use cache
         }
       }
 
-      // Replace with your actual Worker URL
       const workerUrl =
           'https://earnquest-worker.supreet-dalawai.workers.dev/api/leaderboard';
-      // Note: In production, use a config file for URLs
 
       final response = await http.get(Uri.parse(workerUrl));
 
@@ -96,7 +89,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         if (data['success'] == true) {
           final leaderboard = data['leaderboard'] ?? [];
 
-          // Update cache
           await prefs.setString('leaderboard_data', json.encode(leaderboard));
           await prefs.setInt(
             'leaderboard_timestamp',
@@ -118,8 +110,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          // If we have cache, show it even if expired, but show error snackbar
-          // For now just show error state
           _errorMessage = e.toString();
           _isLoading = false;
         });
@@ -137,11 +127,15 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
         title: const Text('Leaderboard'),
         centerTitle: true,
-        backgroundColor: AppTheme.primaryColor,
+        backgroundColor: Colors.transparent,
         elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(gradient: AppTheme.primaryGradient),
+        ),
       ),
       body: Column(
         children: [
@@ -149,16 +143,16 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-            color: Colors.orange.shade50,
+            color: AppTheme.accentColor.withValues(alpha: 0.1),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.timer, size: 16, color: Colors.orange),
+                const Icon(Icons.timer, size: 16, color: AppTheme.accentColor),
                 const SizedBox(width: 8),
                 Text(
                   'Updates in: ${_formatDuration(_timeLeft)}',
                   style: const TextStyle(
-                    color: Colors.orange,
+                    color: AppTheme.accentColor,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -239,7 +233,7 @@ class _LeaderboardCard extends StatelessWidget {
       case 3:
         return const Color(0xFFCD7F32); // Bronze
       default:
-        return Colors.grey;
+        return AppTheme.textSecondary;
     }
   }
 
@@ -258,115 +252,109 @@ class _LeaderboardCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
+    return ScaleButton(
+      onTap: () {}, // Optional: Show user profile
+      child: ZenCard(
+        padding: const EdgeInsets.all(12),
         color: isCurrentUser
             ? AppTheme.primaryColor.withValues(alpha: 0.1)
-            : Colors.white,
-        border: Border.all(
-          color: isCurrentUser ? AppTheme.primaryColor : Colors.grey.shade200,
-          width: isCurrentUser ? 2 : 1,
-        ),
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Medal/Rank
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              color: _getMedalColor().withValues(alpha: 0.2),
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(
-                _getMedalEmoji(),
-                style: const TextStyle(fontSize: 24),
+            : AppTheme.surfaceColor,
+        border: isCurrentUser
+            ? Border.all(color: AppTheme.primaryColor, width: 2)
+            : null,
+        child: Row(
+          children: [
+            // Medal/Rank
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: _getMedalColor().withValues(alpha: 0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Text(
+                  _getMedalEmoji(),
+                  style: const TextStyle(fontSize: 24),
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 12),
-          // User Info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        name,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: isCurrentUser
-                              ? AppTheme.primaryColor
-                              : Colors.black,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    if (isCurrentUser)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppTheme.primaryColor,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: const Text(
-                          'You',
+            const SizedBox(width: 12),
+            // User Info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          name,
                           style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
+                            fontSize: 16,
                             fontWeight: FontWeight.bold,
+                            color: isCurrentUser
+                                ? AppTheme.primaryColor
+                                : AppTheme.textPrimary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (isCurrentUser)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppTheme.primaryColor,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Text(
+                            'You',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 4),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Earned: ₹${earnings.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Earnings Display
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
                 Text(
-                  'Earned: ₹${earnings.toStringAsFixed(2)}',
-                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                  '₹${earnings.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.primaryColor,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Total',
+                  style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
                 ),
               ],
             ),
-          ),
-          const SizedBox(width: 12),
-          // Earnings Display
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '₹${earnings.toStringAsFixed(2)}',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.primaryColor,
-                ),
-              ),
-              const SizedBox(height: 2),
-              const Text(
-                'Total',
-                style: TextStyle(fontSize: 12, color: Colors.grey),
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

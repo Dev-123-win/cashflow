@@ -36,8 +36,10 @@ class CustomDialog extends StatelessWidget {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      AppTheme.surfaceColor,
-                      AppTheme.surfaceColor.withValues(alpha: 0.95),
+                      Theme.of(context).colorScheme.surface,
+                      Theme.of(
+                        context,
+                      ).colorScheme.surface.withValues(alpha: 0.95),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(AppTheme.radiusXL),

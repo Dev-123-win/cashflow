@@ -29,7 +29,7 @@ class _SpinScreenState extends State<SpinScreen> {
   late final CooldownService _cooldownService;
   late final AdService _adService;
   late final CloudflareWorkersService _cloudflareService;
-  late final List<double> _rewards = AppConstants.spinRewards;
+  late List<double> _rewards;
   late ConfettiController _confettiController;
   final StreamController<int> _selectedController =
       StreamController<int>.broadcast();
@@ -44,6 +44,8 @@ class _SpinScreenState extends State<SpinScreen> {
     _cooldownService = CooldownService();
     _adService = AdService();
     _cloudflareService = CloudflareWorkersService();
+    // Create a mutable copy of the rewards
+    _rewards = List<double>.from(AppConstants.spinRewards);
     _confettiController = ConfettiController(
       duration: const Duration(seconds: 2),
     );
@@ -138,69 +140,32 @@ class _SpinScreenState extends State<SpinScreen> {
       // Determine target index
       int targetIndex = -1;
 
-      // Find indices that match the reward
-      final matchingIndices = <int>[];
+      // Check if exact reward exists
       for (int i = 0; i < _rewards.length; i++) {
         if ((_rewards[i] - reward).abs() < 0.01) {
-          matchingIndices.add(i);
+          targetIndex = i;
+          break;
         }
       }
 
-      if (matchingIndices.isNotEmpty) {
-        // Pick a random matching index
-        targetIndex =
-            matchingIndices[math.Random().nextInt(matchingIndices.length)];
-      } else {
-        // Fallback: Pick index with closest value
+      // If reward not found on wheel, replace the closest value
+      if (targetIndex == -1) {
         double minDiff = double.infinity;
+        int closestIndex = 0;
+
         for (int i = 0; i < _rewards.length; i++) {
           final diff = (_rewards[i] - reward).abs();
           if (diff < minDiff) {
             minDiff = diff;
-            targetIndex = i;
-          }
-        }
-      }
-
-      // NEAR MISS LOGIC:
-      // If reward is low (< 1.0), try to make it look like a near miss of a high reward (> 5.0)
-      if (reward < 1.0) {
-        // Find high reward indices
-        final highRewardIndices = <int>[];
-        for (int i = 0; i < _rewards.length; i++) {
-          if (_rewards[i] >= 5.0) {
-            highRewardIndices.add(i);
+            closestIndex = i;
           }
         }
 
-        if (highRewardIndices.isNotEmpty) {
-          // Check if our target index is adjacent to any high reward index
-          // If not, try to find a matching reward index that IS adjacent
-          bool isAdjacent = false;
-          for (final highIndex in highRewardIndices) {
-            final prev = (highIndex - 1 + _rewards.length) % _rewards.length;
-            final next = (highIndex + 1) % _rewards.length;
-            if (targetIndex == prev || targetIndex == next) {
-              isAdjacent = true;
-              break;
-            }
-          }
-
-          if (!isAdjacent && matchingIndices.length > 1) {
-            // Try to switch to an adjacent one if available
-            for (final matchIndex in matchingIndices) {
-              for (final highIndex in highRewardIndices) {
-                final prev =
-                    (highIndex - 1 + _rewards.length) % _rewards.length;
-                final next = (highIndex + 1) % _rewards.length;
-                if (matchIndex == prev || matchIndex == next) {
-                  targetIndex = matchIndex;
-                  break;
-                }
-              }
-            }
-          }
-        }
+        // Update the wheel segment to show the ACTUAL reward
+        setState(() {
+          _rewards[closestIndex] = reward.toDouble();
+        });
+        targetIndex = closestIndex;
       }
 
       // Start the visual spin
@@ -385,33 +350,62 @@ class _SpinScreenState extends State<SpinScreen> {
                             child: Stack(
                               alignment: Alignment.center,
                               children: [
-                                FortuneWheel(
-                                  selected: _selectedController.stream,
-                                  animateFirst: false,
-                                  items: List.generate(
-                                    _rewards.length,
-                                    (index) => FortuneItem(
-                                      child: Text(
-                                        '${_rewards[index].toInt()}',
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                                      style: FortuneItemStyle(
-                                        color: _getSegmentColor(index),
-                                        borderColor: AppTheme.surfaceColor,
-                                        borderWidth: 2,
-                                      ),
-                                    ),
-                                  ),
-                                  onAnimationEnd: () =>
-                                      _onSpinComplete(userProvider),
-                                  physics: CircularPanPhysics(
-                                    duration: const Duration(seconds: 4),
-                                    curve: Curves.easeOutCubic,
+                                // Decorative Lights Ring
+                                SizedBox(
+                                  width: 320,
+                                  height: 320,
+                                  child: CustomPaint(
+                                    painter: WheelLightsPainter(),
                                   ),
                                 ),
+
+                                // The Wheel
+                                Padding(
+                                  padding: const EdgeInsets.all(
+                                    16.0,
+                                  ), // Space for lights
+                                  child: FortuneWheel(
+                                    selected: _selectedController.stream,
+                                    animateFirst: false,
+                                    items: List.generate(
+                                      _rewards.length,
+                                      (index) => FortuneItem(
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              '${_rewards[index].toInt()}',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Image.asset(
+                                              'assets/icons/Coin.png',
+                                              width: 16,
+                                              height: 16,
+                                            ),
+                                          ],
+                                        ),
+                                        style: FortuneItemStyle(
+                                          color: _getSegmentColor(index),
+                                          borderColor: AppTheme.surfaceColor,
+                                          borderWidth: 2,
+                                        ),
+                                      ),
+                                    ),
+                                    onAnimationEnd: () =>
+                                        _onSpinComplete(userProvider),
+                                    physics: CircularPanPhysics(
+                                      duration: const Duration(seconds: 4),
+                                      curve: Curves.easeOutCubic,
+                                    ),
+                                  ),
+                                ),
+
                                 // Center Indicator
                                 Container(
                                   width: 60,
@@ -556,4 +550,49 @@ class _SpinScreenState extends State<SpinScreen> {
     ];
     return colors[index % colors.length];
   }
+}
+
+class WheelLightsPainter extends CustomPainter {
+  final int lightsCount;
+  final Color color;
+
+  WheelLightsPainter({this.lightsCount = 12, this.color = Colors.white});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2;
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+
+    final borderPaint = Paint()
+      ..color = AppTheme.primaryColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 8;
+
+    // Draw outer ring
+    canvas.drawCircle(center, radius, borderPaint);
+
+    // Draw lights
+    for (int i = 0; i < lightsCount; i++) {
+      final angle = (2 * math.pi * i) / lightsCount;
+      final x = center.dx + (radius - 10) * math.cos(angle);
+      final y = center.dy + (radius - 10) * math.sin(angle);
+
+      // Draw glow
+      canvas.drawCircle(Offset(x, y), 6, paint);
+
+      // Draw core
+      canvas.drawCircle(
+        Offset(x, y),
+        4,
+        Paint()..color = Colors.white.withValues(alpha: 0.9),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

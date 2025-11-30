@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'dart:ui';
+
 import '../../core/theme/app_theme.dart';
 import '../../providers/user_provider.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/zen_card.dart';
 import '../../widgets/scale_button.dart';
 import '../settings/settings_screen.dart';
+import '../../services/achievement_service.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -303,93 +304,146 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _buildAchievementsGrid(BuildContext context) {
-    // Mock achievements data
-    final achievements = [
-      {
-        'icon': Icons.games_rounded,
-        'name': 'Game Starter',
-        'earned': true,
-        'color': Colors.blue,
-      },
-      {
-        'icon': Icons.emoji_events_rounded,
-        'name': 'Victory!',
-        'earned': true,
-        'color': Colors.amber,
-      },
-      {
-        'icon': Icons.psychology_rounded,
-        'name': 'Quiz Master',
-        'earned': false,
-        'color': Colors.purple,
-      },
-      {
-        'icon': Icons.grid_view_rounded,
-        'name': 'Memory Genius',
-        'earned': true,
-        'color': Colors.teal,
-      },
-      {
-        'icon': Icons.local_fire_department_rounded,
-        'name': '7 Day Streak',
-        'earned': false,
-        'color': Colors.red,
-      },
-      {
-        'icon': Icons.monetization_on_rounded,
-        'name': 'First 100',
-        'earned': false,
-        'color': Colors.green,
-      },
-    ];
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final userId = userProvider.user.id;
 
-    return GridView.count(
-      crossAxisCount: 3,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: AppTheme.space12,
-      crossAxisSpacing: AppTheme.space12,
-      children: achievements.asMap().entries.map((entry) {
-        final index = entry.key;
-        final achievement = entry.value;
-        final earned = achievement['earned'] as bool;
-        final color = achievement['color'] as Color;
+    return StreamBuilder<List<AchievementUnlock>>(
+      stream: AchievementService().getUserAchievements(userId),
+      builder: (context, snapshot) {
+        // Get list of unlocked achievement IDs
+        final unlockedIds = snapshot.hasData
+            ? snapshot.data!.map((a) => a.achievementId).toSet()
+            : <String>{};
 
-        return ZenCard(
-              padding: const EdgeInsets.all(AppTheme.space12),
-              color: earned
-                  ? color.withValues(alpha: 0.1)
-                  : AppTheme.surfaceColor,
-              border: earned
-                  ? Border.all(color: color.withValues(alpha: 0.3))
-                  : null,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    achievement['icon'] as IconData,
-                    size: 32,
-                    color: earned ? color : AppTheme.textTertiary,
+        // Map achievements to display data
+        final achievements = AchievementService.allAchievements.map((
+          achievement,
+        ) {
+          final isUnlocked = unlockedIds.contains(achievement.id);
+
+          // Map achievement ID to icon and color
+          IconData icon;
+          Color color;
+
+          switch (achievement.id) {
+            case 'first_game':
+              icon = Icons.games_rounded;
+              color = Colors.blue;
+              break;
+            case 'first_win':
+              icon = Icons.emoji_events_rounded;
+              color = Colors.amber;
+              break;
+            case 'quiz_master':
+              icon = Icons.psychology_rounded;
+              color = Colors.purple;
+              break;
+            case 'memory_genius':
+              icon = Icons.grid_view_rounded;
+              color = Colors.teal;
+              break;
+            case 'tic_tac_strategist':
+              icon = Icons.extension_rounded;
+              color = Colors.indigo;
+              break;
+            case 'week_streak':
+              icon = Icons.local_fire_department_rounded;
+              color = Colors.red;
+              break;
+            case 'month_streak':
+              icon = Icons.star_rounded;
+              color = Colors.orange;
+              break;
+            case 'first_100':
+            case 'first_500':
+            case 'first_1000':
+              icon = Icons.monetization_on_rounded;
+              color = Colors.green;
+              break;
+            case 'game_addict':
+              icon = Icons.sports_esports_rounded;
+              color = Colors.deepPurple;
+              break;
+            case 'true_winner':
+              icon = Icons.emoji_events_rounded;
+              color = Colors.yellow;
+              break;
+            case 'task_master':
+              icon = Icons.task_alt_rounded;
+              color = Colors.cyan;
+              break;
+            case 'first_withdrawal':
+              icon = Icons.account_balance_wallet_rounded;
+              color = Colors.pink;
+              break;
+            default:
+              icon = Icons.emoji_events_rounded;
+              color = Colors.grey;
+          }
+
+          return {
+            'id': achievement.id,
+            'icon': icon,
+            'name': achievement.name,
+            'earned': isUnlocked,
+            'color': color,
+          };
+        }).toList();
+
+        // Show first 6 achievements
+        final displayAchievements = achievements.take(6).toList();
+
+        return GridView.count(
+          crossAxisCount: 3,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: AppTheme.space12,
+          crossAxisSpacing: AppTheme.space12,
+          children: displayAchievements.asMap().entries.map((entry) {
+            final index = entry.key;
+            final achievement = entry.value;
+            final earned = achievement['earned'] as bool;
+            final color = achievement['color'] as Color;
+
+            return ZenCard(
+                  padding: const EdgeInsets.all(AppTheme.space12),
+                  color: earned
+                      ? color.withValues(alpha: 0.1)
+                      : AppTheme.surfaceColor,
+                  border: earned
+                      ? Border.all(color: color.withValues(alpha: 0.3))
+                      : null,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        achievement['icon'] as IconData,
+                        size: 32,
+                        color: earned ? color : AppTheme.textTertiary,
+                      ),
+                      const SizedBox(height: AppTheme.space8),
+                      Text(
+                        achievement['name'] as String,
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: earned ? color : AppTheme.textSecondary,
+                          fontWeight: earned
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                          fontSize: 10,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: AppTheme.space8),
-                  Text(
-                    achievement['name'] as String,
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: earned ? color : AppTheme.textSecondary,
-                      fontWeight: earned ? FontWeight.bold : FontWeight.normal,
-                      fontSize: 10,
-                    ),
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            )
-            .animate()
-            .fadeIn(delay: (1000 + (index * 100)).ms)
-            .scale(delay: (1000 + (index * 100)).ms);
-      }).toList(),
+                )
+                .animate()
+                .fadeIn(delay: (1000 + (index * 100)).ms)
+                .scale(delay: (1000 + (index * 100)).ms);
+          }).toList(),
+        );
+      },
     );
   }
 

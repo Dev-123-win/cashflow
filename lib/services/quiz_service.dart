@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'cloudflare_workers_service.dart';
 import 'device_fingerprint_service.dart';
 import 'package:provider/provider.dart';
+import '../core/constants/app_constants.dart';
 
 /// Quiz question model (Top-level class)
 class QuizQuestion {
@@ -35,7 +36,7 @@ class QuizService {
 
   // Quiz configuration
   static const int questionsPerQuiz = 5;
-  static const int rewardPerCorrect = 10; // 10 Coins per correct answer
+  static const int rewardPerCorrect = AppConstants.quizRewardPerCorrect;
   static const int timeLimitSeconds = 60;
 
   /// Question bank - Simple Math Questions for Beginners Only

@@ -6,6 +6,8 @@ import '../../services/ad_service.dart';
 import '../../providers/user_provider.dart';
 import '../../widgets/custom_dialog.dart';
 import '../../widgets/error_states.dart';
+import '../../widgets/zen_card.dart';
+import '../../widgets/scale_button.dart';
 
 class QuizScreen extends StatefulWidget {
   const QuizScreen({super.key});
@@ -196,13 +198,14 @@ class _QuizScreenState extends State<QuizScreen> {
           children: [
             CircleAvatar(
               radius: 48,
-              backgroundColor: (passed ? AppTheme.successColor : Colors.orange)
-                  .withValues(alpha: 0.2),
+              backgroundColor:
+                  (passed ? AppTheme.successColor : AppTheme.warningColor)
+                      .withValues(alpha: 0.2),
               child: Text(
                 '${(correct / total * 100).toStringAsFixed(0)}%',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: passed ? AppTheme.successColor : Colors.orange,
+                  color: passed ? AppTheme.successColor : AppTheme.warningColor,
                 ),
               ),
             ),
@@ -275,12 +278,12 @@ class _QuizScreenState extends State<QuizScreen> {
       child: Scaffold(
         backgroundColor: AppTheme.backgroundColor,
         appBar: AppBar(
-          backgroundColor: AppTheme.backgroundColor,
+          backgroundColor: Colors.transparent,
           elevation: 0,
           title: const Text('Quiz'),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.pop(context),
+          leading: ScaleButton(
+            onTap: () => Navigator.pop(context),
+            child: const Icon(Icons.arrow_back),
           ),
         ),
         body: Consumer<UserProvider>(
@@ -304,13 +307,7 @@ class _QuizScreenState extends State<QuizScreen> {
       child: Column(
         children: [
           const SizedBox(height: AppTheme.space32),
-          Container(
-            padding: const EdgeInsets.all(AppTheme.space32),
-            decoration: BoxDecoration(
-              color: AppTheme.surfaceColor,
-              borderRadius: BorderRadius.circular(AppTheme.radiusM),
-              boxShadow: AppTheme.cardShadow,
-            ),
+          ZenCard(
             child: Column(
               children: [
                 Text('🧠', style: Theme.of(context).textTheme.displaySmall),
@@ -333,13 +330,7 @@ class _QuizScreenState extends State<QuizScreen> {
             ),
           ),
           const SizedBox(height: AppTheme.space32),
-          Container(
-            padding: const EdgeInsets.all(AppTheme.space16),
-            decoration: BoxDecoration(
-              color: AppTheme.surfaceColor,
-              borderRadius: BorderRadius.circular(AppTheme.radiusM),
-              boxShadow: AppTheme.cardShadow,
-            ),
+          ZenCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -388,13 +379,7 @@ class _QuizScreenState extends State<QuizScreen> {
       child: Column(
         children: [
           // Progress
-          Container(
-            padding: const EdgeInsets.all(AppTheme.space16),
-            decoration: BoxDecoration(
-              color: AppTheme.surfaceColor,
-              borderRadius: BorderRadius.circular(AppTheme.radiusM),
-              boxShadow: AppTheme.cardShadow,
-            ),
+          ZenCard(
             child: Column(
               children: [
                 Row(
@@ -408,7 +393,7 @@ class _QuizScreenState extends State<QuizScreen> {
                       '${_timeRemaining}s',
                       style: Theme.of(context).textTheme.labelLarge?.copyWith(
                         color: _timeRemaining <= 10
-                            ? Colors.red
+                            ? AppTheme.errorColor
                             : AppTheme.textSecondary,
                       ),
                     ),
@@ -430,13 +415,7 @@ class _QuizScreenState extends State<QuizScreen> {
           const SizedBox(height: AppTheme.space24),
 
           // Question
-          Container(
-            padding: const EdgeInsets.all(AppTheme.space16),
-            decoration: BoxDecoration(
-              color: AppTheme.surfaceColor,
-              borderRadius: BorderRadius.circular(AppTheme.radiusM),
-              boxShadow: AppTheme.cardShadow,
-            ),
+          ZenCard(
             child: Column(
               children: [
                 Text(
@@ -462,7 +441,7 @@ class _QuizScreenState extends State<QuizScreen> {
           ...List.generate(question.options.length, (index) {
             final isSelected = _answers[_currentQuestionIndex] == index;
 
-            return GestureDetector(
+            return ScaleButton(
               onTap: () => _selectAnswer(index),
               child: Container(
                 margin: const EdgeInsets.only(bottom: AppTheme.space12),

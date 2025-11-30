@@ -35,7 +35,10 @@ class AppConstants {
   static const Map<String, int> gameRewards = {
     'tictactoe': 60, // 0.06 * 1000
     'memory_match': 60, // 0.06 * 1000
+    'quiz': 50, // Max reward (5 questions * 10)
   };
+
+  static const int quizRewardPerCorrect = 10; // 0.01 * 1000
 
   // Ad Rewards (OPTIMIZED - Reduced by 15%)
   static const int rewardedAdReward = 25; // 0.025 * 1000

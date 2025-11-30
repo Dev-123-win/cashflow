@@ -14,6 +14,8 @@ import '../../providers/user_provider.dart';
 import '../../widgets/custom_dialog.dart';
 import '../../widgets/error_states.dart';
 import '../../widgets/banner_ad_widget.dart';
+import '../../widgets/zen_card.dart';
+import '../../widgets/scale_button.dart';
 
 class TicTacToeScreen extends StatefulWidget {
   const TicTacToeScreen({super.key});
@@ -83,7 +85,7 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
             SizedBox(height: 8),
             Text('• Get 3 in a row to win'),
             SizedBox(height: 8),
-            Text('• Win to earn 80 Coins'),
+            Text('• Win to earn 60 Coins'),
             SizedBox(height: 8),
             Text('• Max 20 games per day'),
           ],
@@ -152,7 +154,7 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
           if (mounted) {
             _showGameResult(
               title: 'You Won! 🎉',
-              message: 'Claim your 80 Coins!',
+              message: 'Claim your 60 Coins!',
               won: true,
             );
 
@@ -222,7 +224,7 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
           );
 
           // 1. Optimistic Update
-          userProvider.addOptimisticCoins(80);
+          userProvider.addOptimisticCoins(60);
 
           // 2. Call Backend with Timeout
           try {
@@ -235,7 +237,7 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
             // Success handled in _recordGameWin
           } catch (e) {
             // 3. Rollback on failure
-            userProvider.rollbackOptimisticCoins(80);
+            userProvider.rollbackOptimisticCoins(60);
             if (mounted) {
               StateSnackbar.showError(
                 context,
@@ -318,9 +320,9 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
             Text(message),
             const SizedBox(height: AppTheme.space16),
             Text(
-              won ? 'Watch Ad to Claim 80 Coins' : 'Better luck next time!',
+              won ? 'Watch Ad to Claim 60 Coins' : 'Better luck next time!',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: won ? Colors.green : Colors.orange,
+                color: won ? AppTheme.successColor : AppTheme.warningColor,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -365,17 +367,20 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
       child: Scaffold(
         backgroundColor: AppTheme.backgroundColor,
         appBar: AppBar(
-          backgroundColor: AppTheme.backgroundColor,
+          backgroundColor: Colors.transparent,
           elevation: 0,
           title: const Text('Tic Tac Toe'),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.pop(context),
+          leading: ScaleButton(
+            onTap: () => Navigator.pop(context),
+            child: const Icon(Icons.arrow_back),
           ),
           actions: [
-            IconButton(
-              icon: const Icon(Icons.help_outline),
-              onPressed: _showHowToPlay,
+            ScaleButton(
+              onTap: _showHowToPlay,
+              child: const Padding(
+                padding: EdgeInsets.only(right: 16.0),
+                child: Icon(Icons.help_outline),
+              ),
             ),
           ],
         ),
@@ -389,15 +394,7 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
                     child: Column(
                       children: [
                         // Game Info Card
-                        Container(
-                          padding: const EdgeInsets.all(AppTheme.space16),
-                          decoration: BoxDecoration(
-                            color: AppTheme.surfaceColor,
-                            borderRadius: BorderRadius.circular(
-                              AppTheme.radiusM,
-                            ),
-                            boxShadow: AppTheme.cardShadow,
-                          ),
+                        ZenCard(
                           child: Column(
                             children: [
                               Row(
@@ -416,12 +413,12 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        '80 Coins',
+                                        '60 Coins',
                                         style: Theme.of(context)
                                             .textTheme
                                             .headlineSmall
                                             ?.copyWith(
-                                              color: Colors.green,
+                                              color: AppTheme.successColor,
                                               fontWeight: FontWeight.bold,
                                             ),
                                       ),
@@ -480,68 +477,54 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
                               final isEmpty = cell.isEmpty;
 
                               return GestureDetector(
-                                    onTap: isEmpty
-                                        ? () => _handleTap(index)
-                                        : null,
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: isEmpty
-                                            ? AppTheme.surfaceVariant
-                                            : AppTheme.backgroundColor,
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(
-                                          color: AppTheme.primaryColor,
-                                          width: 2,
-                                        ),
-                                      ),
-                                      child: Center(
-                                        child: Text(
-                                          cell,
-                                          style: const TextStyle(
-                                            fontSize: 32,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.blue,
+                                onTap: isEmpty ? () => _handleTap(index) : null,
+                                child:
+                                    Container(
+                                          decoration: BoxDecoration(
+                                            color: isEmpty
+                                                ? AppTheme.surfaceVariant
+                                                : AppTheme.backgroundColor,
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                            border: Border.all(
+                                              color: AppTheme.primaryColor
+                                                  .withValues(alpha: 0.1),
+                                              width: 2,
+                                            ),
                                           ),
-                                        ),
-                                      ),
-                                    ),
-                                  )
-                                  .animate(target: isEmpty ? 0 : 1)
-                                  .scale(
-                                    duration: 300.ms,
-                                    curve: Curves.easeOutBack,
-                                  )
-                                  .fade();
+                                          child: Center(
+                                            child: Text(
+                                              cell,
+                                              style: TextStyle(
+                                                fontSize: 32,
+                                                fontWeight: FontWeight.bold,
+                                                color: cell == 'X'
+                                                    ? AppTheme.primaryColor
+                                                    : AppTheme.secondaryColor,
+                                              ),
+                                            ),
+                                          ),
+                                        )
+                                        .animate(target: isEmpty ? 0 : 1)
+                                        .scale(
+                                          duration: 300.ms,
+                                          curve: Curves.easeOutBack,
+                                        )
+                                        .fade(),
+                              );
                             }),
                           ),
                         ),
                         const SizedBox(height: AppTheme.space32),
 
                         // Game Status
-                        Container(
-                          padding: const EdgeInsets.all(AppTheme.space16),
-                          decoration: BoxDecoration(
-                            color: AppTheme.surfaceColor,
-                            borderRadius: BorderRadius.circular(
-                              AppTheme.radiusM,
-                            ),
-                            boxShadow: AppTheme.cardShadow,
-                          ),
+                        ZenCard(
                           child: Column(
                             children: [
                               if (!_game.isGameOver)
                                 Column(
                                   children: [
-                                    Text(
-                                      'Your turn - Tap to make a move',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium
-                                          ?.copyWith(
-                                            color: AppTheme.textSecondary,
-                                          ),
-                                    ),
-                                    const SizedBox(height: AppTheme.space12),
                                     SizedBox(
                                       height: 4,
                                       child: LinearProgressIndicator(
@@ -567,8 +550,8 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
                                       ?.copyWith(
                                         fontWeight: FontWeight.bold,
                                         color: _game.playerWon()
-                                            ? Colors.green
-                                            : Colors.orange,
+                                            ? AppTheme.successColor
+                                            : AppTheme.warningColor,
                                       ),
                                 ).animate().scale(
                                   duration: 500.ms,
@@ -618,10 +601,12 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
                                       AppTheme.space12,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: Colors.orange.withValues(
+                                      color: AppTheme.warningColor.withValues(
                                         alpha: 0.1,
                                       ),
-                                      border: Border.all(color: Colors.orange),
+                                      border: Border.all(
+                                        color: AppTheme.warningColor,
+                                      ),
                                       borderRadius: BorderRadius.circular(
                                         AppTheme.radiusS,
                                       ),
@@ -630,7 +615,7 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
                                       children: [
                                         const Icon(
                                           Icons.schedule,
-                                          color: Colors.orange,
+                                          color: AppTheme.warningColor,
                                         ),
                                         const SizedBox(width: AppTheme.space12),
                                         Expanded(

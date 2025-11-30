@@ -61,6 +61,19 @@ class UserProvider extends ChangeNotifier {
       // Fetch user stats from Worker
       final userData = await _cloudflareService.getUserStats(userId: userId);
       _user = User.fromJson(userData);
+
+      // Fallback to Firebase Auth data if backend returns empty fields
+      if (currentUser != null) {
+        if (_user.displayName.isEmpty || _user.email.isEmpty) {
+          _user = _user.copyWith(
+            displayName: _user.displayName.isEmpty
+                ? currentUser.displayName
+                : _user.displayName,
+            email: _user.email.isEmpty ? currentUser.email : _user.email,
+          );
+        }
+      }
+
       _isAuthenticated = true;
       _error = null;
     } catch (e) {
@@ -156,6 +169,20 @@ class UserProvider extends ChangeNotifier {
         userId: _user.userId,
       );
       _user = User.fromJson(userData);
+
+      // Fallback to Firebase Auth data if backend returns empty fields
+      final currentUser = _auth.currentUser;
+      if (currentUser != null) {
+        if (_user.displayName.isEmpty || _user.email.isEmpty) {
+          _user = _user.copyWith(
+            displayName: _user.displayName.isEmpty
+                ? currentUser.displayName
+                : _user.displayName,
+            email: _user.email.isEmpty ? currentUser.email : _user.email,
+          );
+        }
+      }
+
       _error = null;
       notifyListeners();
     } catch (e) {
