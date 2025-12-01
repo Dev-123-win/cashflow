@@ -1,5 +1,6 @@
+import 'package:cashflow/core/theme/colors.dart';
 import 'package:flutter/material.dart';
-import '../core/theme/app_theme.dart';
+import '../core/constants/dimensions.dart';
 
 /// Loading overlay widget for async operations
 class LoadingOverlayWidget extends StatelessWidget {
@@ -25,12 +26,10 @@ class LoadingOverlayWidget extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  AppTheme.primaryColor,
-                ),
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
               ),
               if (message != null) ...[
-                const SizedBox(height: AppTheme.space16),
+                const SizedBox(height: AppDimensions.space16),
                 Text(
                   message!,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -69,31 +68,31 @@ class ErrorStateWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppTheme.space24),
+        padding: const EdgeInsets.symmetric(horizontal: AppDimensions.space24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(AppTheme.space24),
+              padding: const EdgeInsets.all(AppDimensions.space24),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppTheme.errorColor.withValues(alpha: 0.1),
+                color: AppColors.error.withValues(alpha: 0.1),
               ),
-              child: Icon(icon, size: 64, color: AppTheme.errorColor),
+              child: Icon(icon, size: 64, color: AppColors.error),
             ),
-            const SizedBox(height: AppTheme.space32),
+            const SizedBox(height: AppDimensions.space32),
             Text(
               title,
               style: Theme.of(context).textTheme.headlineSmall,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppTheme.space12),
+            const SizedBox(height: AppDimensions.space12),
             Text(
               message,
               style: Theme.of(context).textTheme.bodyMedium,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppTheme.space32),
+            const SizedBox(height: AppDimensions.space32),
             if (onRetry != null)
               ElevatedButton.icon(
                 onPressed: onRetry,
@@ -154,8 +153,8 @@ class _LoadingSkeletonWidgetState extends State<LoadingSkeletonWidget>
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final skeletonColor = isDarkMode
-        ? AppTheme.darkSurfaceVariant
-        : AppTheme.surfaceVariant;
+        ? AppColors.surfaceVariantDark
+        : AppColors.surfaceVariantLight;
 
     if (!widget.isList) {
       return FadeTransition(
@@ -165,7 +164,7 @@ class _LoadingSkeletonWidgetState extends State<LoadingSkeletonWidget>
           width: widget.width,
           decoration: BoxDecoration(
             color: skeletonColor,
-            borderRadius: BorderRadius.circular(AppTheme.radiusM),
+            borderRadius: BorderRadius.circular(AppDimensions.radiusM),
           ),
         ),
       );
@@ -177,7 +176,7 @@ class _LoadingSkeletonWidgetState extends State<LoadingSkeletonWidget>
       physics: const NeverScrollableScrollPhysics(),
       itemBuilder: (context, index) {
         return Padding(
-          padding: const EdgeInsets.all(AppTheme.space16),
+          padding: const EdgeInsets.all(AppDimensions.space16),
           child: FadeTransition(
             opacity: _opacity,
             child: Container(
@@ -185,7 +184,7 @@ class _LoadingSkeletonWidgetState extends State<LoadingSkeletonWidget>
               width: widget.width,
               decoration: BoxDecoration(
                 color: skeletonColor,
-                borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                borderRadius: BorderRadius.circular(AppDimensions.radiusM),
               ),
             ),
           ),
@@ -250,29 +249,31 @@ class _SuccessStateWidgetState extends State<SuccessStateWidget>
       child: ScaleTransition(
         scale: _scaleAnimation,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppTheme.space24),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppDimensions.space24,
+          ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                padding: const EdgeInsets.all(AppTheme.space24),
+                padding: const EdgeInsets.all(AppDimensions.space24),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppTheme.successColor.withValues(alpha: 0.1),
+                  color: AppColors.success.withValues(alpha: 0.1),
                 ),
                 child: const Icon(
                   Icons.check_circle_outline,
                   size: 64,
-                  color: AppTheme.successColor,
+                  color: AppColors.success,
                 ),
               ),
-              const SizedBox(height: AppTheme.space32),
+              const SizedBox(height: AppDimensions.space32),
               Text(
                 widget.title,
                 style: Theme.of(context).textTheme.headlineSmall,
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: AppTheme.space12),
+              const SizedBox(height: AppDimensions.space12),
               Text(
                 widget.message,
                 style: Theme.of(context).textTheme.bodyMedium,

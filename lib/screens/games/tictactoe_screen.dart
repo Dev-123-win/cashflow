@@ -4,7 +4,8 @@ import 'package:provider/provider.dart';
 import 'dart:math' as math;
 import 'package:flutter_animate/flutter_animate.dart';
 
-import '../../core/theme/app_theme.dart';
+import '../../core/theme/colors.dart';
+import '../../core/constants/dimensions.dart';
 import '../../services/game_service.dart';
 import '../../services/cooldown_service.dart';
 import '../../services/ad_service.dart';
@@ -318,11 +319,11 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(message),
-            const SizedBox(height: AppTheme.space16),
+            const SizedBox(height: AppDimensions.space16),
             Text(
               won ? 'Watch Ad to Claim 60 Coins' : 'Better luck next time!',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: won ? AppTheme.successColor : AppTheme.warningColor,
+                color: won ? AppColors.success : AppColors.warning,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -362,10 +363,21 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.primaryDark : AppColors.primary;
+    final secondaryColor = isDark ? AppColors.accentDark : AppColors.accent;
+    final surfaceColor = isDark
+        ? AppColors.surfaceDark
+        : AppColors.surfaceLight;
+    final surfaceVariant = isDark
+        ? AppColors.surfaceVariantDark
+        : AppColors.surfaceVariantLight;
+
     return PopScope(
       canPop: true,
       child: Scaffold(
-        backgroundColor: AppTheme.backgroundColor,
+        backgroundColor: theme.scaffoldBackgroundColor,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -390,7 +402,7 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
               children: [
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(AppTheme.space16),
+                    padding: const EdgeInsets.all(AppDimensions.space16),
                     child: Column(
                       children: [
                         // Game Info Card
@@ -407,44 +419,31 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
                                     children: [
                                       Text(
                                         'You (X)',
-                                        style: Theme.of(
-                                          context,
-                                        ).textTheme.titleSmall,
+                                        style: theme.textTheme.titleSmall,
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
                                         '60 Coins',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .headlineSmall
+                                        style: theme.textTheme.headlineSmall
                                             ?.copyWith(
-                                              color: AppTheme.successColor,
+                                              color: AppColors.success,
                                               fontWeight: FontWeight.bold,
                                             ),
                                       ),
                                     ],
                                   ),
-                                  Text(
-                                    'vs',
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.titleLarge,
-                                  ),
+                                  Text('vs', style: theme.textTheme.titleLarge),
                                   Column(
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
                                       Text(
                                         'AI (O)',
-                                        style: Theme.of(
-                                          context,
-                                        ).textTheme.titleSmall,
+                                        style: theme.textTheme.titleSmall,
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
                                         'Win Reward',
-                                        style: Theme.of(
-                                          context,
-                                        ).textTheme.bodySmall,
+                                        style: theme.textTheme.bodySmall,
                                       ),
                                     ],
                                   ),
@@ -453,17 +452,25 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
                             ],
                           ),
                         ),
-                        const SizedBox(height: AppTheme.space32),
+                        const SizedBox(height: AppDimensions.space32),
 
                         // Game Board
                         Container(
-                          padding: const EdgeInsets.all(AppTheme.space8),
+                          padding: const EdgeInsets.all(AppDimensions.space8),
                           decoration: BoxDecoration(
-                            color: AppTheme.surfaceColor,
+                            color: surfaceColor,
                             borderRadius: BorderRadius.circular(
-                              AppTheme.radiusM,
+                              AppDimensions.radiusM,
                             ),
-                            boxShadow: AppTheme.cardShadow,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(
+                                  alpha: isDark ? 0.3 : 0.05,
+                                ),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                           ),
                           child: GridView.count(
                             crossAxisCount: 3,
@@ -482,14 +489,15 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
                                     Container(
                                           decoration: BoxDecoration(
                                             color: isEmpty
-                                                ? AppTheme.surfaceVariant
-                                                : AppTheme.backgroundColor,
+                                                ? surfaceVariant
+                                                : theme.scaffoldBackgroundColor,
                                             borderRadius: BorderRadius.circular(
                                               8,
                                             ),
                                             border: Border.all(
-                                              color: AppTheme.primaryColor
-                                                  .withValues(alpha: 0.1),
+                                              color: primaryColor.withValues(
+                                                alpha: 0.1,
+                                              ),
                                               width: 2,
                                             ),
                                           ),
@@ -500,8 +508,8 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
                                                 fontSize: 32,
                                                 fontWeight: FontWeight.bold,
                                                 color: cell == 'X'
-                                                    ? AppTheme.primaryColor
-                                                    : AppTheme.secondaryColor,
+                                                    ? primaryColor
+                                                    : secondaryColor,
                                               ),
                                             ),
                                           ),
@@ -516,7 +524,7 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
                             }),
                           ),
                         ),
-                        const SizedBox(height: AppTheme.space32),
+                        const SizedBox(height: AppDimensions.space32),
 
                         // Game Status
                         ZenCard(
@@ -528,10 +536,9 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
                                     SizedBox(
                                       height: 4,
                                       child: LinearProgressIndicator(
-                                        backgroundColor:
-                                            AppTheme.surfaceVariant,
+                                        backgroundColor: surfaceVariant,
                                         valueColor: AlwaysStoppedAnimation(
-                                          AppTheme.primaryColor,
+                                          primaryColor,
                                         ),
                                       ),
                                     ),
@@ -544,14 +551,12 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
                                       : _game.winner == 'draw'
                                       ? 'Draw Game!'
                                       : 'AI Won 🤖',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .headlineSmall
+                                  style: theme.textTheme.headlineSmall
                                       ?.copyWith(
                                         fontWeight: FontWeight.bold,
                                         color: _game.playerWon()
-                                            ? AppTheme.successColor
-                                            : AppTheme.warningColor,
+                                            ? AppColors.success
+                                            : AppColors.warning,
                                       ),
                                 ).animate().scale(
                                   duration: 500.ms,
@@ -560,7 +565,7 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
                             ],
                           ),
                         ),
-                        const SizedBox(height: AppTheme.space32),
+                        const SizedBox(height: AppDimensions.space32),
 
                         // Action Buttons
                         Row(
@@ -572,7 +577,7 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
                                 label: const Text('New Game'),
                               ),
                             ),
-                            const SizedBox(width: AppTheme.space16),
+                            const SizedBox(width: AppDimensions.space16),
                             Expanded(
                               child: OutlinedButton.icon(
                                 onPressed: () => Navigator.pop(context),
@@ -582,7 +587,7 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: AppTheme.space16),
+                        const SizedBox(height: AppDimensions.space16),
 
                         // Cooldown Info (if on cooldown)
                         Consumer<CooldownService>(
@@ -598,32 +603,32 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
                                 children: [
                                   Container(
                                     padding: const EdgeInsets.all(
-                                      AppTheme.space12,
+                                      AppDimensions.space12,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: AppTheme.warningColor.withValues(
+                                      color: AppColors.warning.withValues(
                                         alpha: 0.1,
                                       ),
                                       border: Border.all(
-                                        color: AppTheme.warningColor,
+                                        color: AppColors.warning,
                                       ),
                                       borderRadius: BorderRadius.circular(
-                                        AppTheme.radiusS,
+                                        AppDimensions.radiusS,
                                       ),
                                     ),
                                     child: Row(
                                       children: [
                                         const Icon(
                                           Icons.schedule,
-                                          color: AppTheme.warningColor,
+                                          color: AppColors.warning,
                                         ),
-                                        const SizedBox(width: AppTheme.space12),
+                                        const SizedBox(
+                                          width: AppDimensions.space12,
+                                        ),
                                         Expanded(
                                           child: Text(
                                             'Next game available in ${cooldownService.formatCooldown(remaining)}',
-                                            style: Theme.of(
-                                              context,
-                                            ).textTheme.bodySmall,
+                                            style: theme.textTheme.bodySmall,
                                           ),
                                         ),
                                       ],

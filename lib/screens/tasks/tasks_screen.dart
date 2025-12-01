@@ -3,7 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../../core/theme/app_theme.dart';
+import '../../core/theme/colors.dart';
+import '../../core/constants/dimensions.dart';
 import '../../models/task_model.dart';
 
 import '../../core/utils/device_utils.dart';
@@ -134,10 +135,16 @@ class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
 
     if (_loadingTaskIds.contains(taskId)) return;
 
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final surfaceColor = isDark
+        ? AppColors.surfaceDark
+        : AppColors.surfaceLight;
+
     // Show BottomSheet
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.surfaceColor,
+      backgroundColor: surfaceColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -147,10 +154,7 @@ class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'How to earn',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
+            Text('How to earn', style: theme.textTheme.headlineSmall),
             const SizedBox(height: 16),
             _buildStep(context, 1, 'Click "Start Task" to open the link.'),
             _buildStep(
@@ -178,6 +182,10 @@ class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
   }
 
   Widget _buildStep(BuildContext context, int step, String text) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.primaryDark : AppColors.primary;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -186,23 +194,21 @@ class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
             width: 24,
             height: 24,
             decoration: BoxDecoration(
-              color: AppTheme.primaryColor.withValues(alpha: 0.1),
+              color: primaryColor.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Center(
               child: Text(
                 '$step',
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: AppTheme.primaryColor,
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: primaryColor,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ),
           ),
           const SizedBox(width: 12),
-          Expanded(
-            child: Text(text, style: Theme.of(context).textTheme.bodyMedium),
-          ),
+          Expanded(child: Text(text, style: theme.textTheme.bodyMedium)),
         ],
       ),
     );
@@ -259,12 +265,19 @@ class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final textSecondary = isDark
+        ? AppColors.textSecondaryDark
+        : AppColors.textSecondaryLight;
+    final primaryColor = isDark ? AppColors.primaryDark : AppColors.primary;
+
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: _isLoading
             ? ListView.builder(
-                padding: const EdgeInsets.all(AppTheme.space16),
+                padding: const EdgeInsets.all(AppDimensions.space16),
                 itemCount: 6,
                 itemBuilder: (context, index) => const Padding(
                   padding: EdgeInsets.only(bottom: 16.0),
@@ -274,23 +287,23 @@ class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
             : RefreshIndicator(
                 onRefresh: _loadTasks,
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(AppTheme.space16),
+                  padding: const EdgeInsets.all(AppDimensions.space16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Header
                       Text(
                         'Available Tasks',
-                        style: Theme.of(context).textTheme.headlineSmall,
+                        style: theme.textTheme.headlineSmall,
                       ),
-                      const SizedBox(height: AppTheme.space4),
+                      const SizedBox(height: AppDimensions.space4),
                       Text(
                         'Complete tasks to earn Coins',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppTheme.textSecondary,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: textSecondary,
                         ),
                       ),
-                      const SizedBox(height: AppTheme.space24),
+                      const SizedBox(height: AppDimensions.space24),
 
                       // Task List
                       Consumer<UserProvider>(
@@ -318,7 +331,7 @@ class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
                                     duration: '2 min', // Placeholder
                                     reward: task.reward,
                                     iconUrl: task.icon,
-                                    color: AppTheme.primaryColor,
+                                    color: primaryColor,
                                     isCompleted: isCompleted,
                                     isLoading: isLoading,
                                     onTap: () => _handleTaskTap(
@@ -332,11 +345,11 @@ class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
                                   if ((index + 1) % 3 == 0)
                                     const Padding(
                                       padding: EdgeInsets.only(
-                                        bottom: AppTheme.space12,
+                                        bottom: AppDimensions.space12,
                                       ),
                                       child: NativeAdWidget(),
                                     ),
-                                  const SizedBox(height: AppTheme.space12),
+                                  const SizedBox(height: AppDimensions.space12),
                                 ],
                               );
                             },
@@ -344,14 +357,14 @@ class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
                         },
                       ),
 
-                      const SizedBox(height: AppTheme.space32),
+                      const SizedBox(height: AppDimensions.space32),
 
                       // Completed Today
                       Text(
                         'Completed Today',
-                        style: Theme.of(context).textTheme.headlineSmall,
+                        style: theme.textTheme.headlineSmall,
                       ),
-                      const SizedBox(height: AppTheme.space12),
+                      const SizedBox(height: AppDimensions.space12),
 
                       Consumer<UserProvider>(
                         builder: (context, userProvider, _) {
@@ -375,12 +388,9 @@ class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
                                   const SizedBox(height: 16),
                                   Text(
                                     'No completed tasks yet',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium
-                                        ?.copyWith(
-                                          color: AppTheme.textSecondary,
-                                        ),
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: textSecondary,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -392,28 +402,28 @@ class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
                                 .map(
                                   (task) => Padding(
                                     padding: const EdgeInsets.only(
-                                      bottom: AppTheme.space12,
+                                      bottom: AppDimensions.space12,
                                     ),
                                     child: ZenCard(
                                       child: Row(
                                         children: [
                                           Container(
                                             padding: const EdgeInsets.all(
-                                              AppTheme.space8,
+                                              AppDimensions.space8,
                                             ),
                                             decoration: BoxDecoration(
-                                              color: AppTheme.successColor
+                                              color: AppColors.success
                                                   .withValues(alpha: 0.1),
                                               shape: BoxShape.circle,
                                             ),
                                             child: const Icon(
                                               Icons.check_circle,
-                                              color: AppTheme.successColor,
+                                              color: AppColors.success,
                                               size: 20,
                                             ),
                                           ),
                                           const SizedBox(
-                                            width: AppTheme.space12,
+                                            width: AppDimensions.space12,
                                           ),
                                           Column(
                                             crossAxisAlignment:
@@ -421,18 +431,14 @@ class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
                                             children: [
                                               Text(
                                                 task.title,
-                                                style: Theme.of(
-                                                  context,
-                                                ).textTheme.titleMedium,
+                                                style:
+                                                    theme.textTheme.titleMedium,
                                               ),
                                               Text(
                                                 'Earned ${task.reward} Coins',
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .bodySmall
+                                                style: theme.textTheme.bodySmall
                                                     ?.copyWith(
-                                                      color: AppTheme
-                                                          .textSecondary,
+                                                      color: textSecondary,
                                                     ),
                                               ),
                                             ],
@@ -480,37 +486,49 @@ class _TaskCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final surfaceColor = isDark
+        ? AppColors.surfaceDark
+        : AppColors.surfaceLight;
+    final surfaceVariant = isDark
+        ? AppColors.surfaceVariantDark
+        : AppColors.surfaceVariantLight;
+    final textSecondary = isDark
+        ? AppColors.textSecondaryDark
+        : AppColors.textSecondaryLight;
+
     return ScaleButton(
       onTap: isCompleted || isLoading ? null : onTap,
       child: Container(
-        margin: const EdgeInsets.only(bottom: AppTheme.space12),
-        padding: const EdgeInsets.all(AppTheme.space16),
+        margin: const EdgeInsets.only(bottom: AppDimensions.space12),
+        padding: const EdgeInsets.all(AppDimensions.space16),
         decoration: BoxDecoration(
           color: isCompleted
-              ? AppTheme.surfaceVariant.withValues(alpha: 0.5)
-              : AppTheme.surfaceColor,
-          borderRadius: BorderRadius.circular(AppTheme.radiusL),
+              ? surfaceVariant.withValues(alpha: 0.5)
+              : surfaceColor,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusL),
           boxShadow: isCompleted
               ? null
               : [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
+                    color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
                 ],
           border: Border.all(
-            color: isCompleted ? Colors.transparent : AppTheme.surfaceVariant,
+            color: isCompleted ? Colors.transparent : surfaceVariant,
             width: 1,
           ),
         ),
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(AppTheme.space12),
+              padding: const EdgeInsets.all(AppDimensions.space12),
               decoration: BoxDecoration(
                 color: isCompleted ? Colors.grey : color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                borderRadius: BorderRadius.circular(AppDimensions.radiusM),
               ),
               child: isLoading
                   ? SizedBox(
@@ -539,62 +557,58 @@ class _TaskCard extends StatelessWidget {
                             size: 24,
                           )),
             ),
-            const SizedBox(width: AppTheme.space16),
+            const SizedBox(width: AppDimensions.space16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       decoration: isCompleted
                           ? TextDecoration.lineThrough
                           : null,
-                      color: isCompleted ? AppTheme.textSecondary : null,
+                      color: isCompleted ? textSecondary : null,
                     ),
                   ),
-                  const SizedBox(height: AppTheme.space4),
+                  const SizedBox(height: AppDimensions.space4),
                   Text(
                     isCompleted ? 'Completed' : description,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppTheme.textSecondary,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: textSecondary,
                     ),
                   ),
                   if (!isCompleted) ...[
-                    const SizedBox(height: AppTheme.space8),
+                    const SizedBox(height: AppDimensions.space8),
                     Row(
                       children: [
-                        Icon(
-                          Icons.schedule,
-                          size: 14,
-                          color: AppTheme.textSecondary,
-                        ),
-                        const SizedBox(width: AppTheme.space4),
+                        Icon(Icons.schedule, size: 14, color: textSecondary),
+                        const SizedBox(width: AppDimensions.space4),
                         Text(
                           duration,
-                          style: Theme.of(context).textTheme.labelSmall
-                              ?.copyWith(color: AppTheme.textSecondary),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: textSecondary,
+                          ),
                         ),
-                        const SizedBox(width: AppTheme.space12),
+                        const SizedBox(width: AppDimensions.space12),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: AppTheme.space8,
-                            vertical: AppTheme.space4,
+                            horizontal: AppDimensions.space8,
+                            vertical: AppDimensions.space4,
                           ),
                           decoration: BoxDecoration(
-                            color: AppTheme.successColor.withValues(alpha: 0.1),
+                            color: AppColors.success.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(
-                              AppTheme.radiusS,
+                              AppDimensions.radiusS,
                             ),
                           ),
                           child: Text(
                             '+$reward Coins',
-                            style: Theme.of(context).textTheme.labelSmall
-                                ?.copyWith(
-                                  color: AppTheme.successColor,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: AppColors.success,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ],
@@ -604,13 +618,9 @@ class _TaskCard extends StatelessWidget {
               ),
             ),
             if (isCompleted)
-              const Icon(Icons.check_circle, color: AppTheme.successColor)
+              const Icon(Icons.check_circle, color: AppColors.success)
             else
-              Icon(
-                Icons.arrow_forward_ios,
-                size: 16,
-                color: AppTheme.textSecondary,
-              ),
+              Icon(Icons.arrow_forward_ios, size: 16, color: textSecondary),
           ],
         ),
       ),

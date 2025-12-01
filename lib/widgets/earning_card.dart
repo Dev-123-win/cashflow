@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_theme.dart';
+import '../core/theme/colors.dart';
+import '../core/constants/dimensions.dart';
 
 class EarningCard extends StatelessWidget {
   final String title;
@@ -23,16 +24,37 @@ class EarningCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surfaceColor = isDark
+        ? AppColors.surfaceDark
+        : AppColors.surfaceLight;
+    final surfaceVariant = isDark
+        ? AppColors.surfaceVariantDark
+        : AppColors.surfaceVariantLight;
+    final textTertiary = isDark
+        ? AppColors.textTertiaryDark
+        : AppColors.textTertiaryLight;
+    final textPrimary = isDark
+        ? AppColors.textPrimaryDark
+        : AppColors.textPrimaryLight;
+    final primaryColor = isDark ? AppColors.primaryDark : AppColors.primary;
+
     return GestureDetector(
       onTap: locked ? null : onTap,
       child: Container(
-        padding: const EdgeInsets.all(AppTheme.space16),
+        padding: const EdgeInsets.all(AppDimensions.space16),
         decoration: BoxDecoration(
-          color: locked ? AppTheme.surfaceVariant : AppTheme.surfaceColor,
-          borderRadius: BorderRadius.circular(AppTheme.radiusM),
-          boxShadow: AppTheme.cardShadow,
+          color: locked ? surfaceVariant : surfaceColor,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
           border: Border.all(
-            color: locked ? AppTheme.textTertiary : Colors.transparent,
+            color: locked ? textTertiary : Colors.transparent,
             width: 1,
           ),
         ),
@@ -42,46 +64,38 @@ class EarningCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  icon,
-                  style: const TextStyle(fontSize: 32),
-                ),
-                if (locked)
-                  const Icon(
-                    Icons.lock,
-                    color: AppTheme.textTertiary,
-                    size: 20,
-                  ),
+                Text(icon, style: const TextStyle(fontSize: 32)),
+                if (locked) Icon(Icons.lock, color: textTertiary, size: 20),
               ],
             ),
-            const SizedBox(height: AppTheme.space12),
+            const SizedBox(height: AppDimensions.space12),
             Text(
               title,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: locked ? AppTheme.textTertiary : AppTheme.textPrimary,
+                color: locked ? textTertiary : textPrimary,
               ),
             ),
-            const SizedBox(height: AppTheme.space4),
+            const SizedBox(height: AppDimensions.space4),
             Text(
               subtitle,
               style: Theme.of(context).textTheme.bodyMedium,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: AppTheme.space12),
+            const SizedBox(height: AppDimensions.space12),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   '+₹${reward.toStringAsFixed(2)}',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: AppTheme.successColor,
+                    color: AppColors.success,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 Icon(
                   Icons.arrow_forward,
-                  color: locked ? AppTheme.textTertiary : AppTheme.primaryColor,
+                  color: locked ? textTertiary : primaryColor,
                   size: 20,
                 ),
               ],

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:iconsax/iconsax.dart';
-import '../core/theme/app_theme.dart';
 import '../widgets/floating_dock.dart';
 import 'home/home_screen.dart';
 import 'arcade/arcade_screen.dart';
@@ -62,7 +61,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         }
       },
       child: Scaffold(
-        backgroundColor: AppTheme.backgroundColor,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         extendBody: true, // Important for floating dock
         body: Stack(
           children: [

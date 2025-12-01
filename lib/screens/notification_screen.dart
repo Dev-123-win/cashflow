@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../core/theme/app_theme.dart';
+import '../core/theme/colors.dart';
+import '../core/constants/dimensions.dart';
 import '../models/notification_model.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../core/constants/app_assets.dart';
@@ -45,12 +46,14 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Notifications'),
         centerTitle: true,
-        backgroundColor: AppTheme.backgroundColor,
+        backgroundColor: theme.scaffoldBackgroundColor,
         elevation: 0,
         actions: [
           if (_notifications.isNotEmpty)
@@ -99,7 +102,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                   const SizedBox(height: 16),
                   Text(
                     'No notifications yet',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    style: theme.textTheme.titleMedium?.copyWith(
                       color: Colors.grey.shade600,
                     ),
                   ),
@@ -107,7 +110,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
               ),
             )
           : ListView.builder(
-              padding: const EdgeInsets.all(AppTheme.space16),
+              padding: const EdgeInsets.all(AppDimensions.space16),
               itemCount: _notifications.length,
               itemBuilder: (context, index) {
                 final notification = _notifications[index];
@@ -125,17 +128,33 @@ class _NotificationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final surfaceColor = isDark
+        ? AppColors.surfaceDark
+        : AppColors.surfaceLight;
+    final primaryColor = isDark ? AppColors.primaryDark : AppColors.primary;
+    final textSecondary = isDark
+        ? AppColors.textSecondaryDark
+        : AppColors.textSecondaryLight;
+
     return Container(
-      margin: const EdgeInsets.only(bottom: AppTheme.space12),
-      padding: const EdgeInsets.all(AppTheme.space16),
+      margin: const EdgeInsets.only(bottom: AppDimensions.space12),
+      padding: const EdgeInsets.all(AppDimensions.space16),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceColor,
-        borderRadius: BorderRadius.circular(AppTheme.radiusM),
-        boxShadow: AppTheme.cardShadow,
+        color: surfaceColor,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
         border: Border.all(
           color: notification.isRead
               ? Colors.transparent
-              : AppTheme.primaryColor.withValues(alpha: 0.3),
+              : primaryColor.withValues(alpha: 0.3),
         ),
       ),
       child: Row(
@@ -144,16 +163,19 @@ class _NotificationCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: _getIconColor(notification.type).withValues(alpha: 0.1),
+              color: _getIconColor(
+                notification.type,
+                isDark,
+              ).withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
               _getIcon(notification.type),
-              color: _getIconColor(notification.type),
+              color: _getIconColor(notification.type, isDark),
               size: 20,
             ),
           ),
-          const SizedBox(width: AppTheme.space16),
+          const SizedBox(width: AppDimensions.space16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -164,13 +186,14 @@ class _NotificationCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         notification.title,
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.bold),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     Text(
                       _formatTime(notification.timestamp),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      style: theme.textTheme.bodySmall?.copyWith(
                         color: Colors.grey,
                         fontSize: 10,
                       ),
@@ -180,8 +203,8 @@ class _NotificationCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   notification.body,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.textSecondary,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: textSecondary,
                   ),
                 ),
               ],
@@ -204,15 +227,17 @@ class _NotificationCard extends StatelessWidget {
     }
   }
 
-  Color _getIconColor(String type) {
+  Color _getIconColor(String type, bool isDark) {
+    final primaryColor = isDark ? AppColors.primaryDark : AppColors.primary;
+
     switch (type) {
       case 'earning':
-        return Colors.green;
+        return AppColors.success;
       case 'reminder':
-        return Colors.orange;
+        return AppColors.warning;
       case 'system':
       default:
-        return AppTheme.primaryColor;
+        return primaryColor;
     }
   }
 

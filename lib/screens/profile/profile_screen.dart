@@ -3,7 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
-import '../../core/theme/app_theme.dart';
+import '../../core/theme/colors.dart';
+import '../../core/constants/dimensions.dart';
 import '../../providers/user_provider.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/zen_card.dart';
@@ -44,8 +45,13 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.primaryDark : AppColors.primary;
+    final secondaryColor = isDark ? AppColors.accentDark : AppColors.accent;
+
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -61,8 +67,8 @@ class ProfileScreen extends StatelessWidget {
               );
             },
             child: Container(
-              margin: const EdgeInsets.only(right: AppTheme.space12),
-              padding: const EdgeInsets.all(AppTheme.space8),
+              margin: const EdgeInsets.only(right: AppDimensions.space12),
+              padding: const EdgeInsets.all(AppDimensions.space8),
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
@@ -73,8 +79,8 @@ class ProfileScreen extends StatelessWidget {
           ScaleButton(
             onTap: () => _logout(context),
             child: Container(
-              margin: const EdgeInsets.only(right: AppTheme.space16),
-              padding: const EdgeInsets.all(AppTheme.space8),
+              margin: const EdgeInsets.only(right: AppDimensions.space16),
+              padding: const EdgeInsets.all(AppDimensions.space8),
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
@@ -111,10 +117,7 @@ class ProfileScreen extends StatelessWidget {
                       height: 320,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [
-                            AppTheme.primaryColor,
-                            AppTheme.secondaryColor,
-                          ],
+                          colors: [primaryColor, secondaryColor],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
@@ -178,7 +181,7 @@ class ProfileScreen extends StatelessWidget {
                                   style: TextStyle(
                                     fontSize: 40,
                                     fontWeight: FontWeight.bold,
-                                    color: AppTheme.primaryColor,
+                                    color: primaryColor,
                                   ),
                                 ),
                               ),
@@ -186,7 +189,7 @@ class ProfileScreen extends StatelessWidget {
                             .animate()
                             .scale(duration: 600.ms, curve: Curves.elasticOut)
                             .fadeIn(),
-                        const SizedBox(height: AppTheme.space16),
+                        const SizedBox(height: AppDimensions.space16),
                         Text(
                           user.displayName.isNotEmpty
                               ? user.displayName
@@ -198,7 +201,7 @@ class ProfileScreen extends StatelessWidget {
                               ),
                           textAlign: TextAlign.center,
                         ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2),
-                        const SizedBox(height: AppTheme.space4),
+                        const SizedBox(height: AppDimensions.space4),
                         Text(
                           user.email,
                           style: Theme.of(context).textTheme.bodyMedium
@@ -207,12 +210,12 @@ class ProfileScreen extends StatelessWidget {
                               ),
                           textAlign: TextAlign.center,
                         ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.2),
-                        const SizedBox(height: AppTheme.space16),
+                        const SizedBox(height: AppDimensions.space16),
                         if (currentUser?.metadata.creationTime != null)
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: AppTheme.space12,
-                              vertical: AppTheme.space4,
+                              horizontal: AppDimensions.space12,
+                              vertical: AppDimensions.space4,
                             ),
                             decoration: BoxDecoration(
                               color: Colors.white.withValues(alpha: 0.2),
@@ -233,7 +236,7 @@ class ProfileScreen extends StatelessWidget {
                 ),
 
                 Padding(
-                  padding: const EdgeInsets.all(AppTheme.space20),
+                  padding: const EdgeInsets.all(AppDimensions.space20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -242,8 +245,8 @@ class ProfileScreen extends StatelessWidget {
                         crossAxisCount: 2,
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        mainAxisSpacing: AppTheme.space16,
-                        crossAxisSpacing: AppTheme.space16,
+                        mainAxisSpacing: AppDimensions.space16,
+                        crossAxisSpacing: AppDimensions.space16,
                         childAspectRatio: 1.2,
                         children: [
                           _buildStatCard(
@@ -280,7 +283,7 @@ class ProfileScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: AppTheme.space32),
+                      const SizedBox(height: AppDimensions.space32),
 
                       // Achievements Section
                       Text(
@@ -289,7 +292,7 @@ class ProfileScreen extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                         ),
                       ).animate().fadeIn(delay: 900.ms).slideX(),
-                      const SizedBox(height: AppTheme.space16),
+                      const SizedBox(height: AppDimensions.space16),
                       _buildAchievementsGrid(context),
                       const SizedBox(height: 100), // Bottom padding
                     ],
@@ -306,6 +309,17 @@ class ProfileScreen extends StatelessWidget {
   Widget _buildAchievementsGrid(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final userId = userProvider.user.id;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final surfaceColor = isDark
+        ? AppColors.surfaceDark
+        : AppColors.surfaceLight;
+    final textSecondary = isDark
+        ? AppColors.textSecondaryDark
+        : AppColors.textSecondaryLight;
+    final textTertiary = isDark
+        ? AppColors.textTertiaryDark
+        : AppColors.textTertiaryLight;
 
     return StreamBuilder<List<AchievementUnlock>>(
       stream: AchievementService().getUserAchievements(userId),
@@ -397,8 +411,8 @@ class ProfileScreen extends StatelessWidget {
           crossAxisCount: 3,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: AppTheme.space12,
-          crossAxisSpacing: AppTheme.space12,
+          mainAxisSpacing: AppDimensions.space12,
+          crossAxisSpacing: AppDimensions.space12,
           children: displayAchievements.asMap().entries.map((entry) {
             final index = entry.key;
             final achievement = entry.value;
@@ -406,10 +420,8 @@ class ProfileScreen extends StatelessWidget {
             final color = achievement['color'] as Color;
 
             return ZenCard(
-                  padding: const EdgeInsets.all(AppTheme.space12),
-                  color: earned
-                      ? color.withValues(alpha: 0.1)
-                      : AppTheme.surfaceColor,
+                  padding: const EdgeInsets.all(AppDimensions.space12),
+                  color: earned ? color.withValues(alpha: 0.1) : surfaceColor,
                   border: earned
                       ? Border.all(color: color.withValues(alpha: 0.3))
                       : null,
@@ -419,13 +431,13 @@ class ProfileScreen extends StatelessWidget {
                       Icon(
                         achievement['icon'] as IconData,
                         size: 32,
-                        color: earned ? color : AppTheme.textTertiary,
+                        color: earned ? color : textTertiary,
                       ),
-                      const SizedBox(height: AppTheme.space8),
+                      const SizedBox(height: AppDimensions.space8),
                       Text(
                         achievement['name'] as String,
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: earned ? color : AppTheme.textSecondary,
+                          color: earned ? color : textSecondary,
                           fontWeight: earned
                               ? FontWeight.bold
                               : FontWeight.normal,
@@ -455,11 +467,23 @@ class ProfileScreen extends StatelessWidget {
     Color color, {
     required int delay,
   }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final surfaceColor = isDark
+        ? AppColors.surfaceDark
+        : AppColors.surfaceLight;
+    final surfaceVariant = isDark
+        ? AppColors.surfaceVariantDark
+        : AppColors.surfaceVariantLight;
+    final textSecondary = isDark
+        ? AppColors.textSecondaryDark
+        : AppColors.textSecondaryLight;
+
     return Container(
-      padding: const EdgeInsets.all(AppTheme.space16),
+      padding: const EdgeInsets.all(AppDimensions.space16),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceColor,
-        borderRadius: BorderRadius.circular(AppTheme.radiusL),
+        color: surfaceColor,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusL),
         boxShadow: [
           BoxShadow(
             color: color.withValues(alpha: 0.1),
@@ -467,14 +491,14 @@ class ProfileScreen extends StatelessWidget {
             offset: const Offset(0, 8),
           ),
         ],
-        border: Border.all(color: AppTheme.surfaceVariant, width: 1),
+        border: Border.all(color: surfaceVariant, width: 1),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(AppTheme.space8),
+            padding: const EdgeInsets.all(AppDimensions.space8),
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
@@ -484,16 +508,15 @@ class ProfileScreen extends StatelessWidget {
           const Spacer(),
           Text(
             value,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: AppTheme.textPrimary,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 2),
           Text(
             label,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppTheme.textSecondary,
+              color: textSecondary,
               fontWeight: FontWeight.w500,
             ),
           ),

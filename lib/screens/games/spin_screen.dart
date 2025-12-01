@@ -5,7 +5,8 @@ import 'package:flutter_fortune_wheel/flutter_fortune_wheel.dart';
 import 'package:confetti/confetti.dart';
 import 'dart:math' as math;
 import 'dart:async';
-import '../../core/theme/app_theme.dart';
+import '../../core/theme/colors.dart';
+import '../../core/constants/dimensions.dart';
 import '../../core/constants/app_constants.dart';
 import '../../services/cooldown_service.dart';
 import '../../services/device_fingerprint_service.dart';
@@ -228,17 +229,17 @@ class _SpinScreenState extends State<SpinScreen> {
               'Congratulations!',
               style: Theme.of(context).textTheme.titleMedium,
             ),
-            const SizedBox(height: AppTheme.space16),
+            const SizedBox(height: AppDimensions.space16),
             Container(
-              padding: const EdgeInsets.all(AppTheme.space16),
+              padding: const EdgeInsets.all(AppDimensions.space16),
               decoration: BoxDecoration(
-                color: AppTheme.successColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                color: AppColors.success.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(AppDimensions.radiusM),
               ),
               child: Text(
                 '$reward Coins earned!',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: AppTheme.successColor,
+                  color: AppColors.success,
                   fontWeight: FontWeight.bold,
                 ),
                 textAlign: TextAlign.center,
@@ -258,8 +259,17 @@ class _SpinScreenState extends State<SpinScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.primaryDark : AppColors.primary;
+    final secondaryColor = isDark ? AppColors.accentDark : AppColors.accent;
+    final surfaceColor = isDark
+        ? AppColors.surfaceDark
+        : AppColors.surfaceLight;
+    final tertiaryColor = AppColors.warning;
+
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -286,7 +296,7 @@ class _SpinScreenState extends State<SpinScreen> {
                 children: [
                   Expanded(
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(AppTheme.space16),
+                      padding: const EdgeInsets.all(AppDimensions.space16),
                       child: Column(
                         children: [
                           // Info Card
@@ -299,18 +309,14 @@ class _SpinScreenState extends State<SpinScreen> {
                                   children: [
                                     Text(
                                       'Daily Spin',
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.titleMedium,
+                                      style: theme.textTheme.titleMedium,
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
                                       'Win up to 750 Coins',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium
+                                      style: theme.textTheme.bodyMedium
                                           ?.copyWith(
-                                            color: AppTheme.successColor,
+                                            color: AppColors.success,
                                             fontWeight: FontWeight.bold,
                                           ),
                                     ),
@@ -318,31 +324,26 @@ class _SpinScreenState extends State<SpinScreen> {
                                 ),
                                 Container(
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: AppTheme.space12,
-                                    vertical: AppTheme.space8,
+                                    horizontal: AppDimensions.space12,
+                                    vertical: AppDimensions.space8,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: AppTheme.primaryColor.withValues(
-                                      alpha: 0.1,
-                                    ),
+                                    color: primaryColor.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(
-                                      AppTheme.radiusS,
+                                      AppDimensions.radiusS,
                                     ),
                                   ),
                                   child: Text(
                                     'One per day',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .labelSmall
-                                        ?.copyWith(
-                                          color: AppTheme.primaryColor,
-                                        ),
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: primaryColor,
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                          const SizedBox(height: AppTheme.space32),
+                          const SizedBox(height: AppDimensions.space32),
 
                           // Spin Wheel
                           SizedBox(
@@ -355,7 +356,9 @@ class _SpinScreenState extends State<SpinScreen> {
                                   width: 320,
                                   height: 320,
                                   child: CustomPaint(
-                                    painter: WheelLightsPainter(),
+                                    painter: WheelLightsPainter(
+                                      primaryColor: primaryColor,
+                                    ),
                                   ),
                                 ),
 
@@ -392,7 +395,7 @@ class _SpinScreenState extends State<SpinScreen> {
                                         ),
                                         style: FortuneItemStyle(
                                           color: _getSegmentColor(index),
-                                          borderColor: AppTheme.surfaceColor,
+                                          borderColor: surfaceColor,
                                           borderWidth: 2,
                                         ),
                                       ),
@@ -413,16 +416,24 @@ class _SpinScreenState extends State<SpinScreen> {
                                   decoration: BoxDecoration(
                                     color: Colors.white,
                                     shape: BoxShape.circle,
-                                    boxShadow: AppTheme.softShadow,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(
+                                          alpha: 0.1,
+                                        ),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
                                     border: Border.all(
-                                      color: AppTheme.primaryColor,
+                                      color: primaryColor,
                                       width: 4,
                                     ),
                                   ),
                                   child: Center(
                                     child: Icon(
                                       Icons.star,
-                                      color: AppTheme.tertiaryColor,
+                                      color: tertiaryColor,
                                       size: 32,
                                     ),
                                   ),
@@ -430,7 +441,7 @@ class _SpinScreenState extends State<SpinScreen> {
                               ],
                             ),
                           ),
-                          const SizedBox(height: AppTheme.space32),
+                          const SizedBox(height: AppDimensions.space32),
 
                           // Spin Button
                           ScaleButton(
@@ -439,22 +450,27 @@ class _SpinScreenState extends State<SpinScreen> {
                                 : null,
                             child: Container(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: AppTheme.space48,
-                                vertical: AppTheme.space16,
+                                horizontal: AppDimensions.space48,
+                                vertical: AppDimensions.space16,
                               ),
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
                                   colors: canSpin
-                                      ? [
-                                          AppTheme.primaryColor,
-                                          AppTheme.secondaryColor,
-                                        ]
+                                      ? [primaryColor, secondaryColor]
                                       : [Colors.grey, Colors.grey],
                                 ),
                                 borderRadius: BorderRadius.circular(
-                                  AppTheme.radiusXL,
+                                  AppDimensions.radiusXL,
                                 ),
-                                boxShadow: AppTheme.elevatedShadow,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color:
+                                        (canSpin ? primaryColor : Colors.grey)
+                                            .withValues(alpha: 0.3),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 6),
+                                  ),
+                                ],
                               ),
                               child: Text(
                                 _isSpinning
@@ -470,38 +486,32 @@ class _SpinScreenState extends State<SpinScreen> {
                               ),
                             ),
                           ),
-                          const SizedBox(height: AppTheme.space32),
+                          const SizedBox(height: AppDimensions.space32),
 
                           // Last Spin Result
                           if (_lastSpinReward != null)
                             ZenCard(
-                              color: AppTheme.successColor.withValues(
-                                alpha: 0.05,
-                              ),
+                              color: AppColors.success.withValues(alpha: 0.05),
                               child: Row(
                                 children: [
                                   const Icon(
                                     Icons.check_circle,
-                                    color: AppTheme.successColor,
+                                    color: AppColors.success,
                                   ),
-                                  const SizedBox(width: AppTheme.space12),
+                                  const SizedBox(width: AppDimensions.space12),
                                   Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         'Last Spin',
-                                        style: Theme.of(
-                                          context,
-                                        ).textTheme.labelSmall,
+                                        style: theme.textTheme.labelSmall,
                                       ),
                                       Text(
                                         '$_lastSpinReward Coins won',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleMedium
+                                        style: theme.textTheme.titleMedium
                                             ?.copyWith(
-                                              color: AppTheme.successColor,
+                                              color: AppColors.success,
                                               fontWeight: FontWeight.bold,
                                             ),
                                       ),
@@ -555,8 +565,13 @@ class _SpinScreenState extends State<SpinScreen> {
 class WheelLightsPainter extends CustomPainter {
   final int lightsCount;
   final Color color;
+  final Color primaryColor;
 
-  WheelLightsPainter({this.lightsCount = 12, this.color = Colors.white});
+  WheelLightsPainter({
+    this.lightsCount = 12,
+    this.color = Colors.white,
+    required this.primaryColor,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -568,7 +583,7 @@ class WheelLightsPainter extends CustomPainter {
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
 
     final borderPaint = Paint()
-      ..color = AppTheme.primaryColor
+      ..color = primaryColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = 8;
 

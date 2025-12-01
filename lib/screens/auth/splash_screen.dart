@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../core/constants/app_assets.dart';
-import '../../core/theme/app_theme.dart';
+import '../../core/theme/colors.dart';
+import '../../core/constants/dimensions.dart';
 import '../../services/cloudflare_workers_service.dart';
 import '../../widgets/custom_dialog.dart';
 
@@ -50,23 +51,12 @@ class _SplashScreenState extends State<SplashScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => CustomDialog(
+      builder: (context) => ErrorDialog(
         title: 'Connection Error',
-        emoji: '⚠️',
-        content: Text(message),
-        actions: [
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _checkBackendHealth();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primaryColor,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Retry'),
-          ),
-        ],
+        message: message,
+        onRetry: () {
+          _checkBackendHealth();
+        },
       ),
     );
   }
@@ -75,19 +65,13 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [AppTheme.primaryColor, AppTheme.secondaryColor],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
+        decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                padding: const EdgeInsets.all(AppTheme.space24),
+                padding: const EdgeInsets.all(AppDimensions.space24),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
@@ -111,16 +95,15 @@ class _SplashScreenState extends State<SplashScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: AppTheme.space32),
+              const SizedBox(height: AppDimensions.space32),
               Text(
                 'EarnQuest',
-                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                style: Theme.of(context).textTheme.displayMedium?.copyWith(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
-                  fontSize: 40,
                 ),
               ),
-              const SizedBox(height: AppTheme.space8),
+              const SizedBox(height: AppDimensions.space8),
               Text(
                 'Earn Money Made Easy',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -128,7 +111,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   letterSpacing: 1.2,
                 ),
               ),
-              const SizedBox(height: AppTheme.space48),
+              const SizedBox(height: AppDimensions.space48),
               const CircularProgressIndicator(
                 valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                 strokeWidth: 3,

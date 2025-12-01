@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import '../core/theme/app_theme.dart';
+import '../core/theme/colors.dart';
+import '../core/constants/dimensions.dart';
 
 /// Premium Floating Dock Navigation Bar
 ///
@@ -35,12 +36,18 @@ class _FloatingDockState extends State<FloatingDock> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surfaceColor = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
+    final surfaceVariant = isDark ? AppColors.surfaceVariantDark : AppColors.surfaceVariantLight;
+    final primaryColor = isDark ? AppColors.primaryDark : AppColors.primary;
+    final secondaryColor = isDark ? AppColors.primaryLight : AppColors.primary;
+
     return Container(
-      margin: const EdgeInsets.all(AppTheme.space20),
+      margin: const EdgeInsets.all(AppDimensions.space20),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceColor,
-        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-        border: Border.all(color: AppTheme.surfaceVariant, width: 1),
+        color: surfaceColor,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
+        border: Border.all(color: surfaceVariant, width: 1),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.1),
@@ -48,24 +55,24 @@ class _FloatingDockState extends State<FloatingDock> {
             offset: const Offset(0, 10),
           ),
           BoxShadow(
-            color: AppTheme.primaryColor.withValues(alpha: 0.15),
+            color: primaryColor.withValues(alpha: 0.15),
             blurRadius: 30,
             offset: const Offset(0, 15),
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+        borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
         child: Padding(
           padding: const EdgeInsets.symmetric(
-            horizontal: AppTheme.space12,
-            vertical: AppTheme.space8,
+            horizontal: AppDimensions.space12,
+            vertical: AppDimensions.space8,
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             mainAxisSize: MainAxisSize.min,
             children: List.generate(widget.icons.length, (index) {
-              return _buildNavItem(index);
+              return _buildNavItem(index, isDark, surfaceVariant, primaryColor, secondaryColor);
             }),
           ),
         ),
@@ -73,7 +80,7 @@ class _FloatingDockState extends State<FloatingDock> {
     );
   }
 
-  Widget _buildNavItem(int index) {
+  Widget _buildNavItem(int index, bool isDark, Color surfaceVariant, Color primaryColor, Color secondaryColor) {
     final isSelected = widget.currentIndex == index;
     final isHovered = _hoveredIndex == index;
     final isFab = index == 2; // Center item is FAB
@@ -102,29 +109,29 @@ class _FloatingDockState extends State<FloatingDock> {
             duration: const Duration(milliseconds: 400),
             curve: Curves.easeOutCubic,
             margin: EdgeInsets.symmetric(
-              horizontal: isFab ? AppTheme.space8 : AppTheme.space4,
+              horizontal: isFab ? AppDimensions.space8 : AppDimensions.space4,
             ),
             padding: EdgeInsets.all(
               isFab
                   ? 16.0
                   : isSelected
                   ? 14.0
-                  : AppTheme.space12,
+                  : AppDimensions.space12,
             ),
             decoration: BoxDecoration(
               gradient: isFab
                   ? LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [AppTheme.primaryColor, AppTheme.secondaryColor],
+                      colors: [primaryColor, secondaryColor],
                     )
                   : isSelected
                   ? LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        AppTheme.primaryColor.withValues(alpha: 0.3),
-                        AppTheme.secondaryColor.withValues(alpha: 0.2),
+                        primaryColor.withValues(alpha: 0.3),
+                        secondaryColor.withValues(alpha: 0.2),
                       ],
                     )
                   : null,
@@ -132,12 +139,12 @@ class _FloatingDockState extends State<FloatingDock> {
                   ? Colors.white.withValues(alpha: 0.1)
                   : Colors.transparent,
               borderRadius: BorderRadius.circular(
-                isFab ? AppTheme.radiusXL : AppTheme.radiusL,
+                isFab ? AppDimensions.radiusXL : AppDimensions.radiusL,
               ),
               boxShadow: isFab
                   ? [
                       BoxShadow(
-                        color: AppTheme.primaryColor.withValues(alpha: 0.4),
+                        color: primaryColor.withValues(alpha: 0.4),
                         blurRadius: 12,
                         offset: const Offset(0, 6),
                       ),
@@ -145,7 +152,7 @@ class _FloatingDockState extends State<FloatingDock> {
                   : null,
               border: !isFab && isSelected
                   ? Border.all(
-                      color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                      color: primaryColor.withValues(alpha: 0.3),
                       width: 1,
                     )
                   : null,
@@ -162,7 +169,7 @@ class _FloatingDockState extends State<FloatingDock> {
                       color: isFab
                           ? Colors.white
                           : isSelected
-                          ? AppTheme.primaryColor
+                          ? primaryColor
                           : Theme.of(context).colorScheme.onSurfaceVariant
                                 .withValues(alpha: 0.7),
                       size: isFab ? 32 : (isSelected ? 26 : 24),
@@ -178,7 +185,7 @@ class _FloatingDockState extends State<FloatingDock> {
                       duration: 1500.ms,
                       color: isFab
                           ? Colors.white.withValues(alpha: 0.5)
-                          : AppTheme.primaryColor.withValues(alpha: 0.3),
+                          : primaryColor.withValues(alpha: 0.3),
                     ),
 
                 // Active indicator dot (Hidden for FAB)
@@ -188,16 +195,16 @@ class _FloatingDockState extends State<FloatingDock> {
                         width: 5,
                         height: 5,
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(
+                          gradient: LinearGradient(
                             colors: [
-                              AppTheme.primaryColor,
-                              AppTheme.secondaryColor,
+                              primaryColor,
+                              secondaryColor,
                             ],
                           ),
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: AppTheme.primaryColor.withValues(
+                              color: primaryColor.withValues(
                                 alpha: 0.5,
                               ),
                               blurRadius: 8,
@@ -228,22 +235,22 @@ class _FloatingDockState extends State<FloatingDock> {
                 child:
                     Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: AppTheme.space12,
+                            horizontal: AppDimensions.space12,
                             vertical: 6.0,
                           ),
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(
+                            gradient: LinearGradient(
                               colors: [
-                                AppTheme.primaryColor,
-                                AppTheme.secondaryColor,
+                                primaryColor,
+                                secondaryColor,
                               ],
                             ),
                             borderRadius: BorderRadius.circular(
-                              AppTheme.radiusM,
+                              AppDimensions.radiusM,
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: AppTheme.primaryColor.withValues(
+                                color: primaryColor.withValues(
                                   alpha: 0.3,
                                 ),
                                 blurRadius: 12,
@@ -285,12 +292,12 @@ class _FloatingDockState extends State<FloatingDock> {
                   Container(
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(
-                            isFab ? AppTheme.radiusXL : AppTheme.radiusL,
+                            isFab ? AppDimensions.radiusXL : AppDimensions.radiusL,
                           ),
                           border: Border.all(
                             color: isFab
                                 ? Colors.white.withValues(alpha: 0.3)
-                                : AppTheme.primaryColor.withValues(alpha: 0.3),
+                                : primaryColor.withValues(alpha: 0.3),
                             width: 2,
                           ),
                         ),

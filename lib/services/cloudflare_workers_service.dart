@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:crypto/crypto.dart';
+import '../core/constants/app_constants.dart';
 
 /// CloudflareWorkersService
 ///
@@ -12,8 +13,7 @@ import 'package:crypto/crypto.dart';
 /// - Withdrawal requests
 /// - User statistics
 class CloudflareWorkersService {
-  static const String _baseUrl =
-      'https://earnquest-worker.earnplay12345.workers.dev';
+  static const String _baseUrl = AppConstants.baseUrl;
   static const Duration _timeout = Duration(seconds: 30);
 
   // TODO: In production, use a more secure way to manage secrets (e.g. obfuscation)

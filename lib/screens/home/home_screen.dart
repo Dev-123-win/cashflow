@@ -7,7 +7,8 @@ import 'package:confetti/confetti.dart';
 
 import 'package:lottie/lottie.dart';
 import '../../core/constants/app_assets.dart';
-import '../../core/theme/app_theme.dart';
+import '../../core/theme/colors.dart';
+import '../../core/constants/dimensions.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/task_provider.dart';
 import '../../widgets/parallax_balance_card.dart';
@@ -94,8 +95,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final surfaceColor = isDark
+        ? AppColors.surfaceDark
+        : AppColors.surfaceLight;
+    final tertiaryColor = AppColors.accent;
+
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Stack(
         children: [
           CustomScrollView(
@@ -105,10 +113,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 floating: true,
                 backgroundColor: Colors.transparent,
                 elevation: 0,
-                title: Text(
-                  'EarnQuest',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
+                title: Text('EarnQuest', style: theme.textTheme.headlineSmall),
                 actions: [
                   ScaleButton(
                     onTap: () {
@@ -120,16 +125,24 @@ class _HomeScreenState extends State<HomeScreen> {
                       );
                     },
                     child: Container(
-                      padding: const EdgeInsets.all(AppTheme.space8),
+                      padding: const EdgeInsets.all(AppDimensions.space8),
                       decoration: BoxDecoration(
-                        color: AppTheme.surfaceColor,
+                        color: surfaceColor,
                         shape: BoxShape.circle,
-                        boxShadow: AppTheme.softShadow,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(
+                              alpha: isDark ? 0.3 : 0.05,
+                            ),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: const Icon(Icons.notifications_outlined),
                     ),
                   ),
-                  const SizedBox(width: AppTheme.space12),
+                  const SizedBox(width: AppDimensions.space12),
                   ScaleButton(
                     onTap: () {
                       Navigator.push(
@@ -140,22 +153,30 @@ class _HomeScreenState extends State<HomeScreen> {
                       );
                     },
                     child: Container(
-                      padding: const EdgeInsets.all(AppTheme.space8),
+                      padding: const EdgeInsets.all(AppDimensions.space8),
                       decoration: BoxDecoration(
-                        color: AppTheme.surfaceColor,
+                        color: surfaceColor,
                         shape: BoxShape.circle,
-                        boxShadow: AppTheme.softShadow,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(
+                              alpha: isDark ? 0.3 : 0.05,
+                            ),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: const Icon(Icons.casino_outlined),
                     ),
                   ),
-                  const SizedBox(width: AppTheme.space16),
+                  const SizedBox(width: AppDimensions.space16),
                 ],
               ),
 
               // Main Content
               SliverPadding(
-                padding: const EdgeInsets.all(AppTheme.space16),
+                padding: const EdgeInsets.all(AppDimensions.space16),
                 sliver: SliverToBoxAdapter(
                   child: Selector<UserProvider, bool>(
                     selector: (_, provider) => provider.isLoading,
@@ -167,11 +188,11 @@ class _HomeScreenState extends State<HomeScreen> {
                               height: 200,
                               shapeBorder: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.all(
-                                  Radius.circular(AppTheme.radiusL),
+                                  Radius.circular(AppDimensions.radiusL),
                                 ),
                               ),
                             ),
-                            const SizedBox(height: AppTheme.space24),
+                            const SizedBox(height: AppDimensions.space24),
                             Row(
                               children: [
                                 Expanded(
@@ -179,18 +200,18 @@ class _HomeScreenState extends State<HomeScreen> {
                                     height: 100,
                                     shapeBorder: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.all(
-                                        Radius.circular(AppTheme.radiusM),
+                                        Radius.circular(AppDimensions.radiusM),
                                       ),
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: AppTheme.space12),
+                                const SizedBox(width: AppDimensions.space12),
                                 Expanded(
                                   child: const ShimmerLoading.rectangular(
                                     height: 100,
                                     shapeBorder: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.all(
-                                        Radius.circular(AppTheme.radiusM),
+                                        Radius.circular(AppDimensions.radiusM),
                                       ),
                                     ),
                                   ),
@@ -230,7 +251,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               },
                             ),
                           ),
-                          const SizedBox(height: AppTheme.space24),
+                          const SizedBox(height: AppDimensions.space24),
 
                           // Daily Goal Card
                           Consumer<TaskProvider>(
@@ -238,7 +259,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               return _buildDailyGoalCard(context, taskProvider);
                             },
                           ),
-                          const SizedBox(height: AppTheme.space16),
+                          const SizedBox(height: AppDimensions.space16),
 
                           // Streak & Leaderboard
                           Row(
@@ -261,22 +282,20 @@ class _HomeScreenState extends State<HomeScreen> {
                                           const SizedBox(width: 4),
                                           Text(
                                             'Streak',
-                                            style: Theme.of(
-                                              context,
-                                            ).textTheme.bodyMedium,
+                                            style: theme.textTheme.bodyMedium,
                                           ),
                                         ],
                                       ),
-                                      const SizedBox(height: AppTheme.space4),
+                                      const SizedBox(
+                                        height: AppDimensions.space4,
+                                      ),
                                       Selector<UserProvider, int>(
                                         selector: (_, provider) =>
                                             provider.user.streak,
                                         builder: (context, streak, _) {
                                           return Text(
                                             '$streak Days',
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .titleLarge
+                                            style: theme.textTheme.titleLarge
                                                 ?.copyWith(
                                                   fontWeight: FontWeight.bold,
                                                 ),
@@ -287,7 +306,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: AppTheme.space12),
+                              const SizedBox(width: AppDimensions.space12),
                               Expanded(
                                 child: ZenCard(
                                   onTap: () {
@@ -306,26 +325,24 @@ class _HomeScreenState extends State<HomeScreen> {
                                     children: [
                                       Row(
                                         children: [
-                                          const Icon(
+                                          Icon(
                                             Icons.emoji_events_outlined,
                                             size: 24,
-                                            color: AppTheme.tertiaryColor,
+                                            color: tertiaryColor,
                                           ),
                                           const SizedBox(width: 4),
                                           Text(
                                             'Rank',
-                                            style: Theme.of(
-                                              context,
-                                            ).textTheme.bodyMedium,
+                                            style: theme.textTheme.bodyMedium,
                                           ),
                                         ],
                                       ),
-                                      const SizedBox(height: AppTheme.space4),
+                                      const SizedBox(
+                                        height: AppDimensions.space4,
+                                      ),
                                       Text(
                                         _userRank,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleLarge
+                                        style: theme.textTheme.titleLarge
                                             ?.copyWith(
                                               fontWeight: FontWeight.bold,
                                             ),
@@ -336,18 +353,18 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: AppTheme.space24),
+                          const SizedBox(height: AppDimensions.space24),
 
                           // Bento Grid for Earning Options
                           Text(
                             'Start Earning',
-                            style: Theme.of(context).textTheme.headlineSmall,
+                            style: theme.textTheme.headlineSmall,
                           ),
-                          const SizedBox(height: AppTheme.space16),
+                          const SizedBox(height: AppDimensions.space16),
                           StaggeredGrid.count(
                             crossAxisCount: 2,
-                            mainAxisSpacing: AppTheme.space12,
-                            crossAxisSpacing: AppTheme.space12,
+                            mainAxisSpacing: AppDimensions.space12,
+                            crossAxisSpacing: AppDimensions.space12,
                             children: [
                               StaggeredGridTile.count(
                                 crossAxisCellCount: 2,
@@ -433,14 +450,14 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: AppTheme.space24),
+                          const SizedBox(height: AppDimensions.space24),
 
                           // Quick Links
                           Text(
                             'Quick Links',
-                            style: Theme.of(context).textTheme.headlineSmall,
+                            style: theme.textTheme.headlineSmall,
                           ),
-                          const SizedBox(height: AppTheme.space16),
+                          const SizedBox(height: AppDimensions.space16),
                           ZenCard(
                             child: Column(
                               children: [
@@ -520,13 +537,25 @@ class _HomeScreenState extends State<HomeScreen> {
     required Color color,
     required VoidCallback onTap,
   }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final surfaceColor = isDark
+        ? AppColors.surfaceDark
+        : AppColors.surfaceLight;
+    final surfaceVariant = isDark
+        ? AppColors.surfaceVariantDark
+        : AppColors.surfaceVariantLight;
+    final textSecondary = isDark
+        ? AppColors.textSecondaryDark
+        : AppColors.textSecondaryLight;
+
     return ScaleButton(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(AppTheme.space16),
+        padding: const EdgeInsets.all(AppDimensions.space16),
         decoration: BoxDecoration(
-          color: AppTheme.surfaceColor,
-          borderRadius: BorderRadius.circular(AppTheme.radiusL),
+          color: surfaceColor,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusL),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.05),
@@ -534,27 +563,27 @@ class _HomeScreenState extends State<HomeScreen> {
               offset: const Offset(0, 4),
             ),
           ],
-          border: Border.all(color: AppTheme.surfaceVariant, width: 1),
+          border: Border.all(color: surfaceVariant, width: 1),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Container(
-              padding: const EdgeInsets.all(AppTheme.space12),
+              padding: const EdgeInsets.all(AppDimensions.space12),
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: color, size: 24),
             ),
-            const SizedBox(height: AppTheme.space16),
+            const SizedBox(height: AppDimensions.space16),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
@@ -562,8 +591,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppTheme.textSecondary,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: textSecondary,
                     fontSize: 12,
                   ),
                 ),
@@ -583,14 +612,29 @@ class _HomeScreenState extends State<HomeScreen> {
     required Color color,
     required VoidCallback onTap,
   }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final surfaceColor = isDark
+        ? AppColors.surfaceDark
+        : AppColors.surfaceLight;
+    final textSecondary = isDark
+        ? AppColors.textSecondaryDark
+        : AppColors.textSecondaryLight;
+
     return ScaleButton(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(AppTheme.space16),
+        padding: const EdgeInsets.all(AppDimensions.space16),
         decoration: BoxDecoration(
-          color: AppTheme.surfaceColor,
-          borderRadius: BorderRadius.circular(AppTheme.radiusM),
-          boxShadow: AppTheme.softShadow,
+          color: surfaceColor,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -602,14 +646,14 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Text(
                   title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 Text(
                   subtitle,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppTheme.textSecondary,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: textSecondary,
                   ),
                 ),
               ],
@@ -626,16 +670,23 @@ class _HomeScreenState extends State<HomeScreen> {
     required String title,
     required VoidCallback onTap,
   }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final surfaceVariant = isDark
+        ? AppColors.surfaceVariantDark
+        : AppColors.surfaceVariantLight;
+    final primaryColor = isDark ? AppColors.primaryDark : AppColors.primary;
+
     return ListTile(
       leading: Container(
-        padding: const EdgeInsets.all(AppTheme.space8),
+        padding: const EdgeInsets.all(AppDimensions.space8),
         decoration: BoxDecoration(
-          color: AppTheme.surfaceVariant,
-          borderRadius: BorderRadius.circular(AppTheme.radiusS),
+          color: surfaceVariant,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusS),
         ),
-        child: Icon(icon, color: AppTheme.primaryColor),
+        child: Icon(icon, color: primaryColor),
       ),
-      title: Text(title, style: Theme.of(context).textTheme.titleMedium),
+      title: Text(title, style: theme.textTheme.titleMedium),
       trailing: const Icon(Icons.arrow_forward_ios, size: 16),
       onTap: onTap,
       contentPadding: EdgeInsets.zero,
@@ -643,6 +694,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildDailyGoalCard(BuildContext context, TaskProvider taskProvider) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.primaryDark : AppColors.primary;
+
     final progress = (taskProvider.dailyEarnings / taskProvider.dailyCap).clamp(
       0.0,
       1.0,
@@ -654,20 +709,20 @@ class _HomeScreenState extends State<HomeScreen> {
         HapticFeedback.lightImpact();
       },
       child: Container(
-        padding: const EdgeInsets.all(AppTheme.space20),
+        padding: const EdgeInsets.all(AppDimensions.space20),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              AppTheme.primaryColor,
+              primaryColor,
               Color(0xFF8B85FF), // Lighter shade
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+          borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
           boxShadow: [
             BoxShadow(
-              color: AppTheme.primaryColor.withValues(alpha: 0.3),
+              color: primaryColor.withValues(alpha: 0.3),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -684,7 +739,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     Text(
                       'Daily Goal',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      style: theme.textTheme.titleMedium?.copyWith(
                         color: Colors.white.withValues(alpha: 0.9),
                         fontWeight: FontWeight.w600,
                       ),
@@ -692,7 +747,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 4),
                     Text(
                       '${(taskProvider.dailyCap - taskProvider.dailyEarnings).toInt()} Coins left',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      style: theme.textTheme.bodySmall?.copyWith(
                         color: Colors.white.withValues(alpha: 0.8),
                       ),
                     ),
@@ -709,7 +764,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   child: Text(
                     '$percentage%',
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    style: theme.textTheme.titleSmall?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
                     ),
@@ -717,9 +772,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: AppTheme.space20),
+            const SizedBox(height: AppDimensions.space20),
             ClipRRect(
-              borderRadius: BorderRadius.circular(AppTheme.radiusS),
+              borderRadius: BorderRadius.circular(AppDimensions.radiusS),
               child: LinearProgressIndicator(
                 value: progress,
                 backgroundColor: Colors.black.withValues(alpha: 0.1),

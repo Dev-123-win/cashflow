@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_theme.dart';
+import '../core/theme/colors.dart';
+import '../core/constants/dimensions.dart';
 
 class BalanceCard extends StatelessWidget {
   final double balance;
@@ -16,18 +17,21 @@ class BalanceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppTheme.space24),
+      padding: const EdgeInsets.all(AppDimensions.space24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            AppTheme.primaryColor,
-            AppTheme.primaryColor.withValues(alpha: 0.8),
-          ],
+          colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.8)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(AppTheme.radiusL),
-        boxShadow: AppTheme.elevatedShadow,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.3),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -38,23 +42,23 @@ class BalanceCard extends StatelessWidget {
               context,
             ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
           ),
-          const SizedBox(height: AppTheme.space8),
+          const SizedBox(height: AppDimensions.space8),
           Text(
             '₹${balance.toStringAsFixed(2)}',
             style: Theme.of(
               context,
             ).textTheme.headlineLarge?.copyWith(color: Colors.white),
           ),
-          const SizedBox(height: AppTheme.space16),
+          const SizedBox(height: AppDimensions.space16),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
               onPressed: canWithdraw ? onWithdraw : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
-                foregroundColor: AppTheme.primaryColor,
+                foregroundColor: AppColors.primary,
                 disabledBackgroundColor: Colors.white.withValues(alpha: 0.4),
-                disabledForegroundColor: AppTheme.primaryColor.withValues(
+                disabledForegroundColor: AppColors.primary.withValues(
                   alpha: 0.5,
                 ),
               ),
@@ -68,7 +72,7 @@ class BalanceCard extends StatelessWidget {
                       child: Text(
                         'Min ₹50',
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: AppTheme.primaryColor.withValues(alpha: 0.6),
+                          color: AppColors.primary.withValues(alpha: 0.6),
                         ),
                       ),
                     ),

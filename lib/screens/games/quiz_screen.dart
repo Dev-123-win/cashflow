@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../core/theme/app_theme.dart';
+import '../../core/theme/colors.dart';
+import '../../core/constants/dimensions.dart';
 import '../../services/quiz_service.dart';
 import '../../services/ad_service.dart';
 import '../../providers/user_provider.dart';
@@ -198,37 +199,36 @@ class _QuizScreenState extends State<QuizScreen> {
           children: [
             CircleAvatar(
               radius: 48,
-              backgroundColor:
-                  (passed ? AppTheme.successColor : AppTheme.warningColor)
-                      .withValues(alpha: 0.2),
+              backgroundColor: (passed ? AppColors.success : AppColors.warning)
+                  .withValues(alpha: 0.2),
               child: Text(
                 '${(correct / total * 100).toStringAsFixed(0)}%',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: passed ? AppTheme.successColor : AppTheme.warningColor,
+                  color: passed ? AppColors.success : AppColors.warning,
                 ),
               ),
             ),
-            const SizedBox(height: AppTheme.space16),
+            const SizedBox(height: AppDimensions.space16),
             Text(
               '$correct/$total Correct',
               style: Theme.of(context).textTheme.titleMedium,
             ),
-            const SizedBox(height: AppTheme.space12),
+            const SizedBox(height: AppDimensions.space12),
             if (passed)
               Text(
                 'Watch Ad to claim 50 Coins!',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondaryLight,
+                ),
                 textAlign: TextAlign.center,
               )
             else
               Text(
                 'Get at least 3 correct to earn rewards.',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondaryLight,
+                ),
                 textAlign: TextAlign.center,
               ),
           ],
@@ -273,10 +273,12 @@ class _QuizScreenState extends State<QuizScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return PopScope(
       canPop: true,
       child: Scaffold(
-        backgroundColor: AppTheme.backgroundColor,
+        backgroundColor: theme.scaffoldBackgroundColor,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -302,57 +304,60 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   Widget _buildStartScreen() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final textSecondary = isDark
+        ? AppColors.textSecondaryDark
+        : AppColors.textSecondaryLight;
+
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppTheme.space16),
+      padding: const EdgeInsets.all(AppDimensions.space16),
       child: Column(
         children: [
-          const SizedBox(height: AppTheme.space32),
+          const SizedBox(height: AppDimensions.space32),
           ZenCard(
             child: Column(
               children: [
-                Text('🧠', style: Theme.of(context).textTheme.displaySmall),
-                const SizedBox(height: AppTheme.space24),
+                Text('🧠', style: theme.textTheme.displaySmall),
+                const SizedBox(height: AppDimensions.space24),
                 Text(
                   'Unlimited Quiz',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: AppTheme.space16),
+                const SizedBox(height: AppDimensions.space16),
                 Text(
                   'Answer 5 questions correctly to earn 50 Coins!',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.textSecondary,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: textSecondary,
                   ),
                   textAlign: TextAlign.center,
                 ),
               ],
             ),
           ),
-          const SizedBox(height: AppTheme.space32),
+          const SizedBox(height: AppDimensions.space32),
           ZenCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '📋 How It Works',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: AppTheme.space12),
+                Text('📋 How It Works', style: theme.textTheme.titleMedium),
+                const SizedBox(height: AppDimensions.space12),
                 Text(
                   '• You have 60 seconds for 5 questions\n'
                   '• Get 3+ correct to win\n'
                   '• Watch an ad to claim 50 Coins\n'
                   '• Play as many times as you want!',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppTheme.textSecondary,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: textSecondary,
                     height: 1.6,
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: AppTheme.space32),
+          const SizedBox(height: AppDimensions.space32),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
@@ -360,7 +365,7 @@ class _QuizScreenState extends State<QuizScreen> {
               icon: const Icon(Icons.play_arrow),
               label: const Text('Start Quiz'),
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.all(AppTheme.space16),
+                padding: const EdgeInsets.all(AppDimensions.space16),
               ),
             ),
           ),
@@ -370,12 +375,25 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   Widget _buildQuizScreen() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final surfaceColor = isDark
+        ? AppColors.surfaceDark
+        : AppColors.surfaceLight;
+    final surfaceVariant = isDark
+        ? AppColors.surfaceVariantDark
+        : AppColors.surfaceVariantLight;
+    final textSecondary = isDark
+        ? AppColors.textSecondaryDark
+        : AppColors.textSecondaryLight;
+    final primaryColor = isDark ? AppColors.primaryDark : AppColors.primary;
+
     final question = _questions[_currentQuestionIndex];
     final isAnswered = _answers[_currentQuestionIndex] != null;
     final progress = (_currentQuestionIndex + 1) / _questions.length;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppTheme.space16),
+      padding: const EdgeInsets.all(AppDimensions.space16),
       child: Column(
         children: [
           // Progress
@@ -387,32 +405,32 @@ class _QuizScreenState extends State<QuizScreen> {
                   children: [
                     Text(
                       'Question ${_currentQuestionIndex + 1}/${_questions.length}',
-                      style: Theme.of(context).textTheme.labelLarge,
+                      style: theme.textTheme.labelLarge,
                     ),
                     Text(
                       '${_timeRemaining}s',
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      style: theme.textTheme.labelLarge?.copyWith(
                         color: _timeRemaining <= 10
-                            ? AppTheme.errorColor
-                            : AppTheme.textSecondary,
+                            ? AppColors.error
+                            : textSecondary,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: AppTheme.space12),
+                const SizedBox(height: AppDimensions.space12),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
                     value: progress,
                     minHeight: 8,
-                    backgroundColor: AppTheme.surfaceVariant,
-                    valueColor: AlwaysStoppedAnimation(AppTheme.primaryColor),
+                    backgroundColor: surfaceVariant,
+                    valueColor: AlwaysStoppedAnimation(primaryColor),
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: AppTheme.space24),
+          const SizedBox(height: AppDimensions.space24),
 
           // Question
           ZenCard(
@@ -420,22 +438,22 @@ class _QuizScreenState extends State<QuizScreen> {
               children: [
                 Text(
                   question.question,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: AppTheme.space12),
+                const SizedBox(height: AppDimensions.space12),
                 Text(
                   question.category,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: AppTheme.primaryColor,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: primaryColor,
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: AppTheme.space24),
+          const SizedBox(height: AppDimensions.space24),
 
           // Options
           ...List.generate(question.options.length, (index) {
@@ -444,20 +462,26 @@ class _QuizScreenState extends State<QuizScreen> {
             return ScaleButton(
               onTap: () => _selectAnswer(index),
               child: Container(
-                margin: const EdgeInsets.only(bottom: AppTheme.space12),
-                padding: const EdgeInsets.all(AppTheme.space16),
+                margin: const EdgeInsets.only(bottom: AppDimensions.space12),
+                padding: const EdgeInsets.all(AppDimensions.space16),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? AppTheme.primaryColor.withValues(alpha: 0.2)
-                      : AppTheme.surfaceColor,
-                  borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                      ? primaryColor.withValues(alpha: 0.2)
+                      : surfaceColor,
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusM),
                   border: Border.all(
-                    color: isSelected
-                        ? AppTheme.primaryColor
-                        : AppTheme.surfaceVariant,
+                    color: isSelected ? primaryColor : surfaceVariant,
                     width: isSelected ? 2 : 1,
                   ),
-                  boxShadow: AppTheme.cardShadow,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(
+                        alpha: isDark ? 0.3 : 0.05,
+                      ),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: Row(
                   children: [
@@ -467,37 +491,35 @@ class _QuizScreenState extends State<QuizScreen> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: isSelected
-                            ? AppTheme.primaryColor
-                            : AppTheme.backgroundColor,
-                        border: Border.all(color: AppTheme.surfaceVariant),
+                            ? primaryColor
+                            : theme.scaffoldBackgroundColor,
+                        border: Border.all(color: surfaceVariant),
                       ),
                       child: Center(
                         child: Text(
                           String.fromCharCode(65 + index), // A, B, C, D
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: isSelected
-                                ? Colors.white
-                                : AppTheme.textSecondary,
+                            color: isSelected ? Colors.white : textSecondary,
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(width: AppTheme.space16),
+                    const SizedBox(width: AppDimensions.space16),
                     Expanded(
                       child: Text(
                         question.options[index],
-                        style: Theme.of(context).textTheme.bodyMedium,
+                        style: theme.textTheme.bodyMedium,
                       ),
                     ),
                     if (isSelected)
-                      Icon(Icons.check_circle, color: AppTheme.primaryColor),
+                      Icon(Icons.check_circle, color: primaryColor),
                   ],
                 ),
               ),
             );
           }),
-          const SizedBox(height: AppTheme.space32),
+          const SizedBox(height: AppDimensions.space32),
 
           // Navigation Buttons
           Row(
@@ -512,7 +534,7 @@ class _QuizScreenState extends State<QuizScreen> {
                 )
               else
                 const Spacer(),
-              const SizedBox(width: AppTheme.space16),
+              const SizedBox(width: AppDimensions.space16),
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: isAnswered ? _nextQuestion : null,

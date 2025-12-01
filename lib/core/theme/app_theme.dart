@@ -1,81 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../constants/dimensions.dart';
+import 'colors.dart';
+import 'typography.dart';
 
 class AppTheme {
   // ---------------------------------------------------------------------------
-  // 🎨 COLOR PALETTE (PREMIUM)
-  // ---------------------------------------------------------------------------
-
-  // Brand Colors
-  static const Color primaryColor = Color(0xFF6C63FF); // Deep Purple
-  static const Color primaryVariant = Color(0xFF5A52D5);
-  static const Color secondaryColor = Color(0xFF00D9C0); // Teal/Cyan
-  static const Color accentColor = Color(0xFFFFB800); // Gold
-  static const Color accentVariant = Color(0xFFFFD600);
-
-  // Semantic Colors
-  static const Color successColor = Color(0xFF00E676);
-  static const Color errorColor = Color(0xFFFF5252);
-  static const Color warningColor = Color(0xFFFF9800);
-  static const Color infoColor = Color(0xFF2196F3);
-
-  // Neutral Colors (Light Mode)
-  static const Color backgroundLight = Color(
-    0xFFF8F9FC,
-  ); // Very light grey-blue
-  static const Color surfaceLight = Color(0xFFFFFFFF);
-  static const Color surfaceVariantLight = Color(0xFFF0F2F5);
-  static const Color textPrimaryLight = Color(0xFF1A1D1E);
-  static const Color textSecondaryLight = Color(0xFF6C7278);
-  static const Color textTertiaryLight = Color(0xFF9AA0A6);
-
-  // Neutral Colors (Dark Mode)
-  static const Color backgroundDark = Color(0xFF0F1115); // Deep almost-black
-  static const Color surfaceDark = Color(0xFF181A20);
-  static const Color surfaceVariantDark = Color(0xFF262A34);
-  static const Color textPrimaryDark = Color(0xFFFFFFFF);
-  static const Color textSecondaryDark = Color(0xFFB0B3B8);
-  static const Color textTertiaryDark = Color(0xFF6E7179);
-
-  // Gradients
-  static const LinearGradient primaryGradient = LinearGradient(
-    colors: [Color(0xFF6C63FF), Color(0xFF8B85FF)],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
-
-  static const LinearGradient goldGradient = LinearGradient(
-    colors: [Color(0xFFFFB800), Color(0xFFFFD600)],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
-
-  static const LinearGradient darkGradient = LinearGradient(
-    colors: [Color(0xFF181A20), Color(0xFF262A34)],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
-
-  // ---------------------------------------------------------------------------
-  // 📐 SPACING & RADIUS
-  // ---------------------------------------------------------------------------
-
-  static const double space4 = 4.0;
-  static const double space8 = 8.0;
-  static const double space12 = 12.0;
-  static const double space16 = 16.0;
-  static const double space20 = 20.0;
-  static const double space24 = 24.0;
-  static const double space32 = 32.0;
-  static const double space48 = 48.0;
-
-  static const double radiusS = 8.0;
-  static const double radiusM = 16.0;
-  static const double radiusL = 24.0;
-  static const double radiusXL = 32.0;
-
-  // ---------------------------------------------------------------------------
-  // 🌓 THEME DATA BUILDERS
+  // THEME DATA BUILDERS
   // ---------------------------------------------------------------------------
 
   static ThemeData get lightTheme => _buildTheme(Brightness.light);
@@ -83,215 +14,173 @@ class AppTheme {
 
   static ThemeData _buildTheme(Brightness brightness) {
     final isLight = brightness == Brightness.light;
+
     final colorScheme = ColorScheme(
       brightness: brightness,
-      primary: primaryColor,
+      primary: isLight ? AppColors.primary : AppColors.primaryLight,
       onPrimary: Colors.white,
-      secondary: secondaryColor,
-      onSecondary: Colors.black,
-      error: errorColor,
+      secondary: isLight ? AppColors.accent : AppColors.accentDark,
+      onSecondary: Colors.white,
+      error: AppColors.error,
       onError: Colors.white,
-      surface: isLight ? surfaceLight : surfaceDark,
-      onSurface: isLight ? textPrimaryLight : textPrimaryDark,
+      surface: isLight ? AppColors.surfaceLight : AppColors.surfaceDark,
+      onSurface: isLight
+          ? AppColors.textPrimaryLight
+          : AppColors.textPrimaryDark,
       surfaceContainerHighest: isLight
-          ? surfaceVariantLight
-          : surfaceVariantDark,
+          ? AppColors.surfaceVariantLight
+          : AppColors.surfaceVariantDark,
+      outline: isLight ? AppColors.borderLight : AppColors.borderDark,
     );
 
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
       colorScheme: colorScheme,
-      scaffoldBackgroundColor: isLight ? backgroundLight : backgroundDark,
-      fontFamily: 'Manrope',
+      scaffoldBackgroundColor: isLight
+          ? AppColors.backgroundLight
+          : AppColors.backgroundDark,
+      fontFamily: AppTypography.fontFamily,
 
       // AppBar
       appBarTheme: AppBarTheme(
-        backgroundColor: Colors.transparent,
+        backgroundColor: isLight
+            ? AppColors.backgroundLight
+            : AppColors.backgroundDark,
         elevation: 0,
-        centerTitle: false,
+        centerTitle: true,
+        scrolledUnderElevation: 0,
         systemOverlayStyle: isLight
             ? SystemUiOverlayStyle.dark
             : SystemUiOverlayStyle.light,
-        titleTextStyle: TextStyle(
-          fontFamily: 'Manrope',
-          fontSize: 20,
-          fontWeight: FontWeight.w700,
-          color: isLight ? textPrimaryLight : textPrimaryDark,
-        ),
+        titleTextStyle: isLight
+            ? AppTypography.lightTextTheme.headlineSmall
+            : AppTypography.darkTextTheme.headlineSmall,
         iconTheme: IconThemeData(
-          color: isLight ? textPrimaryLight : textPrimaryDark,
+          color: isLight
+              ? AppColors.textPrimaryLight
+              : AppColors.textPrimaryDark,
         ),
       ),
 
       // Buttons
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: primaryColor,
+          backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           elevation: 0,
           padding: const EdgeInsets.symmetric(
-            horizontal: space24,
-            vertical: space16,
+            horizontal: AppDimensions.space24,
+            vertical: AppDimensions.space16,
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(radiusM),
+            borderRadius: BorderRadius.circular(AppDimensions.radiusM),
           ),
           textStyle: const TextStyle(
-            fontFamily: 'Manrope',
+            fontFamily: AppTypography.fontFamily,
             fontSize: 16,
             fontWeight: FontWeight.w600,
           ),
         ),
       ),
 
-      // Text Theme
-      textTheme: TextTheme(
-        displayLarge: TextStyle(
-          fontSize: 32,
-          fontWeight: FontWeight.w800,
-          letterSpacing: -1.0,
-          color: isLight ? textPrimaryLight : textPrimaryDark,
-        ),
-        displayMedium: TextStyle(
-          fontSize: 28,
-          fontWeight: FontWeight.w700,
-          letterSpacing: -0.5,
-          color: isLight ? textPrimaryLight : textPrimaryDark,
-        ),
-        headlineSmall: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w700,
-          color: isLight ? textPrimaryLight : textPrimaryDark,
-        ),
-        titleMedium: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-          color: isLight ? textPrimaryLight : textPrimaryDark,
-        ),
-        bodyLarge: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w400,
-          height: 1.5,
-          color: isLight ? textSecondaryLight : textSecondaryDark,
-        ),
-        bodyMedium: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w400,
-          height: 1.5,
-          color: isLight ? textSecondaryLight : textSecondaryDark,
-        ),
-        labelSmall: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 0.5,
-          color: isLight ? textTertiaryLight : textTertiaryDark,
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: isLight ? AppColors.primary : AppColors.primaryLight,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppDimensions.radiusS),
+          ),
+          textStyle: const TextStyle(
+            fontFamily: AppTypography.fontFamily,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
+
+      // Text Theme
+      textTheme: isLight
+          ? AppTypography.lightTextTheme
+          : AppTypography.darkTextTheme,
 
       // Inputs
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: isLight ? surfaceVariantLight : surfaceVariantDark,
-        contentPadding: const EdgeInsets.all(space16),
+        fillColor: isLight
+            ? AppColors.surfaceLight
+            : AppColors.surfaceVariantDark,
+        contentPadding: const EdgeInsets.all(AppDimensions.space16),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(radiusM),
-          borderSide: BorderSide.none,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+          borderSide: BorderSide(
+            color: isLight ? AppColors.borderLight : AppColors.borderDark,
+          ),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(radiusM),
-          borderSide: BorderSide.none,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+          borderSide: BorderSide(
+            color: isLight ? AppColors.borderLight : AppColors.borderDark,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(radiusM),
-          borderSide: const BorderSide(color: primaryColor, width: 1.5),
+          borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+          borderSide: const BorderSide(color: AppColors.primary, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+          borderSide: const BorderSide(color: AppColors.error),
         ),
         hintStyle: TextStyle(
-          color: isLight ? textTertiaryLight : textTertiaryDark,
+          color: isLight
+              ? AppColors.textTertiaryLight
+              : AppColors.textTertiaryDark,
           fontSize: 14,
         ),
       ),
 
+      // Card
+      cardTheme: CardThemeData(
+        color: isLight ? AppColors.surfaceLight : AppColors.surfaceDark,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+          side: BorderSide(
+            color: isLight ? AppColors.borderLight : AppColors.borderDark,
+          ),
+        ),
+        margin: EdgeInsets.zero,
+      ),
+
       // Divider
       dividerTheme: DividerThemeData(
-        color: isLight
-            ? Colors.black.withValues(alpha: 0.05)
-            : Colors.white.withValues(alpha: 0.05),
+        color: isLight ? AppColors.borderLight : AppColors.borderDark,
         thickness: 1,
         space: 1,
       ),
-    );
-  }
 
-  // ---------------------------------------------------------------------------
-  // 🔄 BACKWARD COMPATIBILITY & ALIASES
-  // ---------------------------------------------------------------------------
-
-  // Background Colors
-  static const Color backgroundColor = backgroundLight;
-  static const Color surfaceColor = surfaceLight;
-  static const Color surfaceVariant = surfaceVariantLight;
-
-  // Dark Mode Colors (Legacy)
-  static const Color darkBackgroundColor = backgroundDark;
-  static const Color darkSurfaceColor = surfaceDark;
-  static const Color darkSurfaceVariant = surfaceVariantDark;
-  static const Color darkTextPrimary = textPrimaryDark;
-  static const Color darkTextSecondary = textSecondaryDark;
-  static const Color darkTextTertiary = textTertiaryDark;
-
-  // Text Colors
-  static const Color textPrimary = textPrimaryLight;
-  static const Color textSecondary = textSecondaryLight;
-  static const Color textTertiary = textTertiaryLight;
-
-  // Legacy Colors
-  static const Color tertiaryColor = accentColor;
-
-  // Spacing
-  static const double space2 = 2.0;
-  static const double space28 = 28.0;
-  static const double space40 = 40.0;
-  static const double space56 = 56.0;
-
-  // Shadows
-  static List<BoxShadow> get cardShadow => softShadow;
-  static List<BoxShadow> get elevatedShadow => glowShadow;
-
-  // ---------------------------------------------------------------------------
-  // 🛠 UTILITIES
-  // ---------------------------------------------------------------------------
-
-  static List<BoxShadow> get softShadow => [
-    BoxShadow(
-      color: const Color(0xFF000000).withValues(alpha: 0.05),
-      blurRadius: 10,
-      offset: const Offset(0, 4),
-    ),
-  ];
-
-  static List<BoxShadow> get glowShadow => [
-    BoxShadow(
-      color: primaryColor.withValues(alpha: 0.3),
-      blurRadius: 20,
-      offset: const Offset(0, 8),
-    ),
-  ];
-
-  static BoxDecoration glassMorphism(
-    BuildContext context, {
-    double opacity = 0.1,
-  }) {
-    return glassDecoration(context);
-  }
-
-  static BoxDecoration glassDecoration(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return BoxDecoration(
-      color: (isDark ? Colors.black : Colors.white).withValues(alpha: 0.7),
-      borderRadius: BorderRadius.circular(radiusM),
-      border: Border.all(
-        color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.05),
+      // Bottom Navigation Bar
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        backgroundColor: isLight
+            ? AppColors.surfaceLight
+            : AppColors.surfaceDark,
+        selectedItemColor: AppColors.primary,
+        unselectedItemColor: isLight
+            ? AppColors.textTertiaryLight
+            : AppColors.textTertiaryDark,
+        type: BottomNavigationBarType.fixed,
+        elevation: 0,
+        showSelectedLabels: true,
+        showUnselectedLabels: true,
+        selectedLabelStyle: const TextStyle(
+          fontFamily: AppTypography.fontFamily,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+        unselectedLabelStyle: const TextStyle(
+          fontFamily: AppTypography.fontFamily,
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
       ),
     );
   }

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
-import '../../core/theme/app_theme.dart';
+import '../../core/theme/colors.dart';
+import '../../core/constants/dimensions.dart';
 import '../../services/ad_service.dart';
 import '../../services/cloudflare_workers_service.dart';
 import '../../services/device_fingerprint_service.dart';
@@ -174,25 +175,42 @@ class _WatchAdsScreenState extends State<WatchAdsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.primaryDark : AppColors.primary;
+    final surfaceColor = isDark
+        ? AppColors.surfaceDark
+        : AppColors.surfaceLight;
+    final surfaceVariant = isDark
+        ? AppColors.surfaceVariantDark
+        : AppColors.surfaceVariantLight;
+    final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
+
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppTheme.backgroundColor,
+        backgroundColor: theme.scaffoldBackgroundColor,
         elevation: 0,
         title: const Text('Watch & Earn'),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppTheme.space16),
+        padding: const EdgeInsets.all(AppDimensions.space16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Earnings Summary
             Container(
-              padding: const EdgeInsets.all(AppTheme.space16),
+              padding: const EdgeInsets.all(AppDimensions.space16),
               decoration: BoxDecoration(
-                color: AppTheme.surfaceColor,
-                borderRadius: BorderRadius.circular(AppTheme.radiusM),
-                boxShadow: AppTheme.cardShadow,
+                color: surfaceColor,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -205,12 +223,12 @@ class _WatchAdsScreenState extends State<WatchAdsScreen> {
                         children: [
                           Text(
                             'Ads Watched',
-                            style: Theme.of(context).textTheme.labelLarge,
+                            style: theme.textTheme.labelLarge,
                           ),
-                          const SizedBox(height: AppTheme.space8),
+                          const SizedBox(height: AppDimensions.space8),
                           Text(
                             '$_adsWatchedToday/$_maxAdsPerDay',
-                            style: Theme.of(context).textTheme.headlineSmall,
+                            style: theme.textTheme.headlineSmall,
                           ),
                         ],
                       ),
@@ -219,40 +237,41 @@ class _WatchAdsScreenState extends State<WatchAdsScreen> {
                         children: [
                           Text(
                             'Earned Today',
-                            style: Theme.of(context).textTheme.labelLarge,
+                            style: theme.textTheme.labelLarge,
                           ),
-                          const SizedBox(height: AppTheme.space8),
+                          const SizedBox(height: AppDimensions.space8),
                           Text(
                             '$_totalEarned Coins',
-                            style: Theme.of(context).textTheme.headlineSmall
-                                ?.copyWith(color: AppTheme.primaryColor),
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              color: primaryColor,
+                            ),
                           ),
                         ],
                       ),
                     ],
                   ),
-                  const SizedBox(height: AppTheme.space12),
+                  const SizedBox(height: AppDimensions.space12),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(4),
                     child: LinearProgressIndicator(
                       value: _adsWatchedToday / _maxAdsPerDay,
                       minHeight: 8,
-                      backgroundColor: AppTheme.surfaceVariant,
-                      valueColor: AlwaysStoppedAnimation(AppTheme.primaryColor),
+                      backgroundColor: surfaceVariant,
+                      valueColor: AlwaysStoppedAnimation(primaryColor),
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: AppTheme.space32),
+            const SizedBox(height: AppDimensions.space32),
 
             // Info Box
             Container(
-              padding: const EdgeInsets.all(AppTheme.space16),
+              padding: const EdgeInsets.all(AppDimensions.space16),
               decoration: BoxDecoration(
-                color: AppTheme.surfaceColor,
-                borderRadius: BorderRadius.circular(AppTheme.radiusM),
-                border: Border.all(color: AppTheme.tertiaryColor, width: 1),
+                color: surfaceColor,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                border: Border.all(color: borderColor, width: 1),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -260,24 +279,24 @@ class _WatchAdsScreenState extends State<WatchAdsScreen> {
                   Row(
                     children: [
                       const Icon(Icons.info_outline, size: 20),
-                      const SizedBox(width: AppTheme.space12),
+                      const SizedBox(width: AppDimensions.space12),
                       Expanded(
                         child: Text(
                           'How to Earn',
-                          style: Theme.of(context).textTheme.titleLarge,
+                          style: theme.textTheme.titleLarge,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: AppTheme.space12),
+                  const SizedBox(height: AppDimensions.space12),
                   Text(
                     '• Watch full video advertisements\n• Get ${AppConstants.rewardedAdReward} Coins per ad\n• Limit: $_maxAdsPerDay ads per day\n• Ads reset daily at midnight',
-                    style: Theme.of(context).textTheme.bodySmall,
+                    style: theme.textTheme.bodySmall,
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: AppTheme.space32),
+            const SizedBox(height: AppDimensions.space32),
 
             // Watch Ad Button
             SizedBox(
@@ -287,9 +306,7 @@ class _WatchAdsScreenState extends State<WatchAdsScreen> {
                 onPressed: (_adsWatchedToday >= _maxAdsPerDay || _isLoadingAd)
                     ? null
                     : _watchRewardedAd,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primaryColor,
-                ),
+                style: ElevatedButton.styleFrom(backgroundColor: primaryColor),
                 child: _isLoadingAd
                     ? const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -313,8 +330,9 @@ class _WatchAdsScreenState extends State<WatchAdsScreen> {
                           if (_adsWatchedToday < _maxAdsPerDay)
                             Text(
                               'Earn ${AppConstants.rewardedAdReward} Coins',
-                              style: Theme.of(context).textTheme.labelSmall
-                                  ?.copyWith(color: Colors.white),
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: Colors.white,
+                              ),
                             ),
                         ],
                       ),
@@ -323,31 +341,31 @@ class _WatchAdsScreenState extends State<WatchAdsScreen> {
 
             if (_adsWatchedToday >= _maxAdsPerDay)
               Padding(
-                padding: const EdgeInsets.only(top: AppTheme.space16),
+                padding: const EdgeInsets.only(top: AppDimensions.space16),
                 child: Container(
-                  padding: const EdgeInsets.all(AppTheme.space12),
+                  padding: const EdgeInsets.all(AppDimensions.space12),
                   decoration: BoxDecoration(
                     color: Colors.orange.withValues(alpha: 0.1),
                     border: Border.all(color: Colors.orange),
-                    borderRadius: BorderRadius.circular(AppTheme.radiusS),
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusS),
                   ),
                   child: Row(
                     children: [
                       const Icon(Icons.schedule, color: Colors.orange),
-                      const SizedBox(width: AppTheme.space12),
+                      const SizedBox(width: AppDimensions.space12),
                       Expanded(
                         child: Text(
                           'Daily ad limit reached. Claim more tomorrow!',
-                          style: Theme.of(
-                            context,
-                          ).textTheme.bodySmall?.copyWith(color: Colors.orange),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: Colors.orange,
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
               ),
-            const SizedBox(height: AppTheme.space32),
+            const SizedBox(height: AppDimensions.space32),
           ],
         ),
       ),

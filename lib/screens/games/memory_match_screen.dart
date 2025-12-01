@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 
-import '../../core/theme/app_theme.dart';
+import '../../core/theme/colors.dart';
+import '../../core/constants/dimensions.dart';
 import '../../services/game_service.dart';
 import '../../services/cooldown_service.dart';
 import '../../services/cloudflare_workers_service.dart';
@@ -172,22 +173,22 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppTheme.successColor.withValues(alpha: 0.1),
+                color: AppColors.success.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppTheme.successColor),
+                border: Border.all(color: AppColors.success),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Icon(
                     Icons.play_circle_filled,
-                    color: AppTheme.successColor,
+                    color: AppColors.success,
                   ),
                   const SizedBox(width: 8),
                   Text(
                     'Claim Reward 📺',
                     style: TextStyle(
-                      color: AppTheme.successColor,
+                      color: AppColors.success,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -351,17 +352,15 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
                   context,
                   'Accuracy',
                   '${accuracy.toStringAsFixed(1)}%',
-                  color: accuracy >= 80
-                      ? AppTheme.successColor
-                      : AppTheme.warningColor,
+                  color: accuracy >= 80 ? AppColors.success : AppColors.warning,
                 ),
               ],
             ),
-            const SizedBox(height: AppTheme.space24),
+            const SizedBox(height: AppDimensions.space24),
             Text(
               '${(reward).toInt()} Coins added to wallet!',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: AppTheme.successColor,
+                color: AppColors.success,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -427,10 +426,23 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.primaryDark : AppColors.primary;
+    final surfaceColor = isDark
+        ? AppColors.surfaceDark
+        : AppColors.surfaceLight;
+    final surfaceVariant = isDark
+        ? AppColors.surfaceVariantDark
+        : AppColors.surfaceVariantLight;
+    final textSecondary = isDark
+        ? AppColors.textSecondaryDark
+        : AppColors.textSecondaryLight;
+
     return PopScope(
       canPop: true,
       child: Scaffold(
-        backgroundColor: AppTheme.backgroundColor,
+        backgroundColor: theme.scaffoldBackgroundColor,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -443,7 +455,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
         body: Consumer<UserProvider>(
           builder: (context, userProvider, _) {
             return SingleChildScrollView(
-              padding: const EdgeInsets.all(AppTheme.space16),
+              padding: const EdgeInsets.all(AppDimensions.space16),
               child: Column(
                 children: [
                   // Game Info Card
@@ -456,11 +468,10 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
                             child: Center(
                               child: Text(
                                 'Memorize! Cards flip in $_previewSeconds...',
-                                style: Theme.of(context).textTheme.titleMedium
-                                    ?.copyWith(
-                                      color: AppTheme.primaryColor,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  color: primaryColor,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           )
@@ -468,15 +479,13 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                'Moves',
-                                style: Theme.of(context).textTheme.labelSmall,
-                              ),
+                              Text('Moves', style: theme.textTheme.labelSmall),
                               const SizedBox(height: 4),
                               Text(
                                 '${_game.moves}',
-                                style: Theme.of(context).textTheme.headlineSmall
-                                    ?.copyWith(fontWeight: FontWeight.bold),
+                                style: theme.textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ],
                           ),
@@ -485,34 +494,29 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
                             children: [
                               Text(
                                 'Matched',
-                                style: Theme.of(context).textTheme.labelSmall,
+                                style: theme.textTheme.labelSmall,
                               ),
                               const SizedBox(height: 4),
                               Text(
                                 '${_game.matchedPairs}/4',
-                                style: Theme.of(context).textTheme.headlineSmall
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: AppTheme.primaryColor,
-                                    ),
+                                style: theme.textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: primaryColor,
+                                ),
                               ),
                             ],
                           ),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              Text(
-                                'Reward',
-                                style: Theme.of(context).textTheme.labelSmall,
-                              ),
+                              Text('Reward', style: theme.textTheme.labelSmall),
                               const SizedBox(height: 4),
                               Text(
                                 '500+ Coins',
-                                style: Theme.of(context).textTheme.headlineSmall
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: AppTheme.successColor,
-                                    ),
+                                style: theme.textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.success,
+                                ),
                               ),
                             ],
                           ),
@@ -520,15 +524,25 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
                       ],
                     ),
                   ),
-                  const SizedBox(height: AppTheme.space32),
+                  const SizedBox(height: AppDimensions.space32),
 
                   // Game Board (3x3)
                   Container(
-                    padding: const EdgeInsets.all(AppTheme.space8),
+                    padding: const EdgeInsets.all(AppDimensions.space8),
                     decoration: BoxDecoration(
-                      color: AppTheme.surfaceColor,
-                      borderRadius: BorderRadius.circular(AppTheme.radiusM),
-                      boxShadow: AppTheme.cardShadow,
+                      color: surfaceColor,
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusM,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(
+                            alpha: isDark ? 0.3 : 0.05,
+                          ),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
                     child: GridView.count(
                       crossAxisCount: 3,
@@ -550,18 +564,16 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
                         if (isCenter) {
                           return Container(
                             decoration: BoxDecoration(
-                              color: AppTheme.backgroundColor,
+                              color: theme.scaffoldBackgroundColor,
                               borderRadius: BorderRadius.circular(
-                                AppTheme.radiusS,
+                                AppDimensions.radiusS,
                               ),
-                              border: Border.all(
-                                color: AppTheme.surfaceVariant,
-                              ),
+                              border: Border.all(color: surfaceVariant),
                             ),
-                            child: const Center(
+                            child: Center(
                               child: Icon(
                                 Icons.gamepad,
-                                color: AppTheme.primaryColor,
+                                color: primaryColor,
                                 size: 32,
                               ),
                             ),
@@ -592,18 +604,16 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
                                   decoration: BoxDecoration(
                                     color: isRevealed || isMatched
                                         ? Colors.white
-                                        : AppTheme.primaryColor,
+                                        : primaryColor,
                                     borderRadius: BorderRadius.circular(
-                                      AppTheme.radiusS,
+                                      AppDimensions.radiusS,
                                     ),
                                     border: Border.all(
                                       color: isMatched
-                                          ? AppTheme.successColor
+                                          ? AppColors.success
                                           : isSelected
-                                          ? AppTheme.primaryColor.withValues(
-                                              alpha: 0.8,
-                                            )
-                                          : AppTheme.surfaceVariant,
+                                          ? primaryColor.withValues(alpha: 0.8)
+                                          : surfaceVariant,
                                       width: isMatched
                                           ? 3
                                           : (isSelected ? 2 : 1),
@@ -611,13 +621,22 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
                                     boxShadow: isSelected
                                         ? [
                                             BoxShadow(
-                                              color: AppTheme.primaryColor
-                                                  .withValues(alpha: 0.4),
+                                              color: primaryColor.withValues(
+                                                alpha: 0.4,
+                                              ),
                                               blurRadius: 8,
                                               spreadRadius: 2,
                                             ),
                                           ]
-                                        : AppTheme.cardShadow,
+                                        : [
+                                            BoxShadow(
+                                              color: Colors.black.withValues(
+                                                alpha: isDark ? 0.3 : 0.05,
+                                              ),
+                                              blurRadius: 10,
+                                              offset: const Offset(0, 4),
+                                            ),
+                                          ],
                                   ),
                                   child: Center(
                                     child: AnimatedScale(
@@ -652,7 +671,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
                       }),
                     ),
                   ),
-                  const SizedBox(height: AppTheme.space32),
+                  const SizedBox(height: AppDimensions.space32),
 
                   // Progress Bar
                   ZenCard(
@@ -661,36 +680,30 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              'Progress',
-                              style: Theme.of(context).textTheme.labelLarge,
-                            ),
+                            Text('Progress', style: theme.textTheme.labelLarge),
                             Text(
                               '${(_game.matchedPairs / 4 * 100).toStringAsFixed(0)}%',
-                              style: Theme.of(context).textTheme.labelLarge
-                                  ?.copyWith(
-                                    color: AppTheme.primaryColor,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                              style: theme.textTheme.labelLarge?.copyWith(
+                                color: primaryColor,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: AppTheme.space12),
+                        const SizedBox(height: AppDimensions.space12),
                         ClipRRect(
                           borderRadius: BorderRadius.circular(4),
                           child: LinearProgressIndicator(
                             value: _game.matchedPairs / 4,
                             minHeight: 8,
-                            backgroundColor: AppTheme.surfaceVariant,
-                            valueColor: AlwaysStoppedAnimation(
-                              AppTheme.primaryColor,
-                            ),
+                            backgroundColor: surfaceVariant,
+                            valueColor: AlwaysStoppedAnimation(primaryColor),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: AppTheme.space32),
+                  const SizedBox(height: AppDimensions.space32),
 
                   // Action Buttons
                   Row(
@@ -702,7 +715,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
                           label: const Text('Reset Game'),
                         ),
                       ),
-                      const SizedBox(width: AppTheme.space16),
+                      const SizedBox(width: AppDimensions.space16),
                       Expanded(
                         child: OutlinedButton.icon(
                           onPressed: () => Navigator.pop(context),
@@ -712,7 +725,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
                       ),
                     ],
                   ),
-                  const SizedBox(height: AppTheme.space16),
+                  const SizedBox(height: AppDimensions.space16),
 
                   // Cooldown Info
                   Consumer<CooldownService>(
@@ -724,40 +737,33 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
 
                       if (remaining > 0) {
                         return Container(
-                          padding: const EdgeInsets.all(AppTheme.space16),
+                          padding: const EdgeInsets.all(AppDimensions.space16),
                           decoration: BoxDecoration(
-                            color: AppTheme.warningColor.withValues(alpha: 0.1),
+                            color: AppColors.warning.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(
-                              AppTheme.radiusM,
+                              AppDimensions.radiusM,
                             ),
                             border: Border.all(
-                              color: AppTheme.warningColor,
+                              color: AppColors.warning,
                               width: 1,
                             ),
                           ),
                           child: Row(
                             children: [
-                              const Icon(
-                                Icons.timer,
-                                color: AppTheme.warningColor,
-                              ),
-                              const SizedBox(width: AppTheme.space12),
+                              const Icon(Icons.timer, color: AppColors.warning),
+                              const SizedBox(width: AppDimensions.space12),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
                                       'Cooldown Active',
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.labelLarge,
+                                      style: theme.textTheme.labelLarge,
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
                                       'Next game in ${cooldownService.formatCooldown(remaining)}',
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.bodySmall,
+                                      style: theme.textTheme.bodySmall,
                                     ),
                                   ],
                                 ),
@@ -770,7 +776,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
                       return const SizedBox.shrink();
                     },
                   ),
-                  const SizedBox(height: AppTheme.space32),
+                  const SizedBox(height: AppDimensions.space32),
 
                   // How to Play
                   ZenCard(
@@ -779,20 +785,19 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
                       children: [
                         Text(
                           '📋 How to Play',
-                          style: Theme.of(context).textTheme.titleMedium,
+                          style: theme.textTheme.titleMedium,
                         ),
-                        const SizedBox(height: AppTheme.space12),
+                        const SizedBox(height: AppDimensions.space12),
                         Text(
                           '• Cards are hidden, tap to reveal\n'
                           '• Match pairs of identical emojis\n'
                           '• Complete all 4 pairs to win\n'
                           '• Watch ad to claim reward\n'
                           '• Win reward: 60 Coins',
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
-                                height: 1.5,
-                                color: AppTheme.textSecondary,
-                              ),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            height: 1.5,
+                            color: textSecondary,
+                          ),
                         ),
                       ],
                     ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import '../core/theme/app_theme.dart';
+import '../core/theme/colors.dart';
+import '../core/constants/dimensions.dart';
 
 class CustomDialog extends StatelessWidget {
   final String title;
@@ -24,7 +25,8 @@ class CustomDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveAccentColor = accentColor ?? AppTheme.primaryColor;
+    final effectiveAccentColor = accentColor ?? AppColors.primary;
+    final isLight = Theme.of(context).brightness == Brightness.light;
 
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -42,7 +44,7 @@ class CustomDialog extends StatelessWidget {
                       ).colorScheme.surface.withValues(alpha: 0.95),
                     ],
                   ),
-                  borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
                   border: Border.all(
                     color: effectiveAccentColor.withValues(alpha: 0.3),
                     width: 2,
@@ -63,7 +65,7 @@ class CustomDialog extends StatelessWidget {
                   ],
                 ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
                   child: Stack(
                     children: [
                       // Animated gradient background
@@ -85,7 +87,7 @@ class CustomDialog extends StatelessWidget {
 
                       // Content
                       Padding(
-                        padding: const EdgeInsets.all(AppTheme.space28),
+                        padding: const EdgeInsets.all(AppDimensions.space24),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -93,7 +95,7 @@ class CustomDialog extends StatelessWidget {
                             if (emoji != null) ...[
                               Container(
                                     padding: const EdgeInsets.all(
-                                      AppTheme.space20,
+                                      AppDimensions.space16,
                                     ),
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
@@ -128,17 +130,20 @@ class CustomDialog extends StatelessWidget {
                                     duration: 400.ms,
                                     curve: Curves.elasticOut,
                                   ),
-                              const SizedBox(height: AppTheme.space20),
+                              const SizedBox(height: AppDimensions.space16),
                             ],
 
                             // Title with gradient text effect
                             ShaderMask(
                                   shaderCallback: (bounds) => LinearGradient(
                                     colors: [
-                                      AppTheme.textPrimary,
-                                      AppTheme.textPrimary.withValues(
-                                        alpha: 0.8,
-                                      ),
+                                      isLight
+                                          ? AppColors.textPrimaryLight
+                                          : AppColors.textPrimaryDark,
+                                      (isLight
+                                              ? AppColors.textPrimaryLight
+                                              : AppColors.textPrimaryDark)
+                                          .withValues(alpha: 0.8),
                                     ],
                                   ).createShader(bounds),
                                   child: Text(
@@ -157,7 +162,7 @@ class CustomDialog extends StatelessWidget {
                                 .fadeIn(duration: 300.ms)
                                 .slideY(begin: -0.3, end: 0, duration: 400.ms),
 
-                            const SizedBox(height: AppTheme.space20),
+                            const SizedBox(height: AppDimensions.space16),
 
                             // Divider with gradient
                             Container(
@@ -179,13 +184,15 @@ class CustomDialog extends StatelessWidget {
                               curve: Curves.easeOut,
                             ),
 
-                            const SizedBox(height: AppTheme.space20),
+                            const SizedBox(height: AppDimensions.space16),
 
                             // Content
                             DefaultTextStyle(
                                   style: Theme.of(context).textTheme.bodyLarge!
                                       .copyWith(
-                                        color: AppTheme.textSecondary,
+                                        color: isLight
+                                            ? AppColors.textSecondaryLight
+                                            : AppColors.textSecondaryDark,
                                         height: 1.5,
                                       ),
                                   child: content,
@@ -196,13 +203,13 @@ class CustomDialog extends StatelessWidget {
 
                             // Actions
                             if (actions != null) ...[
-                              const SizedBox(height: AppTheme.space28),
+                              const SizedBox(height: AppDimensions.space24),
                               _buildActions(context, effectiveAccentColor),
                             ],
 
                             // Close button
                             if (showCloseButton && actions == null) ...[
-                              const SizedBox(height: AppTheme.space28),
+                              const SizedBox(height: AppDimensions.space24),
                               _buildCloseButton(context, effectiveAccentColor),
                             ],
                           ],
@@ -251,8 +258,8 @@ class CustomDialog extends StatelessWidget {
 
   Widget _buildActions(BuildContext context, Color accentColor) {
     return Wrap(
-      spacing: AppTheme.space12,
-      runSpacing: AppTheme.space12,
+      spacing: AppDimensions.space12,
+      runSpacing: AppDimensions.space12,
       alignment: WrapAlignment.center,
       children: actions!.asMap().entries.map((entry) {
         final index = entry.key;
@@ -285,7 +292,7 @@ class CustomDialog extends StatelessWidget {
               elevation: 0,
               padding: const EdgeInsets.symmetric(vertical: 18),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppTheme.radiusL),
+                borderRadius: BorderRadius.circular(AppDimensions.radiusL),
                 side: BorderSide(
                   color: accentColor.withValues(alpha: 0.3),
                   width: 1,
@@ -325,10 +332,12 @@ class SuccessDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isLight = Theme.of(context).brightness == Brightness.light;
+
     return CustomDialog(
       title: title,
       emoji: '🎉',
-      accentColor: AppTheme.successColor,
+      accentColor: AppColors.success,
       showConfetti: true,
       content: Column(
         mainAxisSize: MainAxisSize.min,
@@ -336,12 +345,14 @@ class SuccessDialog extends StatelessWidget {
           Text(
             message,
             textAlign: TextAlign.center,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyLarge?.copyWith(color: AppTheme.textSecondary),
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              color: isLight
+                  ? AppColors.textSecondaryLight
+                  : AppColors.textSecondaryDark,
+            ),
           ),
           if (extraContent != null) ...[
-            const SizedBox(height: AppTheme.space16),
+            const SizedBox(height: AppDimensions.space16),
             extraContent!,
           ],
         ],
@@ -366,16 +377,20 @@ class ErrorDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isLight = Theme.of(context).brightness == Brightness.light;
+
     return CustomDialog(
       title: title,
       emoji: '⚠️',
-      accentColor: AppTheme.errorColor,
+      accentColor: AppColors.error,
       content: Text(
         message,
         textAlign: TextAlign.center,
-        style: Theme.of(
-          context,
-        ).textTheme.bodyLarge?.copyWith(color: AppTheme.textSecondary),
+        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+          color: isLight
+              ? AppColors.textSecondaryLight
+              : AppColors.textSecondaryDark,
+        ),
       ),
       actions: [
         if (onRetry != null)
@@ -384,9 +399,7 @@ class ErrorDialog extends StatelessWidget {
               Navigator.pop(context);
               onRetry!();
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.errorColor,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
             child: const Text('Retry'),
           ),
         OutlinedButton(
@@ -416,7 +429,7 @@ class InfoDialog extends StatelessWidget {
     return CustomDialog(
       title: title,
       emoji: 'ℹ️',
-      accentColor: AppTheme.primaryColor,
+      accentColor: AppColors.primary,
       content: content,
       actions: actions,
     );
@@ -440,16 +453,20 @@ class WarningDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isLight = Theme.of(context).brightness == Brightness.light;
+
     return CustomDialog(
       title: title,
       emoji: '⚡',
-      accentColor: AppTheme.warningColor,
+      accentColor: AppColors.warning,
       content: Text(
         message,
         textAlign: TextAlign.center,
-        style: Theme.of(
-          context,
-        ).textTheme.bodyLarge?.copyWith(color: AppTheme.textSecondary),
+        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+          color: isLight
+              ? AppColors.textSecondaryLight
+              : AppColors.textSecondaryDark,
+        ),
       ),
       actions: [
         if (onConfirm != null)
@@ -458,9 +475,7 @@ class WarningDialog extends StatelessWidget {
               Navigator.pop(context);
               onConfirm!();
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.warningColor,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.warning),
             child: Text(confirmText),
           ),
         OutlinedButton(

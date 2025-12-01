@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../core/theme/app_theme.dart';
+import '../core/theme/colors.dart';
+import '../core/constants/dimensions.dart';
 
 /// Daily earning progress indicator widget
 class DailyCapIndicatorWidget extends StatelessWidget {
@@ -23,19 +24,19 @@ class DailyCapIndicatorWidget extends StatelessWidget {
 
     return Card(
       margin: const EdgeInsets.symmetric(
-        horizontal: AppTheme.space16,
-        vertical: AppTheme.space12,
+        horizontal: AppDimensions.space16,
+        vertical: AppDimensions.space12,
       ),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppTheme.radiusM),
+        borderRadius: BorderRadius.circular(AppDimensions.radiusM),
       ),
       color: isAtCap
-          ? AppTheme.errorColor.withValues(alpha: 0.1)
+          ? AppColors.error.withValues(alpha: 0.1)
           : isNearCap
-          ? AppTheme.warningColor.withValues(alpha: 0.1)
+          ? AppColors.warning.withValues(alpha: 0.1)
           : null,
       child: Padding(
-        padding: const EdgeInsets.all(AppTheme.space16),
+        padding: const EdgeInsets.all(AppDimensions.space16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -50,7 +51,7 @@ class DailyCapIndicatorWidget extends StatelessWidget {
                       'Daily Earnings',
                       style: Theme.of(context).textTheme.labelLarge,
                     ),
-                    const SizedBox(height: AppTheme.space4),
+                    const SizedBox(height: AppDimensions.space4),
                     RichText(
                       text: TextSpan(
                         children: [
@@ -60,10 +61,10 @@ class DailyCapIndicatorWidget extends StatelessWidget {
                                 ?.copyWith(
                                   fontWeight: FontWeight.w700,
                                   color: isAtCap
-                                      ? AppTheme.errorColor
+                                      ? AppColors.error
                                       : isNearCap
-                                      ? AppTheme.warningColor
-                                      : AppTheme.successColor,
+                                      ? AppColors.warning
+                                      : AppColors.success,
                                 ),
                           ),
                           TextSpan(
@@ -73,8 +74,8 @@ class DailyCapIndicatorWidget extends StatelessWidget {
                                   color:
                                       Theme.of(context).brightness ==
                                           Brightness.dark
-                                      ? AppTheme.darkTextTertiary
-                                      : AppTheme.textTertiary,
+                                      ? AppColors.textTertiaryDark
+                                      : AppColors.textTertiaryLight,
                                 ),
                           ),
                         ],
@@ -85,12 +86,14 @@ class DailyCapIndicatorWidget extends StatelessWidget {
                 if (isAtCap)
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: AppTheme.space12,
-                      vertical: AppTheme.space8,
+                      horizontal: AppDimensions.space12,
+                      vertical: AppDimensions.space8,
                     ),
                     decoration: BoxDecoration(
-                      color: AppTheme.errorColor,
-                      borderRadius: BorderRadius.circular(AppTheme.radiusS),
+                      color: AppColors.error,
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusS,
+                      ),
                     ),
                     child: const Text(
                       'Maxed Out',
@@ -103,27 +106,27 @@ class DailyCapIndicatorWidget extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: AppTheme.space12),
+            const SizedBox(height: AppDimensions.space12),
 
             // Progress bar
             ClipRRect(
-              borderRadius: BorderRadius.circular(AppTheme.radiusS),
+              borderRadius: BorderRadius.circular(AppDimensions.radiusS),
               child: LinearProgressIndicator(
                 value: progressPercent,
                 minHeight: 8,
                 backgroundColor: Theme.of(context).brightness == Brightness.dark
-                    ? AppTheme.darkSurfaceVariant
-                    : AppTheme.surfaceVariant,
+                    ? AppColors.surfaceVariantDark
+                    : AppColors.surfaceVariantLight,
                 valueColor: AlwaysStoppedAnimation<Color>(
                   isAtCap
-                      ? AppTheme.errorColor
+                      ? AppColors.error
                       : isNearCap
-                      ? AppTheme.warningColor
-                      : AppTheme.successColor,
+                      ? AppColors.warning
+                      : AppColors.success,
                 ),
               ),
             ),
-            const SizedBox(height: AppTheme.space12),
+            const SizedBox(height: AppDimensions.space12),
 
             // Remaining info
             if (!isAtCap)
@@ -131,15 +134,15 @@ class DailyCapIndicatorWidget extends StatelessWidget {
                 'Remaining: ₹${remaining.toStringAsFixed(2)} | Resets at 12:00 AM',
                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
                   color: Theme.of(context).brightness == Brightness.dark
-                      ? AppTheme.darkTextSecondary
-                      : AppTheme.textSecondary,
+                      ? AppColors.textSecondaryDark
+                      : AppColors.textSecondaryLight,
                 ),
               ),
             if (isAtCap)
               Text(
                 'You\'ve reached today\'s earning limit. Come back tomorrow to earn more!',
                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: AppTheme.errorColor,
+                  color: AppColors.error,
                   fontWeight: FontWeight.w600,
                 ),
               ),

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import '../core/theme/app_theme.dart';
+import '../core/theme/colors.dart';
+import '../core/constants/dimensions.dart';
 import '../services/transaction_service.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../core/constants/app_assets.dart';
@@ -30,13 +31,17 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     final currentUser = context.watch<UserProvider>().user;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.primaryDark : AppColors.primary;
+    final secondaryColor = isDark ? AppColors.accentDark : AppColors.accent;
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Transaction History'),
         centerTitle: true,
-        backgroundColor: AppTheme.backgroundColor,
+        backgroundColor: theme.scaffoldBackgroundColor,
         elevation: 0,
       ),
       body: Column(
@@ -44,7 +49,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
           // Filter Bar
           Container(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            color: AppTheme.backgroundColor,
+            color: theme.scaffoldBackgroundColor,
             child: Column(
               children: [
                 SingleChildScrollView(
@@ -155,9 +160,9 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                         const SizedBox(height: 16),
                         Text(
                           'No transactions found',
-                          style: Theme.of(
-                            context,
-                          ).textTheme.titleMedium?.copyWith(color: Colors.grey),
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: Colors.grey,
+                          ),
                         ),
                       ],
                     ),
@@ -185,21 +190,16 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
-                            colors: [
-                              AppTheme.primaryColor,
-                              Color(0xFF8B85FF), // Lighter shade
-                            ],
+                            colors: [primaryColor, secondaryColor],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
                           borderRadius: BorderRadius.circular(
-                            AppTheme.radiusXL,
+                            AppDimensions.radiusXL,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: AppTheme.primaryColor.withValues(
-                                alpha: 0.3,
-                              ),
+                              color: primaryColor.withValues(alpha: 0.3),
                               blurRadius: 20,
                               offset: const Offset(0, 10),
                             ),
@@ -213,15 +213,14 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                                 children: [
                                   Text(
                                     'Total Earnings',
-                                    style: Theme.of(context).textTheme.bodySmall
-                                        ?.copyWith(color: Colors.white70),
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: Colors.white70,
+                                    ),
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
                                     '${totalIncome.toInt()} Coins',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .headlineSmall
+                                    style: theme.textTheme.headlineSmall
                                         ?.copyWith(
                                           color: Colors.white,
                                           fontWeight: FontWeight.bold,
@@ -242,15 +241,14 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                                 children: [
                                   Text(
                                     'Total Withdrawn',
-                                    style: Theme.of(context).textTheme.bodySmall
-                                        ?.copyWith(color: Colors.white70),
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: Colors.white70,
+                                    ),
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
                                     '${totalWithdrawal.toInt()} Coins',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .headlineSmall
+                                    style: theme.textTheme.headlineSmall
                                         ?.copyWith(
                                           color: Colors.white,
                                           fontWeight: FontWeight.bold,
@@ -301,6 +299,10 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     BuildContext context, {
     required bool isStartDate,
   }) async {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.primaryDark : AppColors.primary;
+
     final picked = await showDatePicker(
       context: context,
       initialDate: isStartDate
@@ -310,9 +312,9 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
       lastDate: DateTime.now(),
       builder: (context, child) {
         return Theme(
-          data: Theme.of(context).copyWith(
+          data: theme.copyWith(
             colorScheme: ColorScheme.light(
-              primary: AppTheme.primaryColor,
+              primary: primaryColor,
               onPrimary: Colors.white,
               onSurface: Colors.black,
             ),
@@ -350,21 +352,28 @@ class _FilterChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isSelected = value == selectedValue;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.primaryDark : AppColors.primary;
+    final surfaceColor = isDark
+        ? AppColors.surfaceDark
+        : AppColors.surfaceLight;
+
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? AppTheme.primaryColor : Colors.white,
+          color: isSelected ? primaryColor : surfaceColor,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? AppTheme.primaryColor : Colors.grey.shade300,
+            color: isSelected ? primaryColor : Colors.grey.shade300,
           ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                    color: primaryColor.withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -373,7 +382,7 @@ class _FilterChip extends StatelessWidget {
         ),
         child: Text(
           label,
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+          style: theme.textTheme.labelLarge?.copyWith(
             color: isSelected ? Colors.white : Colors.grey.shade700,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
           ),
@@ -451,30 +460,39 @@ class _TransactionCard extends StatelessWidget {
 
   Color _getStatusColor() {
     if (transaction.status == 'completed') {
-      return Colors.green;
+      return AppColors.success;
     } else if (transaction.status == 'pending') {
-      return Colors.orange;
+      return AppColors.warning;
     } else {
-      return Colors.red;
+      return AppColors.error;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final surfaceColor = isDark
+        ? AppColors.surfaceDark
+        : AppColors.surfaceLight;
+    final surfaceVariant = isDark
+        ? AppColors.surfaceVariantDark
+        : AppColors.surfaceVariantLight;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceColor,
-        borderRadius: BorderRadius.circular(AppTheme.radiusL),
+        color: surfaceColor,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusL),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
-        border: Border.all(color: AppTheme.surfaceVariant, width: 1),
+        border: Border.all(color: surfaceVariant, width: 1),
       ),
       child: Row(
         children: [
@@ -501,16 +519,16 @@ class _TransactionCard extends StatelessWidget {
               children: [
                 Text(
                   _getTransactionLabel(),
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   DateFormat('MMM d, h:mm a').format(transaction.timestamp),
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade500),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: Colors.grey.shade500,
+                  ),
                 ),
               ],
             ),
@@ -521,11 +539,11 @@ class _TransactionCard extends StatelessWidget {
             children: [
               Text(
                 '${transaction.type == 'earning' ? '+' : '-'}${transaction.amount.toInt()} Coins',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: transaction.type == 'earning'
-                      ? Colors.green
-                      : Colors.red,
+                      ? AppColors.success
+                      : AppColors.error,
                 ),
               ),
               const SizedBox(height: 4),
@@ -537,7 +555,7 @@ class _TransactionCard extends StatelessWidget {
                 ),
                 child: Text(
                   transaction.status.toUpperCase(),
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  style: theme.textTheme.labelSmall?.copyWith(
                     color: _getStatusColor(),
                     fontWeight: FontWeight.bold,
                   ),

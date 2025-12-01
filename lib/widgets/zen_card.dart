@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../core/theme/app_theme.dart';
+import '../core/constants/dimensions.dart';
 
 class ZenCard extends StatelessWidget {
   final Widget child;
@@ -30,12 +30,19 @@ class ZenCard extends StatelessWidget {
 
     Widget cardContent = Container(
       margin: margin,
-      padding: padding ?? const EdgeInsets.all(AppTheme.space16),
+      padding: padding ?? const EdgeInsets.all(AppDimensions.space16),
       decoration: isGlass
-          ? AppTheme.glassMorphism(context)
+          ? BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.2),
+                width: 1,
+              ),
+            )
           : BoxDecoration(
               color: cardColor,
-              borderRadius: BorderRadius.circular(AppTheme.radiusM),
+              borderRadius: BorderRadius.circular(AppDimensions.radiusM),
               border: border, // Applied border
               boxShadow: elevation != null && elevation! > 0
                   ? [
@@ -45,7 +52,13 @@ class ZenCard extends StatelessWidget {
                         offset: Offset(0, elevation! * 2),
                       ),
                     ]
-                  : AppTheme.softShadow,
+                  : [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
             ),
       child: child,
     );

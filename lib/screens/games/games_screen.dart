@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import '../../core/theme/app_theme.dart';
+import '../../core/theme/colors.dart';
+import '../../core/constants/dimensions.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/task_provider.dart';
 import '../../widgets/banner_ad_widget.dart';
@@ -53,8 +54,15 @@ class _GamesScreenState extends State<GamesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.primaryDark : AppColors.primary;
+    final surfaceVariant = isDark
+        ? AppColors.surfaceVariantDark
+        : AppColors.surfaceVariantLight;
+
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Play & Earn'),
         elevation: 0,
@@ -65,7 +73,7 @@ class _GamesScreenState extends State<GamesScreen> {
           children: [
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(AppTheme.space16),
+                padding: const EdgeInsets.all(AppDimensions.space16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -76,9 +84,9 @@ class _GamesScreenState extends State<GamesScreen> {
                         children: [
                           Text(
                             'Daily Game Limit',
-                            style: Theme.of(context).textTheme.titleMedium,
+                            style: theme.textTheme.titleMedium,
                           ),
-                          const SizedBox(height: AppTheme.space12),
+                          const SizedBox(height: AppDimensions.space12),
                           Consumer2<UserProvider, TaskProvider>(
                             builder: (context, userProvider, taskProvider, _) {
                               return Row(
@@ -87,30 +95,26 @@ class _GamesScreenState extends State<GamesScreen> {
                                 children: [
                                   Text(
                                     '${taskProvider.completedTasks}/6 games played',
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.bodyMedium,
+                                    style: theme.textTheme.bodyMedium,
                                   ),
                                   Container(
                                     padding: const EdgeInsets.symmetric(
-                                      horizontal: AppTheme.space12,
-                                      vertical: AppTheme.space4,
+                                      horizontal: AppDimensions.space12,
+                                      vertical: AppDimensions.space4,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: AppTheme.successColor.withValues(
+                                      color: AppColors.success.withValues(
                                         alpha: 0.1,
                                       ),
                                       borderRadius: BorderRadius.circular(
-                                        AppTheme.radiusS,
+                                        AppDimensions.radiusS,
                                       ),
                                     ),
                                     child: Text(
                                       '₹${taskProvider.dailyEarnings.toStringAsFixed(2)} earned',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .labelSmall
+                                      style: theme.textTheme.labelSmall
                                           ?.copyWith(
-                                            color: AppTheme.successColor,
+                                            color: AppColors.success,
                                             fontWeight: FontWeight.bold,
                                           ),
                                     ),
@@ -122,19 +126,19 @@ class _GamesScreenState extends State<GamesScreen> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: AppTheme.space24),
+                    const SizedBox(height: AppDimensions.space24),
 
                     // Available Games Grid
                     Text(
                       'Available Games',
-                      style: Theme.of(context).textTheme.headlineSmall,
+                      style: theme.textTheme.headlineSmall,
                     ),
-                    const SizedBox(height: AppTheme.space16),
+                    const SizedBox(height: AppDimensions.space16),
 
                     StaggeredGrid.count(
                       crossAxisCount: 2,
-                      mainAxisSpacing: AppTheme.space12,
-                      crossAxisSpacing: AppTheme.space12,
+                      mainAxisSpacing: AppDimensions.space12,
+                      crossAxisSpacing: AppDimensions.space12,
                       children: [
                         StaggeredGridTile.count(
                           crossAxisCellCount: 2,
@@ -176,14 +180,14 @@ class _GamesScreenState extends State<GamesScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: AppTheme.space24),
+                    const SizedBox(height: AppDimensions.space24),
 
                     // Today's Best Scores
                     Text(
                       "Today's Best Scores",
-                      style: Theme.of(context).textTheme.headlineSmall,
+                      style: theme.textTheme.headlineSmall,
                     ),
-                    const SizedBox(height: AppTheme.space12),
+                    const SizedBox(height: AppDimensions.space12),
 
                     _ScoreCard(
                       rank: 1,
@@ -191,21 +195,21 @@ class _GamesScreenState extends State<GamesScreen> {
                       score: '45 sec',
                       medal: '🥇',
                     ),
-                    const SizedBox(height: AppTheme.space8),
+                    const SizedBox(height: AppDimensions.space8),
                     _ScoreCard(
                       rank: 2,
                       name: 'Priya S.',
                       score: '52 sec',
                       medal: '🥈',
                     ),
-                    const SizedBox(height: AppTheme.space8),
+                    const SizedBox(height: AppDimensions.space8),
                     _ScoreCard(
                       rank: 3,
                       name: 'You',
                       score: '67 sec',
                       medal: '🥉',
                     ),
-                    const SizedBox(height: AppTheme.space24),
+                    const SizedBox(height: AppDimensions.space24),
 
                     ScaleButton(
                       onTap: () {
@@ -213,16 +217,19 @@ class _GamesScreenState extends State<GamesScreen> {
                       },
                       child: Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.all(AppTheme.space16),
+                        padding: const EdgeInsets.all(AppDimensions.space16),
                         decoration: BoxDecoration(
-                          color: AppTheme.surfaceVariant,
-                          borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                          color: surfaceVariant,
+                          borderRadius: BorderRadius.circular(
+                            AppDimensions.radiusM,
+                          ),
                         ),
                         child: Center(
                           child: Text(
                             'View Full Leaderboard',
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(color: AppTheme.primaryColor),
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: primaryColor,
+                            ),
                           ),
                         ),
                       ),
@@ -259,13 +266,25 @@ class _GameCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final surfaceColor = isDark
+        ? AppColors.surfaceDark
+        : AppColors.surfaceLight;
+    final surfaceVariant = isDark
+        ? AppColors.surfaceVariantDark
+        : AppColors.surfaceVariantLight;
+    final textSecondary = isDark
+        ? AppColors.textSecondaryDark
+        : AppColors.textSecondaryLight;
+
     return ScaleButton(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(AppTheme.space16),
+        padding: const EdgeInsets.all(AppDimensions.space16),
         decoration: BoxDecoration(
-          color: AppTheme.surfaceColor,
-          borderRadius: BorderRadius.circular(AppTheme.radiusL),
+          color: surfaceColor,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusL),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.05),
@@ -273,14 +292,14 @@ class _GameCard extends StatelessWidget {
               offset: const Offset(0, 4),
             ),
           ],
-          border: Border.all(color: AppTheme.surfaceVariant, width: 1),
+          border: Border.all(color: surfaceVariant, width: 1),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Container(
-              padding: const EdgeInsets.all(AppTheme.space12),
+              padding: const EdgeInsets.all(AppDimensions.space12),
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
@@ -292,33 +311,33 @@ class _GameCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: AppTheme.space4),
+                const SizedBox(height: AppDimensions.space4),
                 Text(
                   description,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppTheme.textSecondary,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: textSecondary,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: AppTheme.space8),
+                const SizedBox(height: AppDimensions.space8),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: AppTheme.space8,
-                    vertical: AppTheme.space4,
+                    horizontal: AppDimensions.space8,
+                    vertical: AppDimensions.space4,
                   ),
                   decoration: BoxDecoration(
-                    color: AppTheme.successColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(AppTheme.radiusS),
+                    color: AppColors.success.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusS),
                   ),
                   child: Text(
                     '+$reward Coins',
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: AppTheme.successColor,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: AppColors.success,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -347,14 +366,26 @@ class _ScoreCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final surfaceColor = isDark
+        ? AppColors.surfaceDark
+        : AppColors.surfaceLight;
+    final surfaceVariant = isDark
+        ? AppColors.surfaceVariantDark
+        : AppColors.surfaceVariantLight;
+    final textSecondary = isDark
+        ? AppColors.textSecondaryDark
+        : AppColors.textSecondaryLight;
+
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppTheme.space16,
-        vertical: AppTheme.space16,
+        horizontal: AppDimensions.space16,
+        vertical: AppDimensions.space16,
       ),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceColor,
-        borderRadius: BorderRadius.circular(AppTheme.radiusM),
+        color: surfaceColor,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusM),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -362,25 +393,23 @@ class _ScoreCard extends StatelessWidget {
             offset: const Offset(0, 4),
           ),
         ],
-        border: Border.all(color: AppTheme.surfaceVariant, width: 1),
+        border: Border.all(color: surfaceVariant, width: 1),
       ),
       child: Row(
         children: [
           Text(medal, style: const TextStyle(fontSize: 24)),
-          const SizedBox(width: AppTheme.space16),
+          const SizedBox(width: AppDimensions.space16),
           Expanded(
             child: Text(
               name,
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           Text(
             score,
-            style: Theme.of(
-              context,
-            ).textTheme.labelLarge?.copyWith(color: AppTheme.textSecondary),
+            style: theme.textTheme.labelLarge?.copyWith(color: textSecondary),
           ),
         ],
       ),

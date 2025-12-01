@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:share_plus/share_plus.dart';
-import '../../core/theme/app_theme.dart';
+import '../../core/theme/colors.dart';
+
 import '../../services/referral_service.dart';
 import '../../widgets/zen_card.dart';
 import '../../widgets/scale_button.dart';
@@ -62,15 +63,22 @@ class _ReferralScreenState extends State<ReferralScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.primaryDark : AppColors.primary;
+    final textSecondary = isDark
+        ? AppColors.textSecondaryDark
+        : AppColors.textSecondaryLight;
+
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: const Text('Invite & Earn'),
         centerTitle: true,
         flexibleSpace: Container(
-          decoration: const BoxDecoration(gradient: AppTheme.primaryGradient),
+          decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
         ),
       ),
       body: _isLoading
@@ -83,7 +91,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
                     decoration: const BoxDecoration(
-                      gradient: AppTheme.primaryGradient,
+                      gradient: AppColors.primaryGradient,
                       borderRadius: BorderRadius.only(
                         bottomLeft: Radius.circular(32),
                         bottomRight: Radius.circular(32),
@@ -99,19 +107,17 @@ class _ReferralScreenState extends State<ReferralScreen> {
                         const SizedBox(height: 16),
                         Text(
                           'Refer Friends, Earn Money',
-                          style: Theme.of(context).textTheme.headlineSmall
-                              ?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'Get ₹2 for every friend who joins!',
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
-                                color: Colors.white.withValues(alpha: 0.9),
-                              ),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: Colors.white.withValues(alpha: 0.9),
+                          ),
                         ),
                       ],
                     ),
@@ -149,8 +155,9 @@ class _ReferralScreenState extends State<ReferralScreen> {
                         // Referral Code Section
                         Text(
                           'Your Referral Code',
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(fontWeight: FontWeight.bold),
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         const SizedBox(height: 16),
                         ZenCard(
@@ -167,7 +174,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                                   Text(
                                     'Share this code',
                                     style: TextStyle(
-                                      color: AppTheme.textSecondary,
+                                      color: textSecondary,
                                       fontSize: 12,
                                     ),
                                   ),
@@ -186,21 +193,21 @@ class _ReferralScreenState extends State<ReferralScreen> {
                                 children: [
                                   ScaleButton(
                                     onTap: _copyReferralCode,
-                                    child: const Padding(
-                                      padding: EdgeInsets.all(8.0),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
                                       child: Icon(
                                         Icons.copy,
-                                        color: AppTheme.primaryColor,
+                                        color: primaryColor,
                                       ),
                                     ),
                                   ),
                                   ScaleButton(
                                     onTap: _shareReferralCode,
-                                    child: const Padding(
-                                      padding: EdgeInsets.all(8.0),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
                                       child: Icon(
                                         Icons.share,
-                                        color: AppTheme.primaryColor,
+                                        color: primaryColor,
                                       ),
                                     ),
                                   ),
@@ -214,8 +221,9 @@ class _ReferralScreenState extends State<ReferralScreen> {
                         // How it works
                         Text(
                           'How it works',
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(fontWeight: FontWeight.bold),
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         const SizedBox(height: 16),
                         _buildStep(
@@ -249,6 +257,12 @@ class _ReferralScreenState extends State<ReferralScreen> {
     IconData icon,
     Color color,
   ) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final textSecondary = isDark
+        ? AppColors.textSecondaryDark
+        : AppColors.textSecondaryLight;
+
     return ZenCard(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -268,10 +282,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
             style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 4),
-          Text(
-            title,
-            style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
-          ),
+          Text(title, style: TextStyle(color: textSecondary, fontSize: 12)),
         ],
       ),
     );
@@ -283,6 +294,16 @@ class _ReferralScreenState extends State<ReferralScreen> {
     String description, {
     bool isLast = false,
   }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.primaryDark : AppColors.primary;
+    final surfaceVariant = isDark
+        ? AppColors.surfaceVariantDark
+        : AppColors.surfaceVariantLight;
+    final textSecondary = isDark
+        ? AppColors.textSecondaryDark
+        : AppColors.textSecondaryLight;
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -291,8 +312,8 @@ class _ReferralScreenState extends State<ReferralScreen> {
             Container(
               width: 32,
               height: 32,
-              decoration: const BoxDecoration(
-                color: AppTheme.primaryColor,
+              decoration: BoxDecoration(
+                color: primaryColor,
                 shape: BoxShape.circle,
               ),
               child: Center(
@@ -309,7 +330,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
               Container(
                 width: 2,
                 height: 40,
-                color: AppTheme.surfaceVariant,
+                color: surfaceVariant,
                 margin: const EdgeInsets.symmetric(vertical: 4),
               ),
           ],
@@ -329,7 +350,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
               const SizedBox(height: 4),
               Text(
                 description,
-                style: TextStyle(color: AppTheme.textSecondary, height: 1.4),
+                style: TextStyle(color: textSecondary, height: 1.4),
               ),
               const SizedBox(height: 24),
             ],

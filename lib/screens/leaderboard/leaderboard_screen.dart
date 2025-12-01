@@ -4,7 +4,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../core/theme/app_theme.dart';
+import '../../core/theme/colors.dart';
+import '../../core/constants/app_constants.dart';
+
 import '../../providers/user_provider.dart';
 import '../../widgets/zen_card.dart';
 import '../../widgets/scale_button.dart';
@@ -80,7 +82,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       }
 
       const workerUrl =
-          'https://earnquest-worker.supreet-dalawai.workers.dev/api/leaderboard';
+          '${AppConstants.baseUrl}${AppConstants.leaderboardEndpoint}';
 
       final response = await http.get(Uri.parse(workerUrl));
 
@@ -126,15 +128,27 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.primaryDark : AppColors.primary;
+    final secondaryColor = isDark ? AppColors.accentDark : AppColors.accent;
+    final accentColor = isDark ? AppColors.accentDark : AppColors.accent;
+
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Leaderboard'),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
         flexibleSpace: Container(
-          decoration: const BoxDecoration(gradient: AppTheme.primaryGradient),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [primaryColor, secondaryColor],
+            ),
+          ),
         ),
       ),
       body: Column(
@@ -143,16 +157,16 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-            color: AppTheme.accentColor.withValues(alpha: 0.1),
+            color: accentColor.withValues(alpha: 0.1),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.timer, size: 16, color: AppTheme.accentColor),
+                Icon(Icons.timer, size: 16, color: accentColor),
                 const SizedBox(width: 8),
                 Text(
                   'Updates in: ${_formatDuration(_timeLeft)}',
-                  style: const TextStyle(
-                    color: AppTheme.accentColor,
+                  style: TextStyle(
+                    color: accentColor,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -224,7 +238,7 @@ class _LeaderboardCard extends StatelessWidget {
     required this.userId,
   });
 
-  Color _getMedalColor() {
+  Color _getMedalColor(bool isDark) {
     switch (rank) {
       case 1:
         return const Color(0xFFFFD700); // Gold
@@ -233,7 +247,9 @@ class _LeaderboardCard extends StatelessWidget {
       case 3:
         return const Color(0xFFCD7F32); // Bronze
       default:
-        return AppTheme.textSecondary;
+        return isDark
+            ? AppColors.textSecondaryDark
+            : AppColors.textSecondaryLight;
     }
   }
 
@@ -252,15 +268,28 @@ class _LeaderboardCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.primaryDark : AppColors.primary;
+    final surfaceColor = isDark
+        ? AppColors.surfaceDark
+        : AppColors.surfaceLight;
+    final textSecondary = isDark
+        ? AppColors.textSecondaryDark
+        : AppColors.textSecondaryLight;
+    final textPrimary = isDark
+        ? AppColors.textPrimaryDark
+        : AppColors.textPrimaryLight;
+
     return ScaleButton(
       onTap: () {}, // Optional: Show user profile
       child: ZenCard(
         padding: const EdgeInsets.all(12),
         color: isCurrentUser
-            ? AppTheme.primaryColor.withValues(alpha: 0.1)
-            : AppTheme.surfaceColor,
+            ? primaryColor.withValues(alpha: 0.1)
+            : surfaceColor,
         border: isCurrentUser
-            ? Border.all(color: AppTheme.primaryColor, width: 2)
+            ? Border.all(color: primaryColor, width: 2)
             : null,
         child: Row(
           children: [
@@ -269,7 +298,7 @@ class _LeaderboardCard extends StatelessWidget {
               width: 50,
               height: 50,
               decoration: BoxDecoration(
-                color: _getMedalColor().withValues(alpha: 0.2),
+                color: _getMedalColor(isDark).withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: Center(
@@ -293,9 +322,7 @@ class _LeaderboardCard extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: isCurrentUser
-                                ? AppTheme.primaryColor
-                                : AppTheme.textPrimary,
+                            color: isCurrentUser ? primaryColor : textPrimary,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -308,7 +335,7 @@ class _LeaderboardCard extends StatelessWidget {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: AppTheme.primaryColor,
+                            color: primaryColor,
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: const Text(
@@ -325,10 +352,7 @@ class _LeaderboardCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     'Earned: ₹${earnings.toStringAsFixed(2)}',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppTheme.textSecondary,
-                    ),
+                    style: TextStyle(fontSize: 14, color: textSecondary),
                   ),
                 ],
               ),
@@ -340,16 +364,16 @@ class _LeaderboardCard extends StatelessWidget {
               children: [
                 Text(
                   '₹${earnings.toStringAsFixed(2)}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.primaryColor,
+                    color: primaryColor,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   'Total',
-                  style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                  style: TextStyle(fontSize: 12, color: textSecondary),
                 ),
               ],
             ),

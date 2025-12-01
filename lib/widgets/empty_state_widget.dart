@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../core/theme/app_theme.dart';
+import '../core/theme/colors.dart';
+import '../core/constants/dimensions.dart';
 
 /// Generic empty state widget for lists/content areas
 class EmptyStateWidget extends StatelessWidget {
@@ -17,7 +18,7 @@ class EmptyStateWidget extends StatelessWidget {
     required this.icon,
     this.actionButtonText,
     this.onActionPressed,
-    this.iconColor = AppTheme.primaryColor,
+    this.iconColor = AppColors.primary,
   });
 
   @override
@@ -36,7 +37,7 @@ class EmptyStateWidget extends StatelessWidget {
             ),
             child: Icon(icon, size: 40, color: iconColor),
           ),
-          const SizedBox(height: AppTheme.space24),
+          const SizedBox(height: AppDimensions.space24),
 
           // Title
           Text(
@@ -46,11 +47,13 @@ class EmptyStateWidget extends StatelessWidget {
             ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: AppTheme.space8),
+          const SizedBox(height: AppDimensions.space8),
 
           // Subtitle
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppTheme.space24),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppDimensions.space24,
+            ),
             child: Text(
               subtitle,
               style: Theme.of(context).textTheme.bodyMedium,
@@ -59,7 +62,7 @@ class EmptyStateWidget extends StatelessWidget {
           ),
 
           if (actionButtonText != null && onActionPressed != null) ...[
-            const SizedBox(height: AppTheme.space24),
+            const SizedBox(height: AppDimensions.space24),
             ElevatedButton.icon(
               onPressed: onActionPressed,
               icon: const Icon(Icons.arrow_forward),

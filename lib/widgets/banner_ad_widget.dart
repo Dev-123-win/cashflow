@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import '../core/theme/app_theme.dart';
 
 /// Widget to display AdMob Banner Ad
 class BannerAdWidget extends StatefulWidget {
@@ -59,7 +58,7 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
       alignment: Alignment.center,
       width: double.maxFinite,
       height: widget.height,
-      color: AppTheme.surfaceColor,
+      color: Theme.of(context).cardColor,
       child: AdWidget(ad: _bannerAd!),
     );
   }
@@ -117,7 +116,7 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
     }
 
     return Container(
-      color: AppTheme.surfaceColor,
+      color: Theme.of(context).cardColor,
       padding: const EdgeInsets.all(8),
       height: 320,
       child: AdWidget(ad: _nativeAd!),

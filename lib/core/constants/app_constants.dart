@@ -1,6 +1,7 @@
 class AppConstants {
   // API Configuration
-  static const String baseUrl = 'https://earnquest.workers.dev';
+  static const String baseUrl =
+      'https://earnquest-worker.earnplay12345.workers.dev';
 
   // API Endpoints
   static const String taskEarningEndpoint = '/api/earn/task';

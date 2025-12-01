@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'dart:async';
-import '../core/theme/app_theme.dart';
+import '../core/theme/colors.dart';
+import '../core/constants/dimensions.dart';
 
 class ParallaxBalanceCard extends StatefulWidget {
   final int coins;
@@ -59,7 +60,7 @@ class _ParallaxBalanceCardState extends State<ParallaxBalanceCard> {
       height: 200,
       width: double.infinity,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppTheme.radiusL),
+        borderRadius: BorderRadius.circular(AppDimensions.radiusL),
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -96,7 +97,7 @@ class _ParallaxBalanceCardState extends State<ParallaxBalanceCard> {
           ),
           // Content
           Padding(
-            padding: const EdgeInsets.all(AppTheme.space24),
+            padding: const EdgeInsets.all(AppDimensions.space24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -114,7 +115,7 @@ class _ParallaxBalanceCardState extends State<ParallaxBalanceCard> {
                                 color: Colors.white.withValues(alpha: 0.8),
                               ),
                         ),
-                        const SizedBox(height: AppTheme.space8),
+                        const SizedBox(height: AppDimensions.space8),
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -139,7 +140,7 @@ class _ParallaxBalanceCardState extends State<ParallaxBalanceCard> {
                       ],
                     ),
                     Container(
-                      padding: const EdgeInsets.all(AppTheme.space8),
+                      padding: const EdgeInsets.all(AppDimensions.space8),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
                         shape: BoxShape.circle,
@@ -157,10 +158,10 @@ class _ParallaxBalanceCardState extends State<ParallaxBalanceCard> {
                     onPressed: widget.canWithdraw ? widget.onWithdraw : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
-                      foregroundColor: AppTheme.primaryColor,
+                      foregroundColor: AppColors.primary,
                       elevation: 0,
                       padding: const EdgeInsets.symmetric(
-                        vertical: AppTheme.space12,
+                        vertical: AppDimensions.space12,
                       ),
                     ),
                     child: const Text('Redeem Coins'),

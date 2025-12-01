@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
-import '../../core/theme/app_theme.dart';
+import '../../core/theme/colors.dart';
+import '../../core/constants/dimensions.dart';
 import '../../core/constants/app_assets.dart';
 import '../../providers/user_provider.dart';
 
@@ -23,8 +24,22 @@ class ArcadeScreen extends StatefulWidget {
 class _ArcadeScreenState extends State<ArcadeScreen> {
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.primaryDark : AppColors.primary;
+    final errorColor = AppColors.error;
+    final surfaceColor = isDark
+        ? AppColors.surfaceDark
+        : AppColors.surfaceLight;
+    final surfaceVariant = isDark
+        ? AppColors.surfaceVariantDark
+        : AppColors.surfaceVariantLight;
+    final textPrimary = isDark
+        ? AppColors.textPrimaryDark
+        : AppColors.textPrimaryLight;
+    final tertiaryColor = AppColors.warning;
+
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
       body: CustomScrollView(
         slivers: [
           // AppBar
@@ -32,10 +47,7 @@ class _ArcadeScreenState extends State<ArcadeScreen> {
             floating: true,
             backgroundColor: Colors.transparent,
             elevation: 0,
-            title: Text(
-              'Arcade Zone',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
+            title: Text('Arcade Zone', style: theme.textTheme.headlineSmall),
             actions: [
               Consumer<UserProvider>(
                 builder: (context, userProvider, _) {
@@ -51,13 +63,11 @@ class _ArcadeScreenState extends State<ArcadeScreen> {
                     ),
                     decoration: BoxDecoration(
                       color: isLimitReached
-                          ? AppTheme.errorColor.withValues(alpha: 0.1)
-                          : AppTheme.surfaceColor,
+                          ? errorColor.withValues(alpha: 0.1)
+                          : surfaceColor,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: isLimitReached
-                            ? AppTheme.errorColor
-                            : AppTheme.surfaceVariant,
+                        color: isLimitReached ? errorColor : surfaceVariant,
                       ),
                     ),
                     child: Row(
@@ -65,20 +75,15 @@ class _ArcadeScreenState extends State<ArcadeScreen> {
                         Icon(
                           isLimitReached ? Icons.block : Icons.videogame_asset,
                           size: 16,
-                          color: isLimitReached
-                              ? AppTheme.errorColor
-                              : AppTheme.primaryColor,
+                          color: isLimitReached ? errorColor : primaryColor,
                         ),
                         const SizedBox(width: 4),
                         Text(
                           '$gamesRemaining/20 left',
-                          style: Theme.of(context).textTheme.labelSmall
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: isLimitReached
-                                    ? AppTheme.errorColor
-                                    : AppTheme.textPrimary,
-                              ),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: isLimitReached ? errorColor : textPrimary,
+                          ),
                         ),
                       ],
                     ),
@@ -90,7 +95,7 @@ class _ArcadeScreenState extends State<ArcadeScreen> {
 
           // Content
           SliverPadding(
-            padding: const EdgeInsets.all(AppTheme.space16),
+            padding: const EdgeInsets.all(AppDimensions.space16),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 // Featured: Daily Spin
@@ -100,25 +105,22 @@ class _ArcadeScreenState extends State<ArcadeScreen> {
                   subtitle: 'Win up to 750 Coins daily!',
                   lottieAsset: AppAssets
                       .giftBoxOpen, // Using gift box as placeholder for wheel if needed
-                  color: AppTheme.tertiaryColor,
+                  color: tertiaryColor,
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => const SpinScreen()),
                   ),
                 ),
-                const SizedBox(height: AppTheme.space24),
+                const SizedBox(height: AppDimensions.space24),
 
                 // Games Grid
-                Text(
-                  'Quick Games',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: AppTheme.space16),
+                Text('Quick Games', style: theme.textTheme.titleLarge),
+                const SizedBox(height: AppDimensions.space16),
 
                 StaggeredGrid.count(
                   crossAxisCount: 2,
-                  mainAxisSpacing: AppTheme.space12,
-                  crossAxisSpacing: AppTheme.space12,
+                  mainAxisSpacing: AppDimensions.space12,
+                  crossAxisSpacing: AppDimensions.space12,
                   children: [
                     StaggeredGridTile.count(
                       crossAxisCellCount: 1,
@@ -174,7 +176,7 @@ class _ArcadeScreenState extends State<ArcadeScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: AppTheme.space24),
+                const SizedBox(height: AppDimensions.space24),
 
                 // Banner Ad
                 const BannerAdWidget(),
@@ -199,14 +201,14 @@ class _ArcadeScreenState extends State<ArcadeScreen> {
       onTap: onTap,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(AppTheme.space20),
+        padding: const EdgeInsets.all(AppDimensions.space20),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [color, color.withValues(alpha: 0.8)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(AppTheme.radiusL),
+          borderRadius: BorderRadius.circular(AppDimensions.radiusL),
           boxShadow: [
             BoxShadow(
               color: color.withValues(alpha: 0.3),
@@ -257,15 +259,34 @@ class _ArcadeScreenState extends State<ArcadeScreen> {
     required VoidCallback onTap,
     bool isHorizontal = false,
   }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final surfaceColor = isDark
+        ? AppColors.surfaceDark
+        : AppColors.surfaceLight;
+    final surfaceVariant = isDark
+        ? AppColors.surfaceVariantDark
+        : AppColors.surfaceVariantLight;
+    final textSecondary = isDark
+        ? AppColors.textSecondaryDark
+        : AppColors.textSecondaryLight;
+    final successColor = AppColors.success;
+
     return ScaleButton(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(AppTheme.space16),
+        padding: const EdgeInsets.all(AppDimensions.space16),
         decoration: BoxDecoration(
-          color: AppTheme.surfaceColor,
-          borderRadius: BorderRadius.circular(AppTheme.radiusM),
-          border: Border.all(color: AppTheme.surfaceVariant),
-          boxShadow: AppTheme.softShadow,
+          color: surfaceColor,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+          border: Border.all(color: surfaceVariant),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: isHorizontal
             ? Row(
@@ -286,24 +307,21 @@ class _ArcadeScreenState extends State<ArcadeScreen> {
                       children: [
                         Text(
                           title,
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.bold),
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         Text(
                           reward,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: AppTheme.successColor,
-                                fontWeight: FontWeight.bold,
-                              ),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: successColor,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  const Icon(
-                    Icons.play_circle_fill,
-                    color: AppTheme.textSecondary,
-                  ),
+                  Icon(Icons.play_circle_fill, color: textSecondary),
                 ],
               )
             : Column(
@@ -323,8 +341,9 @@ class _ArcadeScreenState extends State<ArcadeScreen> {
                     children: [
                       Text(
                         title,
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.bold),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Container(
@@ -333,16 +352,17 @@ class _ArcadeScreenState extends State<ArcadeScreen> {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: AppTheme.successColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(AppTheme.radiusS),
+                          color: successColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(
+                            AppDimensions.radiusS,
+                          ),
                         ),
                         child: Text(
                           reward,
-                          style: Theme.of(context).textTheme.labelSmall
-                              ?.copyWith(
-                                color: AppTheme.successColor,
-                                fontWeight: FontWeight.bold,
-                              ),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: successColor,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ],

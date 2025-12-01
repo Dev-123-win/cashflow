@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../services/ad_service.dart';
-import '../core/theme/app_theme.dart';
+import '../core/constants/dimensions.dart';
 import 'shimmer_loading.dart';
 
 class NativeAdWidget extends StatefulWidget {
@@ -46,18 +46,26 @@ class _NativeAdWidgetState extends State<NativeAdWidget> {
       return const ShimmerLoading.rectangular(
         height: 100,
         shapeBorder: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(AppTheme.radiusM)),
+          borderRadius: BorderRadius.all(
+            Radius.circular(AppDimensions.radiusM),
+          ),
         ),
       );
     }
 
     return Container(
       height: 120, // Adjust based on native ad template
-      padding: const EdgeInsets.all(AppTheme.space12),
+      padding: const EdgeInsets.all(AppDimensions.space12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(AppTheme.radiusM),
-        boxShadow: AppTheme.softShadow,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: AdWidget(ad: _nativeAd!),
     );

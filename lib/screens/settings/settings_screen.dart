@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_theme.dart';
+import '../../core/theme/colors.dart';
+import '../../core/constants/dimensions.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/custom_dialog.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -20,15 +21,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.primaryDark : AppColors.primary;
+    final surfaceColor = isDark
+        ? AppColors.surfaceDark
+        : AppColors.surfaceLight;
+
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppTheme.backgroundColor,
+        backgroundColor: theme.scaffoldBackgroundColor,
         elevation: 0,
         title: const Text('Settings'),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppTheme.space16),
+        padding: const EdgeInsets.all(AppDimensions.space16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -54,7 +62,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _withdrawalNotifications,
               (value) => setState(() => _withdrawalNotifications = value),
             ),
-            const SizedBox(height: AppTheme.space32),
+            const SizedBox(height: AppDimensions.space32),
             _buildSectionTitle(context, 'Privacy'),
             _buildToggleSetting(
               context,
@@ -63,38 +71,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _showOnLeaderboard,
               (value) => setState(() => _showOnLeaderboard = value),
             ),
-            const SizedBox(height: AppTheme.space32),
+            const SizedBox(height: AppDimensions.space32),
             _buildSectionTitle(context, 'About'),
             ListTile(
               contentPadding: const EdgeInsets.symmetric(
-                horizontal: AppTheme.space16,
+                horizontal: AppDimensions.space16,
               ),
-              tileColor: AppTheme.surfaceColor,
+              tileColor: surfaceColor,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                borderRadius: BorderRadius.circular(AppDimensions.radiusM),
               ),
               leading: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                  color: primaryColor.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.info_outline, color: AppTheme.primaryColor),
+                child: Icon(Icons.info_outline, color: primaryColor),
               ),
-              title: Text(
-                'About App',
-                style: Theme.of(context).textTheme.labelLarge,
-              ),
+              title: Text('About App', style: theme.textTheme.labelLarge),
               trailing: const Icon(Icons.arrow_forward_ios, size: 16),
               onTap: () => _showAboutDialog(context),
             ),
-            const SizedBox(height: AppTheme.space32),
+            const SizedBox(height: AppDimensions.space32),
             SizedBox(
               width: double.infinity,
               height: 48,
               child: ElevatedButton(
                 onPressed: () => _showLogoutDialog(context),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.error,
+                ),
                 child: const Text('Logout'),
               ),
             ),
@@ -105,18 +112,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildSectionTitle(BuildContext context, String title) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.primaryDark : AppColors.primary;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         0,
-        AppTheme.space24,
+        AppDimensions.space24,
         0,
-        AppTheme.space12,
+        AppDimensions.space12,
       ),
       child: Text(
         title,
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+        style: theme.textTheme.labelLarge?.copyWith(
           fontWeight: FontWeight.bold,
-          color: AppTheme.primaryColor,
+          color: primaryColor,
         ),
       ),
     );
@@ -129,13 +140,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
     bool value,
     Function(bool) onChanged,
   ) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final surfaceColor = isDark
+        ? AppColors.surfaceDark
+        : AppColors.surfaceLight;
+    final textSecondary = isDark
+        ? AppColors.textSecondaryDark
+        : AppColors.textSecondaryLight;
+    final primaryColor = isDark ? AppColors.primaryDark : AppColors.primary;
+
     return Container(
-      margin: const EdgeInsets.only(bottom: AppTheme.space8),
-      padding: const EdgeInsets.all(AppTheme.space16),
+      margin: const EdgeInsets.only(bottom: AppDimensions.space8),
+      padding: const EdgeInsets.all(AppDimensions.space16),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceColor,
-        borderRadius: BorderRadius.circular(AppTheme.radiusM),
-        boxShadow: AppTheme.cardShadow,
+        color: surfaceColor,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -143,22 +170,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: Theme.of(context).textTheme.labelLarge),
+                Text(title, style: theme.textTheme.labelLarge),
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppTheme.textSecondary,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: textSecondary,
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: AppTheme.space16),
+          const SizedBox(width: AppDimensions.space16),
           Switch(
             value: value,
             onChanged: onChanged,
-            activeThumbColor: AppTheme.primaryColor,
+            activeThumbColor: primaryColor,
           ),
         ],
       ),
@@ -185,7 +212,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               AuthService().signOut();
               Navigator.pop(context);
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
             child: const Text('Logout'),
           ),
         ],
@@ -194,14 +221,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showAboutDialog(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final textSecondary = isDark
+        ? AppColors.textSecondaryDark
+        : AppColors.textSecondaryLight;
+
     showDialog(
       context: context,
       builder: (context) => Dialog(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppTheme.radiusL),
+          borderRadius: BorderRadius.circular(AppDimensions.radiusL),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(AppTheme.space24),
+          padding: const EdgeInsets.all(AppDimensions.space24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -232,21 +265,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: AppTheme.space16),
+              const SizedBox(height: AppDimensions.space16),
               Text(
                 'EarnQuest',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: AppTheme.space8),
+              const SizedBox(height: AppDimensions.space8),
               Text(
                 'Version 1.0.0',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: textSecondary,
+                ),
               ),
-              const SizedBox(height: AppTheme.space24),
+              const SizedBox(height: AppDimensions.space24),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(

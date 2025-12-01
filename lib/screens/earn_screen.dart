@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_theme.dart';
 import 'tasks/tasks_screen.dart';
 import 'games/games_screen.dart';
 
@@ -28,15 +27,19 @@ class _EarnScreenState extends State<EarnScreen>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
+    final onSurfaceVariant = theme.colorScheme.onSurfaceVariant;
+
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Earn Rewards'),
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: AppTheme.primaryColor,
-          labelColor: AppTheme.primaryColor,
-          unselectedLabelColor: AppTheme.textSecondary,
+          indicatorColor: primaryColor,
+          labelColor: primaryColor,
+          unselectedLabelColor: onSurfaceVariant,
           tabs: const [
             Tab(text: 'Tasks', icon: Icon(Icons.assignment_outlined)),
             Tab(text: 'Games', icon: Icon(Icons.sports_esports_outlined)),

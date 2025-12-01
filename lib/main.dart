@@ -22,6 +22,7 @@ import 'services/fee_calculation_service.dart';
 import 'services/device_fingerprint_service.dart';
 import 'services/ad_service.dart';
 import 'core/di/service_locator.dart';
+import 'widgets/custom_dialog.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -200,54 +201,18 @@ class _AuthenticationWrapperState extends State<AuthenticationWrapper> {
       showDialog(
         context: context,
         barrierDismissible: riskScore < 40,
-        builder: (context) => AlertDialog(
-          title: Row(
-            children: [
-              Icon(
-                Icons.warning_amber_rounded,
-                color: riskScore >= 40 ? Colors.red : Colors.orange,
-                size: 28,
-              ),
-              const SizedBox(width: 8),
-              Text('Security Warning ($severity)'),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'The following security issues were detected:',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-              ...warnings.map(
-                (w) => Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Text(w),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                riskScore >= 40
-                    ? 'For security reasons, this app cannot run on this device.'
-                    : 'Some features may not work correctly. Your account may be subject to additional verification.',
-                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-              ),
-            ],
-          ),
-          actions: [
-            if (riskScore < 40)
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('I Understand'),
-              )
-            else
-              TextButton(
-                onPressed: () => SystemNavigator.pop(),
-                child: const Text('Exit App'),
-              ),
-          ],
+        builder: (context) => WarningDialog(
+          title: 'Security Warning ($severity)',
+          message:
+              'The following security issues were detected:\n\n${warnings.join('\n')}\n\n${riskScore >= 40 ? 'For security reasons, this app cannot run on this device.' : 'Some features may not work correctly. Your account may be subject to additional verification.'}',
+          confirmText: riskScore < 40 ? 'I Understand' : 'Exit App',
+          onConfirm: () {
+            if (riskScore >= 40) {
+              SystemNavigator.pop();
+            } else {
+              Navigator.pop(context);
+            }
+          },
         ),
       );
     }
@@ -275,7 +240,7 @@ class _AuthenticationWrapperState extends State<AuthenticationWrapper> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(
-            backgroundColor: AppTheme.backgroundColor,
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
             body: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,

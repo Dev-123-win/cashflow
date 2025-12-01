@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '../../core/theme/app_theme.dart';
+import '../../core/theme/colors.dart';
+import '../../core/constants/dimensions.dart';
 import '../../core/constants/app_assets.dart';
-import '../../widgets/zen_card.dart';
-import '../../widgets/scale_button.dart';
+import '../../widgets/core/app_button.dart';
+import '../../widgets/core/app_card.dart';
 
 class OnboardingScreen extends StatefulWidget {
   final VoidCallback onComplete;
@@ -69,8 +70,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isLight = Theme.of(context).brightness == Brightness.light;
+
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -89,7 +91,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(AppTheme.space24),
+              padding: const EdgeInsets.all(AppDimensions.space24),
               child: Column(
                 children: [
                   Row(
@@ -104,58 +106,38 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         decoration: BoxDecoration(
                           color: _currentPage == index
                               ? _pages[_currentPage].color
-                              : AppTheme.textTertiary.withValues(alpha: 0.3),
+                              : (isLight
+                                        ? AppColors.textTertiaryLight
+                                        : AppColors.textTertiaryDark)
+                                    .withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: AppTheme.space32),
-                  ScaleButton(
-                    onTap: _goToNextPage,
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(
-                        vertical: AppTheme.space16,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _pages[_currentPage].color,
-                        borderRadius: BorderRadius.circular(AppTheme.radiusM),
-                        boxShadow: [
-                          BoxShadow(
-                            color: _pages[_currentPage].color.withValues(
-                              alpha: 0.4,
-                            ),
-                            blurRadius: 16,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: Text(
-                          _currentPage == _pages.length - 1
-                              ? 'Get Started'
-                              : 'Next',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
+                  const SizedBox(height: AppDimensions.space32),
+                  AppButton(
+                    label: _currentPage == _pages.length - 1
+                        ? 'Get Started'
+                        : 'Next',
+                    onPressed: _goToNextPage,
+                    backgroundColor: _pages[_currentPage].color,
                   ),
                   if (_currentPage < _pages.length - 1)
                     Padding(
-                      padding: const EdgeInsets.only(top: AppTheme.space16),
+                      padding: const EdgeInsets.only(
+                        top: AppDimensions.space16,
+                      ),
                       child: TextButton(
                         onPressed: widget.onComplete,
                         child: Text(
                           'Skip',
-                          style: TextStyle(
-                            color: AppTheme.textSecondary,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: Theme.of(context).textTheme.labelLarge
+                              ?.copyWith(
+                                color: isLight
+                                    ? AppColors.textSecondaryLight
+                                    : AppColors.textSecondaryDark,
+                              ),
                         ),
                       ),
                     ),
@@ -169,47 +151,52 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Widget _buildPageContent(OnboardingPage page) {
+    final isLight = Theme.of(context).brightness == Brightness.light;
+
     return SingleChildScrollView(
       child: Container(
-        padding: const EdgeInsets.all(AppTheme.space24),
+        padding: const EdgeInsets.all(AppDimensions.space24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const SizedBox(height: AppTheme.space24),
+            const SizedBox(height: AppDimensions.space24),
             Container(
               height: 280,
               width: double.infinity,
-              padding: const EdgeInsets.all(AppTheme.space24),
+              padding: const EdgeInsets.all(AppDimensions.space24),
               child: SvgPicture.asset(
                 page.assetPath,
                 fit: BoxFit.contain,
                 alignment: Alignment.center,
               ),
             ),
-            const SizedBox(height: AppTheme.space48),
+            const SizedBox(height: AppDimensions.space48),
             Text(
               page.title,
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppTheme.textPrimary,
+              style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                color: isLight
+                    ? AppColors.textPrimaryLight
+                    : AppColors.textPrimaryDark,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppTheme.space16),
+            const SizedBox(height: AppDimensions.space16),
             Text(
               page.description,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: AppTheme.textSecondary,
+                color: isLight
+                    ? AppColors.textSecondaryLight
+                    : AppColors.textSecondaryDark,
                 height: 1.5,
               ),
               textAlign: TextAlign.center,
             ),
             // Show details list if available
             if (page.details != null && page.details!.isNotEmpty) ...[
-              const SizedBox(height: AppTheme.space32),
-              ZenCard(
-                padding: const EdgeInsets.all(AppTheme.space16),
-                color: page.color.withValues(alpha: 0.05),
+              const SizedBox(height: AppDimensions.space32),
+              AppCard(
+                padding: const EdgeInsets.all(AppDimensions.space16),
+                backgroundColor: page.color.withValues(alpha: 0.05),
                 border: Border.all(
                   color: page.color.withValues(alpha: 0.2),
                   width: 1,
@@ -220,16 +207,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ...page.details!.map(
                       (detail) => Padding(
                         padding: const EdgeInsets.symmetric(
-                          vertical: AppTheme.space8,
+                          vertical: AppDimensions.space8,
                         ),
                         child: Row(
                           children: [
                             Icon(
-                              Icons.check_circle,
+                              Icons.check_circle_rounded,
                               color: page.color,
                               size: 20,
                             ),
-                            const SizedBox(width: AppTheme.space12),
+                            const SizedBox(width: AppDimensions.space12),
                             Expanded(
                               child: Text(
                                 detail,
