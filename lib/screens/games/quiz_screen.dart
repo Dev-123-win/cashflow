@@ -4,6 +4,7 @@ import '../../core/theme/colors.dart';
 import '../../core/constants/dimensions.dart';
 import '../../services/quiz_service.dart';
 import '../../services/ad_service.dart';
+import '../../services/transaction_service.dart'; // For local history
 import '../../providers/user_provider.dart';
 import '../../widgets/custom_dialog.dart';
 import '../../widgets/error_states.dart';
@@ -149,6 +150,18 @@ class _QuizScreenState extends State<QuizScreen> {
               throw Exception('Request timed out');
             },
           );
+
+      // ✅ Record transaction locally for history screen
+      await TransactionService().recordTransaction(
+        userId: userProvider.user.userId,
+        type: 'earning',
+        amount: reward.toDouble(),
+        gameType: 'quiz',
+        success: true,
+        status: 'completed',
+        description: 'Quiz Reward',
+        extraData: {'requestId': transactionId},
+      );
 
       if (mounted) {
         showDialog(

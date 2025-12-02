@@ -339,8 +339,8 @@ class _GameCard extends StatelessWidget {
                     children: [
                       Image.asset(
                         'assets/icons/Coin.png',
-                        width: 16,
-                        height: 16,
+                        width: 22,
+                        height: 22,
                       ),
                       const SizedBox(width: 4),
                       Text(

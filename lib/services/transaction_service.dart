@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'database_helper.dart';
 
@@ -26,20 +25,8 @@ class TransactionModel {
     required this.status,
   });
 
-  factory TransactionModel.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
-    return TransactionModel(
-      id: doc.id,
-      userId: data['userId'] ?? '',
-      type: data['type'] ?? 'earning',
-      amount: (data['amount'] ?? 0).toDouble(),
-      gameType: data['gameType'],
-      success: data['success'] ?? true,
-      timestamp: (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      description: data['description'],
-      status: data['status'] ?? 'completed',
-    );
-  }
+  // Removed fromFirestore - now using fromMap for all data
+  // Firestore data comes through backend API, not direct Firestore access
 
   factory TransactionModel.fromMap(Map<String, dynamic> map) {
     return TransactionModel(
@@ -69,7 +56,7 @@ class TransactionModel {
 }
 
 class TransactionService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  // Removed FirebaseFirestore - all Firestore access now through backend API
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
   // Get transaction history for a user (Local + Sync)
@@ -80,8 +67,8 @@ class TransactionService {
     DateTime? endDate,
     int limit = 50,
   }) async* {
-    // 1. Sync withdrawals/referrals from Firestore first
-    _syncExternalTransactions(userId);
+    // 1. Note: Sync of withdrawals happens through backend API, not here
+    // Backend pushes withdrawal data which gets synced separately
 
     // 2. Return local stream
     while (true) {
@@ -99,49 +86,9 @@ class TransactionService {
     }
   }
 
-  Future<void> _syncExternalTransactions(String userId) async {
-    try {
-      // Sync Withdrawals
-      final withdrawals = await _firestore
-          .collection('withdrawals')
-          .where('userId', isEqualTo: userId)
-          .limit(20) // Limit sync to recent
-          .get();
-
-      for (var doc in withdrawals.docs) {
-        final data = doc.data();
-        final transaction = TransactionModel(
-          id: doc.id,
-          userId: userId,
-          type: 'withdrawal',
-          amount: (data['amount'] ?? 0).toDouble(),
-          success: true,
-          timestamp:
-              (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-          status: data['status'] ?? 'pending',
-          description: 'Withdrawal Request',
-        );
-        await _dbHelper.insertTransaction(transaction);
-      }
-
-      // Sync Referrals (assuming source='referral')
-      final externalEarnings = await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('transactions')
-          .where('type', isEqualTo: 'earning')
-          .where('source', isEqualTo: 'referral')
-          .limit(20)
-          .get();
-
-      for (var doc in externalEarnings.docs) {
-        final t = TransactionModel.fromFirestore(doc);
-        await _dbHelper.insertTransaction(t);
-      }
-    } catch (e) {
-      debugPrint('Sync error: $e');
-    }
-  }
+  // Note: _syncExternalTransactions removed
+  // Withdrawal syncing now happens through backend API
+  // No direct Firestore access needed
 
   // Record a new transaction (Local Only for earnings)
   Future<void> recordTransaction({

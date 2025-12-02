@@ -390,8 +390,8 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
                           children: [
                             Image.asset(
                               'assets/icons/Coin.png',
-                              width: 32,
-                              height: 32,
+                              width: 40,
+                              height: 40,
                             ),
                             const SizedBox(width: 8),
                             Text(
@@ -510,8 +510,8 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
                       padding: const EdgeInsets.all(12.0),
                       child: Image.asset(
                         'assets/icons/Coin.png',
-                        width: 24,
-                        height: 24,
+                        width: 32,
+                        height: 32,
                       ),
                     ),
                     border: OutlineInputBorder(

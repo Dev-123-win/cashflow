@@ -521,7 +521,7 @@ class ProfileScreen extends StatelessWidget {
               if (label.contains('Coins') ||
                   label == 'Available' ||
                   label == 'This Month') ...[
-                Image.asset('assets/icons/Coin.png', width: 20, height: 20),
+                Image.asset('assets/icons/Coin.png', width: 28, height: 28),
                 const SizedBox(width: 4),
               ],
               Flexible(

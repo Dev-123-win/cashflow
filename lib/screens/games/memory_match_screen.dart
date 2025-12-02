@@ -9,6 +9,7 @@ import '../../services/game_service.dart';
 import '../../services/cloudflare_workers_service.dart';
 import '../../services/ad_service.dart';
 import '../../services/device_fingerprint_service.dart';
+import '../../services/transaction_service.dart'; // For local history
 import '../../providers/user_provider.dart';
 import '../../widgets/custom_dialog.dart';
 import '../../widgets/error_states.dart';
@@ -247,7 +248,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
           final accuracy = _game.getAccuracy();
 
           // Fixed reward (matches backend)
-          int reward = 60; // 60 Coins
+          int reward = 50; // 50 Coins
 
           // Use request ID as transaction ID for tracking
           final transactionId =
@@ -329,7 +330,18 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
           userProvider.confirmOptimisticCoins(transactionId, newBalance);
         }
 
-
+        // ✅ Record transaction locally for history screen
+        final actualReward = result['reward'] ?? estimatedReward;
+        await TransactionService().recordTransaction(
+          userId: user.uid,
+          type: 'earning',
+          amount: actualReward.toDouble(),
+          gameType: 'memory_match',
+          success: true,
+          status: 'completed',
+          description: 'Memory Match Win',
+          extraData: {'requestId': requestId},
+        );
 
         debugPrint('✅ Game win recorded: ${result['transaction']['id']}');
       }
@@ -519,7 +531,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
                               Text('Reward', style: theme.textTheme.labelSmall),
                               const SizedBox(height: 4),
                               Text(
-                                '500+ Coins',
+                                '50 Coins',
                                 style: theme.textTheme.headlineSmall?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: AppColors.success,
@@ -734,7 +746,6 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
                   ),
                   const SizedBox(height: AppDimensions.space16),
 
-
                   const SizedBox(height: AppDimensions.space32),
 
                   // How to Play
@@ -752,7 +763,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
                           '• Match pairs of identical emojis\n'
                           '• Complete all 4 pairs to win\n'
                           '• Watch ad to claim reward\n'
-                          '• Win reward: 60 Coins',
+                          '• Win reward: 50 Coins',
                           style: theme.textTheme.bodyMedium?.copyWith(
                             height: 1.5,
                             color: textSecondary,
@@ -770,6 +781,3 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
     );
   }
 }
-
-  
-

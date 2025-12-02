@@ -100,16 +100,23 @@ class UserProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Clear stale pending transactions (older than 5 minutes)
+  /// Clear stale pending transactions (older than 24 hours)
   ///
   /// Prevents memory leak from failed requests that were never confirmed/rolled back
+  /// INCREASED to 24 hours to prevent coin loss even if backend is temporarily down
+  /// Gives users a full day for sync to complete, even across app restarts
   void _clearStalePendingTransactions() {
     final now = DateTime.now();
     final staleIds = <String>[];
 
     for (final entry in _pendingTransactions.entries) {
-      if (now.difference(entry.value.timestamp).inMinutes > 5) {
+      if (now.difference(entry.value.timestamp).inMinutes > 1440) {
+        // 24 hours = 1440 minutes
         staleIds.add(entry.key);
+        debugPrint(
+          '⚠️ Clearing stale transaction: ${entry.key} '
+          '(${now.difference(entry.value.timestamp).inHours}h old)',
+        );
       }
     }
 
@@ -118,6 +125,7 @@ class UserProvider extends ChangeNotifier {
     }
 
     if (staleIds.isNotEmpty) {
+      debugPrint('🧹 Cleared ${staleIds.length} stale transactions');
       _savePendingTransactions();
     }
   }

@@ -368,8 +368,8 @@ class _SpinScreenState extends State<SpinScreen> {
                                             const SizedBox(width: 4),
                                             Image.asset(
                                               'assets/icons/Coin.png',
-                                              width: 16,
-                                              height: 16,
+                                              width: 22,
+                                              height: 22,
                                             ),
                                           ],
                                         ),

@@ -10,6 +10,7 @@ import '../../services/game_service.dart';
 import '../../services/ad_service.dart';
 import '../../services/device_fingerprint_service.dart';
 import '../../services/cloudflare_workers_service.dart';
+import '../../services/transaction_service.dart'; // For local history
 import '../../providers/user_provider.dart';
 import '../../widgets/custom_dialog.dart';
 import '../../widgets/error_states.dart';
@@ -286,6 +287,19 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
 
         // ❌ REMOVED: Cooldown should start AFTER reward claim, not here
         // Cooldown will be started in _executeClaimReward after ad is watched
+
+        // ✅ Record transaction locally for history screen
+        final actualReward = result['reward'] ?? 60;
+        await TransactionService().recordTransaction(
+          userId: user.uid,
+          type: 'earning',
+          amount: actualReward.toDouble(),
+          gameType: 'tictactoe',
+          success: true,
+          status: 'completed',
+          description: 'Tic-Tac-Toe Win',
+          extraData: {'requestId': requestId},
+        );
 
         debugPrint('✅ Game win recorded: ${result['transaction']['id']}');
       }

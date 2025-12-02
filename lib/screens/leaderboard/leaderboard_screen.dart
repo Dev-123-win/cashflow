@@ -355,8 +355,8 @@ class _LeaderboardCard extends StatelessWidget {
                     children: [
                       Image.asset(
                         'assets/icons/Coin.png',
-                        width: 14,
-                        height: 14,
+                        width: 20,
+                        height: 20,
                       ),
                       const SizedBox(width: 4),
                       Text(
@@ -376,7 +376,7 @@ class _LeaderboardCard extends StatelessWidget {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Image.asset('assets/icons/Coin.png', width: 18, height: 18),
+                    Image.asset('assets/icons/Coin.png', width: 24, height: 24),
                     const SizedBox(width: 4),
                     Text(
                       AppUtils.formatLargeNumber((earnings * 1000).toInt()),
