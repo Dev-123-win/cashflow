@@ -5,7 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import '../../core/theme/colors.dart';
 import '../../core/constants/dimensions.dart';
 import '../../services/game_service.dart';
-import '../../services/cooldown_service.dart';
+
 import '../../services/cloudflare_workers_service.dart';
 import '../../services/ad_service.dart';
 import '../../services/device_fingerprint_service.dart';
@@ -25,7 +25,7 @@ class MemoryMatchScreen extends StatefulWidget {
 class _MemoryMatchScreenState extends State<MemoryMatchScreen>
     with TickerProviderStateMixin {
   late final GameService _gameService;
-  late final CooldownService _cooldownService;
+
   late final AdService _adService;
   late MemoryMatchGame _game;
   int? _selectedIndex1;
@@ -46,7 +46,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
   void initState() {
     super.initState();
     _gameService = GameService();
-    _cooldownService = CooldownService();
+
     _adService = AdService();
     _game = _gameService.createMemoryMatchGame();
     _isGameCompleted = false;
@@ -249,8 +249,13 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
           // Fixed reward (matches backend)
           int reward = 60; // 60 Coins
 
-          // 1. Optimistic Update
-          userProvider.addOptimisticCoins(reward);
+          // Use request ID as transaction ID for tracking
+          final transactionId =
+              _currentRequestId ??
+              'memory_${DateTime.now().millisecondsSinceEpoch}';
+
+          // 1. Optimistic Update with transaction tracking
+          userProvider.addOptimisticCoins(reward, transactionId, 'game');
 
           // Show success dialog immediately
           if (mounted) {
@@ -266,8 +271,8 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
               },
             );
           } catch (e) {
-            // 3. Rollback on failure
-            userProvider.rollbackOptimisticCoins(reward);
+            // 3. Rollback on failure using transaction ID
+            userProvider.rollbackOptimisticCoins(transactionId);
             if (mounted) {
               StateSnackbar.showError(
                 context,
@@ -317,12 +322,14 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
       if (result['success'] == true) {
         final newBalance = result['newBalance'];
         if (newBalance != null) {
-          userProvider.updateLocalState(coins: newBalance);
-          userProvider.confirmOptimisticCoins(estimatedReward);
+          // Confirm optimistic update with server balance
+          final transactionId =
+              _currentRequestId ??
+              'memory_${DateTime.now().millisecondsSinceEpoch}';
+          userProvider.confirmOptimisticCoins(transactionId, newBalance);
         }
 
-        // Update Cooldown locally
-        _cooldownService.startCooldown(user.uid, 'game_memory', 300);
+
 
         debugPrint('✅ Game win recorded: ${result['transaction']['id']}');
       }
@@ -727,55 +734,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
                   ),
                   const SizedBox(height: AppDimensions.space16),
 
-                  // Cooldown Info
-                  Consumer<CooldownService>(
-                    builder: (context, cooldownService, _) {
-                      final remaining = cooldownService.getRemainingCooldown(
-                        userProvider.user.userId,
-                        'game_memory',
-                      );
 
-                      if (remaining > 0) {
-                        return Container(
-                          padding: const EdgeInsets.all(AppDimensions.space16),
-                          decoration: BoxDecoration(
-                            color: AppColors.warning.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(
-                              AppDimensions.radiusM,
-                            ),
-                            border: Border.all(
-                              color: AppColors.warning,
-                              width: 1,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.timer, color: AppColors.warning),
-                              const SizedBox(width: AppDimensions.space12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Cooldown Active',
-                                      style: theme.textTheme.labelLarge,
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'Next game in ${cooldownService.formatCooldown(remaining)}',
-                                      style: theme.textTheme.bodySmall,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }
-
-                      return const SizedBox.shrink();
-                    },
-                  ),
                   const SizedBox(height: AppDimensions.space32),
 
                   // How to Play
@@ -811,3 +770,6 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
     );
   }
 }
+
+  
+

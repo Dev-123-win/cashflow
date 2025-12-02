@@ -130,15 +130,43 @@ class AppUtils {
     return (current / max).clamp(0, 1);
   }
 
-  // Format large numbers
-  static String formatLargeNumber(int number) {
-    if (number >= 1000000) {
-      return '${(number / 1000000).toStringAsFixed(1)}M';
-    } else if (number >= 1000) {
-      return '${(number / 1000).toStringAsFixed(1)}K';
+  // Format large numbers with abbreviations (K, M, B, T)
+  static String formatLargeNumber(num number) {
+    final absNumber = number.abs();
+
+    if (absNumber >= 1000000000000) {
+      // Trillions
+      final value = number / 1000000000000;
+      return _formatWithDecimal(value, 'T');
+    } else if (absNumber >= 1000000000) {
+      // Billions
+      final value = number / 1000000000;
+      return _formatWithDecimal(value, 'B');
+    } else if (absNumber >= 1000000) {
+      // Millions
+      final value = number / 1000000;
+      return _formatWithDecimal(value, 'M');
+    } else if (absNumber >= 1000) {
+      // Thousands
+      final value = number / 1000;
+      return _formatWithDecimal(value, 'K');
     } else {
-      return number.toString();
+      // Less than 1000, show exact number
+      return number.toInt().toString();
     }
+  }
+
+  // Helper to format number with decimal and remove trailing zeros
+  static String _formatWithDecimal(double value, String suffix) {
+    // Use 1 decimal place for precision
+    final formatted = value.toStringAsFixed(1);
+
+    // Remove trailing .0 (e.g., "1.0K" becomes "1K")
+    if (formatted.endsWith('.0')) {
+      return '${value.toInt()}$suffix';
+    }
+
+    return '$formatted$suffix';
   }
 
   // Get device ID (mock implementation)

@@ -14,11 +14,6 @@ service cloud.firestore {
     function isAuthenticatedUser(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
-
-    // ✅ BACKEND AUTHENTICATION CHECK
-    function isBackendService() {
-      return request.auth.token.email == 'firebase-adminsdk-fbsvc@rewardly-new.iam.gserviceaccount.com';
-    }
     
     function isAdmin(userId) {
       return isAuthenticated() && get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin';
@@ -46,42 +41,42 @@ service cloud.firestore {
 
     // Users collection
     match /users/{userId} {
+      // ✅ Users can read their own data or public profiles
       allow read: if isAuthenticatedUser(userId) || 
                      (isAuthenticated() && resource.data.profilePublic == true);
       
-      // ✅ BACKEND SERVICE can create and update users
-      allow create, update: if isBackendService();
-      
-      // ✅ USERS can update safe profile fields only
+      // ✅ CRITICAL FIX: Backend uses Admin SDK (bypasses rules)
+      // Users can ONLY update safe profile fields
       allow update: if isAuthenticatedUser(userId) &&
                        request.resource.data.diff(resource.data).affectedKeys()
-                         .hasOnly(['upiId', 'displayName', 'profilePicture']);
+                         .hasOnly(['upiId', 'displayName', 'profilePicture']) &&
+                       request.resource.data.upiId.matches('^[a-zA-Z0-9._-]+@[a-zA-Z]+$');
       
+      // ✅ Backend creates users via Admin SDK
+      allow create: if false; // Only backend can create
       allow delete: if isAdmin(userId);
       
       // Transactions subcollection
       match /transactions/{transactionId} {
         allow read: if isAuthenticatedUser(userId);
         
-        // ✅ ONLY BACKEND CAN WRITE TRANSACTIONS
-        allow create: if isBackendService();
-        allow update, delete: if false;
+        // ✅ ONLY BACKEND CAN WRITE TRANSACTIONS (via Admin SDK)
+        allow create, update, delete: if false;
       }
       
       // Game results subcollection
       match /gameResults/{gameResultId} {
         allow read: if isAuthenticatedUser(userId);
         
-        // ✅ ONLY BACKEND CAN WRITE GAME RESULTS
-        allow create: if isBackendService();
-        allow update, delete: if false;
+        // ✅ ONLY BACKEND CAN WRITE GAME RESULTS (via Admin SDK)
+        allow create, update, delete: if false;
       }
     }
     
     // Public leaderboard collection
     match /leaderboard/{entry} {
       allow read: if isAuthenticated();
-      allow write: if false;
+      allow write: if false; // Only backend via Admin SDK
     }
     
     // Game questions collection
@@ -98,9 +93,8 @@ service cloud.firestore {
       // User task completions
       match /completions/{completionId} {
         allow read: if isAuthenticatedUser(request.auth.uid);
-        // ✅ ONLY BACKEND CAN WRITE COMPLETIONS
-        allow create: if isBackendService();
-        allow update, delete: if false;
+        // ✅ ONLY BACKEND CAN WRITE COMPLETIONS (via Admin SDK)
+        allow create, update, delete: if false;
       }
     }
     
@@ -108,8 +102,8 @@ service cloud.firestore {
     match /withdrawalRequests/{requestId} {
       allow read: if isAuthenticatedUser(resource.data.userId) || isAdmin(request.auth.uid);
       
-      // ✅ ONLY BACKEND CAN CREATE WITHDRAWAL REQUESTS (via API)
-      allow create: if isBackendService();
+      // ✅ ONLY BACKEND CAN CREATE WITHDRAWAL REQUESTS (via Admin SDK)
+      allow create: if false;
       
       // User can CANCEL pending requests
       allow update: if isAuthenticatedUser(resource.data.userId) &&
@@ -119,20 +113,24 @@ service cloud.firestore {
       allow delete: if false;
     }
     
+    // Withdrawals collection (created by backend)
+    match /withdrawals/{withdrawalId} {
+      allow read: if isAuthenticatedUser(resource.data.userId) || isAdmin(request.auth.uid);
+      allow create, update, delete: if false; // Only backend via Admin SDK
+    }
+    
     // Referral program collection
     match /referrals/{referralId} {
       allow read: if isAuthenticated();
       
-      // ✅ ONLY BACKEND CAN CREATE REFERRALS
-      allow create: if isBackendService();
-      allow update, delete: if false;
+      // ✅ ONLY BACKEND CAN CREATE REFERRALS (via Admin SDK)
+      allow create, update, delete: if false;
       
       // Referral usages subcollection
       match /usages/{usageId} {
         allow read: if isAuthenticatedUser(resource.data.userId);
-        // ✅ ONLY BACKEND CAN WRITE USAGES
-        allow create: if isBackendService();
-        allow update, delete: if false;
+        // ✅ ONLY BACKEND CAN WRITE USAGES (via Admin SDK)
+        allow create, update, delete: if false;
       }
     }
     
@@ -153,16 +151,14 @@ service cloud.firestore {
     // Audit logs
     match /auditLogs/{logId} {
       allow read: if isAuthenticatedUser(resource.data.userId) || isAdmin(request.auth.uid);
-      allow create: if isBackendService();
-      allow update, delete: if false;
+      allow create, update, delete: if false; // Only backend via Admin SDK
     }
     
     // Device fingerprints
     match /deviceFingerprints/{fingerprintId} {
       allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated(); // Allow adding new users to device
-      allow delete: if false;
+      // ✅ CRITICAL FIX: Only backend can write fingerprints (prevents pollution)
+      allow create, update, delete: if false; // Only backend via Admin SDK
     }
     
     // Analytics collection
@@ -183,7 +179,7 @@ service cloud.firestore {
     // Notifications collection
     match /users/{userId}/notifications/{notificationId} {
       allow read: if isAuthenticatedUser(userId);
-      allow create: if isBackendService();
+      allow create: if false; // Only backend via Admin SDK
       allow update: if isAuthenticatedUser(userId); // Mark as read
       allow delete: if isAuthenticatedUser(userId);
     }

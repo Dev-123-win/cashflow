@@ -3,6 +3,7 @@ import 'package:sensors_plus/sensors_plus.dart';
 import 'dart:async';
 import '../core/theme/colors.dart';
 import '../core/constants/dimensions.dart';
+import '../core/utils/app_utils.dart';
 
 class ParallaxBalanceCard extends StatefulWidget {
   final int coins;
@@ -126,7 +127,7 @@ class _ParallaxBalanceCardState extends State<ParallaxBalanceCard> {
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              '${widget.coins}',
+                              AppUtils.formatLargeNumber(widget.coins),
                               style: Theme.of(context).textTheme.headlineLarge
                                   ?.copyWith(
                                     color: Colors.white,

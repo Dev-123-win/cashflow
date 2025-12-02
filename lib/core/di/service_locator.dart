@@ -3,7 +3,6 @@ import '../../services/ad_service.dart';
 import '../../services/cloudflare_workers_service.dart';
 import '../../services/firestore_service.dart';
 import '../../services/local_notification_service.dart';
-import '../../services/cooldown_service.dart';
 import '../../services/request_deduplication_service.dart';
 import '../../services/fee_calculation_service.dart';
 import '../../services/device_fingerprint_service.dart';
@@ -21,7 +20,6 @@ Future<void> setupServiceLocator() async {
   getIt.registerLazySingleton<LocalNotificationService>(
     () => LocalNotificationService(),
   );
-  getIt.registerLazySingleton<CooldownService>(() => CooldownService());
   getIt.registerLazySingleton<RequestDeduplicationService>(
     () => RequestDeduplicationService(),
   );

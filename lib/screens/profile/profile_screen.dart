@@ -5,6 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../core/theme/colors.dart';
 import '../../core/constants/dimensions.dart';
+import '../../core/utils/app_utils.dart';
 import '../../providers/user_provider.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/zen_card.dart';
@@ -251,7 +252,9 @@ class ProfileScreen extends StatelessWidget {
                         children: [
                           _buildStatCard(
                             context,
-                            '${(user.totalEarnings * 1000).toInt()}',
+                            AppUtils.formatLargeNumber(
+                              (user.totalEarnings * 1000).toInt(),
+                            ),
                             'Total Coins',
                             Icons.monetization_on_rounded,
                             const Color(0xFFFFD700),
@@ -267,7 +270,9 @@ class ProfileScreen extends StatelessWidget {
                           ),
                           _buildStatCard(
                             context,
-                            '${(user.monthlyEarnings * 1000).toInt()}',
+                            AppUtils.formatLargeNumber(
+                              (user.monthlyEarnings * 1000).toInt(),
+                            ),
                             'This Month',
                             Icons.calendar_month_rounded,
                             const Color(0xFF6C63FF),
@@ -275,7 +280,7 @@ class ProfileScreen extends StatelessWidget {
                           ),
                           _buildStatCard(
                             context,
-                            '${user.coins}',
+                            AppUtils.formatLargeNumber(user.coins),
                             'Available',
                             Icons.account_balance_wallet_rounded,
                             const Color(0xFF00D9C0),
@@ -506,11 +511,24 @@ class ProfileScreen extends StatelessWidget {
             child: Icon(icon, color: color, size: 24),
           ),
           const Spacer(),
-          Text(
-            value,
-            style: Theme.of(
-              context,
-            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+          Row(
+            children: [
+              if (label.contains('Coins') ||
+                  label == 'Available' ||
+                  label == 'This Month') ...[
+                Image.asset('assets/icons/Coin.png', width: 20, height: 20),
+                const SizedBox(width: 4),
+              ],
+              Flexible(
+                child: Text(
+                  value,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 2),
           Text(

@@ -10,7 +10,6 @@ import '../../core/constants/app_assets.dart';
 import '../../core/theme/colors.dart';
 import '../../core/constants/dimensions.dart';
 import '../../providers/user_provider.dart';
-import '../../providers/task_provider.dart';
 import '../../widgets/parallax_balance_card.dart';
 import '../../widgets/zen_card.dart';
 import '../../widgets/scale_button.dart';
@@ -20,7 +19,6 @@ import '../../services/cloudflare_workers_service.dart';
 import '../leaderboard/leaderboard_screen.dart';
 import '../transaction_history_screen.dart';
 import '../tasks/tasks_screen.dart';
-import '../games/games_screen.dart';
 import '../games/spin_screen.dart';
 import '../ads/watch_ads_screen.dart';
 import '../withdrawal/withdrawal_screen.dart';
@@ -100,7 +98,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final surfaceColor = isDark
         ? AppColors.surfaceDark
         : AppColors.surfaceLight;
-    final tertiaryColor = AppColors.accent;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -232,7 +229,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               _confettiController.play();
                             },
                             child: Selector<UserProvider, int>(
-                              selector: (_, provider) => provider.user.coins,
+                              selector: (_, provider) => provider.coins,
                               builder: (context, coins, _) {
                                 return ParallaxBalanceCard(
                                   coins: coins,
@@ -253,14 +250,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           const SizedBox(height: AppDimensions.space24),
 
-                          // Daily Goal Card
-                          Consumer<TaskProvider>(
-                            builder: (context, taskProvider, _) {
-                              return _buildDailyGoalCard(context, taskProvider);
-                            },
-                          ),
-                          const SizedBox(height: AppDimensions.space16),
-
                           // Streak & Leaderboard
                           Row(
                             children: [
@@ -275,9 +264,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                     children: [
                                       Row(
                                         children: [
-                                          Lottie.asset(
-                                            AppAssets.streakFire,
-                                            height: 24,
+                                          RepaintBoundary(
+                                            child: Lottie.asset(
+                                              AppAssets.streakFire,
+                                              height: 24,
+                                            ),
                                           ),
                                           const SizedBox(width: 4),
                                           Text(
@@ -325,10 +316,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                     children: [
                                       Row(
                                         children: [
-                                          Icon(
+                                          const Icon(
                                             Icons.emoji_events_outlined,
                                             size: 24,
-                                            color: tertiaryColor,
                                           ),
                                           const SizedBox(width: 4),
                                           Text(
@@ -366,14 +356,36 @@ class _HomeScreenState extends State<HomeScreen> {
                             mainAxisSpacing: AppDimensions.space12,
                             crossAxisSpacing: AppDimensions.space12,
                             children: [
+                              // Watch Ads - Prominent (Full Width)
                               StaggeredGridTile.count(
                                 crossAxisCellCount: 2,
                                 mainAxisCellCount: 1,
-                                child: _buildAnimatedBentoTile(
+                                child: _buildBentoTile(
+                                  context,
+                                  title: 'Watch & Earn',
+                                  subtitle: 'Watch ads for quick earnings',
+                                  icon: Icons.play_circle_outline,
+                                  color: const Color(0xFFFF5252),
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const WatchAdsScreen(),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                              // Daily Tasks
+                              StaggeredGridTile.count(
+                                crossAxisCellCount: 1,
+                                mainAxisCellCount: 1,
+                                child: _buildBentoTile(
                                   context,
                                   title: 'Daily Tasks',
-                                  subtitle: 'Complete tasks to earn',
-                                  lottieAsset: AppAssets.giftBoxOpen,
+                                  subtitle: 'Complete tasks',
+                                  icon: Icons.task_alt_outlined,
                                   color: const Color(0xFF6C63FF),
                                   onTap: () {
                                     _showInterstitialThenNavigate(
@@ -388,33 +400,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                   },
                                 ),
                               ),
-                              StaggeredGridTile.count(
-                                crossAxisCellCount: 1,
-                                mainAxisCellCount: 1,
-                                child: _buildBentoTile(
-                                  context,
-                                  title: 'Play Games',
-                                  subtitle: 'Fun & Earn',
-                                  icon: Icons.sports_esports_outlined,
-                                  color: const Color(0xFF00D9C0),
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const GamesScreen(),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
+                              // Spin Wheel
                               StaggeredGridTile.count(
                                 crossAxisCellCount: 1,
                                 mainAxisCellCount: 1,
                                 child: _buildBentoTile(
                                   context,
                                   title: 'Spin Wheel',
-                                  subtitle: 'Try Luck',
+                                  subtitle: 'Try your luck',
                                   icon: Icons.casino_outlined,
                                   color: const Color(0xFFFFB800),
                                   onTap: () {
@@ -423,26 +416,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                       MaterialPageRoute(
                                         builder: (context) =>
                                             const SpinScreen(),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                              StaggeredGridTile.count(
-                                crossAxisCellCount: 2,
-                                mainAxisCellCount: 0.8,
-                                child: _buildBentoTile(
-                                  context,
-                                  title: 'Watch Ads',
-                                  subtitle: 'Quick earnings',
-                                  icon: Icons.play_circle_outline,
-                                  color: const Color(0xFFFF5252),
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const WatchAdsScreen(),
                                       ),
                                     );
                                   },
@@ -473,7 +446,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                   ),
                                 ),
-                                const Divider(),
+                                const Divider(height: 1),
                                 _buildQuickLink(
                                   context,
                                   icon: Icons.history,
@@ -604,66 +577,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildAnimatedBentoTile(
-    BuildContext context, {
-    required String title,
-    required String subtitle,
-    required String lottieAsset,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final surfaceColor = isDark
-        ? AppColors.surfaceDark
-        : AppColors.surfaceLight;
-    final textSecondary = isDark
-        ? AppColors.textSecondaryDark
-        : AppColors.textSecondaryLight;
-
-    return ScaleButton(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(AppDimensions.space16),
-        decoration: BoxDecoration(
-          color: surfaceColor,
-          borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Lottie.asset(lottieAsset, height: 50, repeat: true),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  subtitle,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildQuickLink(
     BuildContext context, {
     required IconData icon,
@@ -690,101 +603,6 @@ class _HomeScreenState extends State<HomeScreen> {
       trailing: const Icon(Icons.arrow_forward_ios, size: 16),
       onTap: onTap,
       contentPadding: EdgeInsets.zero,
-    );
-  }
-
-  Widget _buildDailyGoalCard(BuildContext context, TaskProvider taskProvider) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final primaryColor = isDark ? AppColors.primaryDark : AppColors.primary;
-
-    final progress = (taskProvider.dailyEarnings / taskProvider.dailyCap).clamp(
-      0.0,
-      1.0,
-    );
-    final percentage = (progress * 100).toInt();
-
-    return ScaleButton(
-      onTap: () {
-        HapticFeedback.lightImpact();
-      },
-      child: Container(
-        padding: const EdgeInsets.all(AppDimensions.space20),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              primaryColor,
-              Color(0xFF8B85FF), // Lighter shade
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
-          boxShadow: [
-            BoxShadow(
-              color: primaryColor.withValues(alpha: 0.3),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Daily Goal',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: Colors.white.withValues(alpha: 0.9),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${(taskProvider.dailyCap - taskProvider.dailyEarnings).toInt()} Coins left',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: Colors.white.withValues(alpha: 0.8),
-                      ),
-                    ),
-                  ],
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    '$percentage%',
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppDimensions.space20),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusS),
-              child: LinearProgressIndicator(
-                value: progress,
-                backgroundColor: Colors.black.withValues(alpha: 0.1),
-                valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-                minHeight: 10,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 

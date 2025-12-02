@@ -334,12 +334,23 @@ class _GameCard extends StatelessWidget {
                     color: AppColors.success.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(AppDimensions.radiusS),
                   ),
-                  child: Text(
-                    '+$reward Coins',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: AppColors.success,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Image.asset(
+                        'assets/icons/Coin.png',
+                        width: 16,
+                        height: 16,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '+$reward',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: AppColors.success,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],

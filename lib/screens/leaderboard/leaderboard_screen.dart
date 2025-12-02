@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme/colors.dart';
 import '../../core/constants/app_constants.dart';
+import '../../core/utils/app_utils.dart';
 
 import '../../providers/user_provider.dart';
 import '../../widgets/zen_card.dart';
@@ -350,9 +351,19 @@ class _LeaderboardCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    'Earned: ₹${earnings.toStringAsFixed(2)}',
-                    style: TextStyle(fontSize: 14, color: textSecondary),
+                  Row(
+                    children: [
+                      Image.asset(
+                        'assets/icons/Coin.png',
+                        width: 14,
+                        height: 14,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Earned: ${AppUtils.formatLargeNumber((earnings * 1000).toInt())}',
+                        style: TextStyle(fontSize: 14, color: textSecondary),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -362,13 +373,20 @@ class _LeaderboardCard extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(
-                  '₹${earnings.toStringAsFixed(2)}',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: primaryColor,
-                  ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Image.asset('assets/icons/Coin.png', width: 18, height: 18),
+                    const SizedBox(width: 4),
+                    Text(
+                      AppUtils.formatLargeNumber((earnings * 1000).toInt()),
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: primaryColor,
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 2),
                 Text(

@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:crypto/crypto.dart';
 import '../core/constants/app_constants.dart';
 
 /// CloudflareWorkersService
@@ -16,9 +15,6 @@ class CloudflareWorkersService {
   static const String _baseUrl = AppConstants.baseUrl;
   static const Duration _timeout = Duration(seconds: 30);
 
-  // TODO: In production, use a more secure way to manage secrets (e.g. obfuscation)
-  static const String _requestSecret = "dev-secret-key-12345";
-
   // Singleton instance
   static final CloudflareWorkersService _instance =
       CloudflareWorkersService._internal();
@@ -29,34 +25,96 @@ class CloudflareWorkersService {
 
   CloudflareWorkersService._internal();
 
-  /// Generate secure headers with Auth Token and HMAC Signature
-  Future<Map<String, String>> _getAuthHeaders(String body) async {
+  /// Generate secure headers with Firebase ID Token only
+  ///
+  /// SECURITY: No client-side secrets. Backend validates Firebase token directly.
+  Future<Map<String, String>> _getAuthHeaders() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       throw Exception('User not authenticated');
     }
 
-    // 1. Get Firebase ID Token
-    final token = await user.getIdToken();
+    // Get fresh Firebase ID Token (auto-refreshes if expired)
+    final token = await user.getIdToken(true);
     if (token == null) {
       throw Exception('Failed to get ID token');
     }
 
-    // 2. Generate Timestamp
+    // Timestamp for request tracking and replay prevention (backend validates)
     final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
-
-    // 3. Generate HMAC-SHA256 Signature
-    final hmac = Hmac(sha256, utf8.encode(_requestSecret));
-    final message = body + timestamp;
-    final signature = hmac.convert(utf8.encode(message)).toString();
 
     return {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
       'Authorization': 'Bearer $token',
-      'X-Request-Signature': signature,
       'X-Request-Timestamp': timestamp,
     };
+  }
+
+  /// Retry a request with exponential backoff
+  ///
+  /// Handles transient network failures by retrying up to 3 times
+  /// with exponential backoff (1s, 2s, 4s). Only retries network errors,
+  /// not authentication or validation errors.
+  ///
+  /// @param request The function to execute (should be idempotent)
+  /// @param maxAttempts Maximum number of retry attempts (default: 3)
+  /// @param initialDelay Initial delay before first retry (default: 1s)
+  /// @returns Result of the request
+  Future<T> _retryRequest<T>(
+    Future<T> Function() request, {
+    int maxAttempts = 3,
+    Duration initialDelay = const Duration(seconds: 1),
+  }) async {
+    int attempt = 0;
+    Duration delay = initialDelay;
+
+    while (true) {
+      attempt++;
+
+      try {
+        return await request();
+      } catch (e) {
+        // Check if we should retry
+        final shouldRetry = attempt < maxAttempts && _isRetryableError(e);
+
+        if (!shouldRetry) {
+          rethrow; // Give up after max attempts or non-retryable error
+        }
+
+        debugPrint(
+          '⚠️ Request failed (attempt $attempt/$maxAttempts): $e\n'
+          '   Retrying in ${delay.inSeconds}s...',
+        );
+
+        await Future.delayed(delay);
+        delay *= 2; // Exponential backoff
+      }
+    }
+  }
+
+  /// Check if an error is retryable (network errors only)
+  bool _isRetryableError(dynamic error) {
+    final errorString = error.toString().toLowerCase();
+
+    // Retry on network/connection errors
+    if (errorString.contains('socketexception') ||
+        errorString.contains('timeout') ||
+        errorString.contains('connection') ||
+        errorString.contains('network') ||
+        error is http.ClientException) {
+      return true;
+    }
+
+    // Don't retry on auth/validation errors
+    if (errorString.contains('authentication') ||
+        errorString.contains('unauthorized') ||
+        errorString.contains('forbidden') ||
+        errorString.contains('invalid')) {
+      return false;
+    }
+
+    return false; // Conservative: don't retry unknown errors
   }
 
   /// Record task completion
@@ -66,29 +124,31 @@ class CloudflareWorkersService {
     required String deviceId,
     String? requestId,
   }) async {
-    try {
-      final url = '$_baseUrl/api/earn/task';
-      final body = jsonEncode({
-        'userId': userId,
-        'taskId': taskId,
-        'deviceId': deviceId,
-        'requestId':
-            requestId ??
-            'task_${DateTime.now().millisecondsSinceEpoch}_$taskId',
-      });
+    return _retryRequest(() async {
+      try {
+        final url = '$_baseUrl/api/earn/task';
+        final body = jsonEncode({
+          'userId': userId,
+          'taskId': taskId,
+          'deviceId': deviceId,
+          'requestId':
+              requestId ??
+              'task_${DateTime.now().millisecondsSinceEpoch}_$taskId',
+        });
 
-      final headers = await _getAuthHeaders(body);
-      _logRequest('POST', url, body: body);
+        final headers = await _getAuthHeaders();
+        _logRequest('POST', url, body: body);
 
-      final response = await http
-          .post(Uri.parse(url), headers: headers, body: body)
-          .timeout(_timeout);
+        final response = await http
+            .post(Uri.parse(url), headers: headers, body: body)
+            .timeout(_timeout);
 
-      return _handleResponse(response);
-    } catch (e) {
-      debugPrint('Task earning error: $e');
-      rethrow;
-    }
+        return _handleResponse(response);
+      } catch (e) {
+        debugPrint('Task earning error: $e');
+        rethrow;
+      }
+    });
   }
 
   /// Record game result
@@ -113,7 +173,7 @@ class CloudflareWorkersService {
             'game_${DateTime.now().millisecondsSinceEpoch}_$gameId',
       });
 
-      final headers = await _getAuthHeaders(body);
+      final headers = await _getAuthHeaders();
       _logRequest('POST', url, body: body);
 
       final response = await http
@@ -144,7 +204,7 @@ class CloudflareWorkersService {
             requestId ?? 'ad_${DateTime.now().millisecondsSinceEpoch}_$adType',
       });
 
-      final headers = await _getAuthHeaders(body);
+      final headers = await _getAuthHeaders();
       _logRequest('POST', url, body: body);
 
       final response = await http
@@ -173,7 +233,7 @@ class CloudflareWorkersService {
             requestId ?? 'spin_${DateTime.now().millisecondsSinceEpoch}',
       });
 
-      final headers = await _getAuthHeaders(body);
+      final headers = await _getAuthHeaders();
       _logRequest('POST', url, body: body);
 
       final response = await http
@@ -232,7 +292,7 @@ class CloudflareWorkersService {
             requestId ?? 'withdrawal_${DateTime.now().millisecondsSinceEpoch}',
       });
 
-      final headers = await _getAuthHeaders(body);
+      final headers = await _getAuthHeaders();
       _logRequest('POST', url, body: body);
 
       final response = await http
@@ -289,7 +349,7 @@ class CloudflareWorkersService {
       });
 
       // Auth is required for creation too
-      final headers = await _getAuthHeaders(body);
+      final headers = await _getAuthHeaders();
       _logRequest('POST', url, body: body);
 
       final response = await http
@@ -309,7 +369,7 @@ class CloudflareWorkersService {
       final url = '$_baseUrl/api/achievements/check';
       final body = jsonEncode({'userId': userId});
 
-      final headers = await _getAuthHeaders(body);
+      final headers = await _getAuthHeaders();
       _logRequest('POST', url, body: body);
 
       final response = await http
@@ -343,7 +403,7 @@ class CloudflareWorkersService {
         'gameType': gameType,
       });
 
-      final headers = await _getAuthHeaders(body);
+      final headers = await _getAuthHeaders();
       _logRequest('POST', url, body: body);
 
       final response = await http

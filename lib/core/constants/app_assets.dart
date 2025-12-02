@@ -1,10 +1,7 @@
 class AppAssets {
   // Icons
-  static const String appLogo = 'assets/icons/app_logo.svg';
-  static const String appIconForeground =
-      'assets/icons/app_icon_foreground.svg';
-  static const String appIconBackground =
-      'assets/icons/app_icon_background.jpg';
+  // Icons
+  static const String appIcon = 'assets/icons/app_icon.png';
   static const String googleIcon = 'assets/icons/google.svg';
 
   // Illustrations

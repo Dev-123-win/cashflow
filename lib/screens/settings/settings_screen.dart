@@ -3,7 +3,7 @@ import '../../core/theme/colors.dart';
 import '../../core/constants/dimensions.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/custom_dialog.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+
 import '../../core/constants/app_assets.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -238,32 +238,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      image: DecorationImage(
-                        image: AssetImage(AppAssets.appIconBackground),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
+              Container(
+                width: 80,
+                height: 80,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  image: DecorationImage(
+                    image: AssetImage(AppAssets.appIcon),
+                    fit: BoxFit.cover,
                   ),
-                  SizedBox(
-                    width: 50,
-                    height: 50,
-                    child: SvgPicture.asset(
-                      AppAssets.appIconForeground,
-                      colorFilter: const ColorFilter.mode(
-                        Colors.white,
-                        BlendMode.srcIn,
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
               const SizedBox(height: AppDimensions.space16),
               Text(

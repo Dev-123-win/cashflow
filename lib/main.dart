@@ -16,7 +16,6 @@ import 'screens/withdrawal/withdrawal_screen.dart';
 import 'screens/main_navigation_screen.dart';
 import 'services/auth_service.dart';
 import 'services/local_notification_service.dart';
-import 'services/cooldown_service.dart';
 import 'services/request_deduplication_service.dart';
 import 'services/fee_calculation_service.dart';
 import 'services/device_fingerprint_service.dart';
@@ -30,10 +29,16 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Setup Service Locator
-  await setupServiceLocator();
+  try {
+    await setupServiceLocator();
+  } catch (e) {
+    debugPrint('Service Locator initialization error: $e');
+    runApp(ErrorApp(message: 'Failed to initialize app services: $e'));
+    return;
+  }
 
-  // Hide system bars for immersive experience
-  SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+  // ✅ CRITICAL FIX: Don't hide system UI globally (only for games)
+  // SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
   // 1. Initialize Firebase (Critical - Blocking)
   try {
@@ -50,7 +55,15 @@ void main() async {
     );
     debugPrint('Firestore offline persistence enabled with 100MB limit');
   } catch (e) {
-    debugPrint('Firebase initialization error: $e');
+    debugPrint('FATAL: Firebase initialization error: $e');
+    // ✅ CRITICAL FIX: Stop app if Firebase fails (all features depend on it)
+    runApp(
+      ErrorApp(
+        message:
+            'Failed to initialize Firebase. Please check your internet connection and try again.',
+      ),
+    );
+    return;
   }
 
   // 2. Initialize AuthService (Critical - Blocking for navigation state)
@@ -59,7 +72,14 @@ void main() async {
     await authService.initialize();
     debugPrint('AuthService initialized successfully');
   } catch (e) {
-    debugPrint('AuthService initialization error: $e');
+    debugPrint('FATAL: AuthService initialization error: $e');
+    runApp(
+      ErrorApp(
+        message:
+            'Failed to initialize authentication service. Please restart the app.',
+      ),
+    );
+    return;
   }
 
   // 3. Initialize non-critical services in parallel
@@ -73,6 +93,7 @@ void main() async {
         debugPrint('Google Mobile Ads initialized successfully');
       } catch (e) {
         debugPrint('Google Mobile Ads initialization error: $e');
+        // Non-critical: App can function without ads
       }
     }),
 
@@ -80,30 +101,77 @@ void main() async {
     Future(() async {
       try {
         final notificationService = getIt<LocalNotificationService>();
-        notificationService.setNavigatorKey(navigatorKey);
         await notificationService.initialize();
+
+        // Request permissions (Android 13+)
+        await notificationService.requestPermissions();
+
         await notificationService.scheduleDailyReminder();
         await notificationService.scheduleStreakReminder();
         await notificationService.scheduleEngagementNotifications();
         debugPrint('Local Notification Service initialized');
       } catch (e) {
         debugPrint('Local Notification Service initialization error: $e');
-      }
-    }),
-
-    // CooldownService
-    Future(() async {
-      try {
-        final cooldownService = getIt<CooldownService>();
-        await cooldownService.initialize();
-        debugPrint('CooldownService initialized successfully');
-      } catch (e) {
-        debugPrint('CooldownService initialization error: $e');
+        // Non-critical: App can function without notifications
       }
     }),
   ]);
 
   runApp(const MyApp());
+}
+
+/// Error screen shown when critical initialization fails
+class ErrorApp extends StatelessWidget {
+  final String message;
+
+  const ErrorApp({super.key, required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        backgroundColor: Colors.red.shade50,
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, size: 64, color: Colors.red.shade700),
+                const SizedBox(height: 24),
+                Text(
+                  'Initialization Error',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red.shade900,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 16, color: Colors.red.shade800),
+                ),
+                const SizedBox(height: 32),
+                ElevatedButton(
+                  onPressed: () {
+                    // Restart app (requires platform-specific implementation)
+                    SystemNavigator.pop();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red.shade700,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Exit App'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -115,7 +183,6 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => TaskProvider()),
-        ChangeNotifierProvider(create: (_) => getIt<CooldownService>()),
         Provider(create: (_) => getIt<RequestDeduplicationService>()),
         Provider(create: (_) => getIt<FeeCalculationService>()),
         Provider(create: (_) => getIt<DeviceFingerprintService>()),

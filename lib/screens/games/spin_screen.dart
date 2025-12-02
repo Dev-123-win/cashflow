@@ -8,7 +8,7 @@ import 'dart:async';
 import '../../core/theme/colors.dart';
 import '../../core/constants/dimensions.dart';
 import '../../core/constants/app_constants.dart';
-import '../../services/cooldown_service.dart';
+
 import '../../services/device_fingerprint_service.dart';
 import '../../services/cloudflare_workers_service.dart';
 import '../../services/ad_service.dart';
@@ -27,7 +27,6 @@ class SpinScreen extends StatefulWidget {
 }
 
 class _SpinScreenState extends State<SpinScreen> {
-  late final CooldownService _cooldownService;
   late final AdService _adService;
   late final CloudflareWorkersService _cloudflareService;
   late List<double> _rewards;
@@ -42,7 +41,7 @@ class _SpinScreenState extends State<SpinScreen> {
   @override
   void initState() {
     super.initState();
-    _cooldownService = CooldownService();
+
     _adService = AdService();
     _cloudflareService = CloudflareWorkersService();
     // Create a mutable copy of the rewards
@@ -77,20 +76,6 @@ class _SpinScreenState extends State<SpinScreen> {
     if (user == null) {
       if (mounted) {
         StateSnackbar.showError(context, 'User not logged in');
-      }
-      return;
-    }
-
-    final remaining = _cooldownService.getRemainingCooldown(
-      user.uid,
-      'spin_daily',
-    );
-    if (remaining > 0) {
-      if (mounted) {
-        StateSnackbar.showWarning(
-          context,
-          'Next spin available in ${_cooldownService.formatCooldown(remaining)}',
-        );
       }
       return;
     }
@@ -191,12 +176,14 @@ class _SpinScreenState extends State<SpinScreen> {
     try {
       _confettiController.play();
 
-      // Optimistic Update
-      userProvider.addOptimisticCoins(_lastSpinReward!);
+      // Generate unique transaction ID for tracking
+      final transactionId = 'spin_${DateTime.now().millisecondsSinceEpoch}';
+
+      // Optimistic Update with transaction tracking
+      userProvider.addOptimisticCoins(_lastSpinReward!, transactionId, 'spin');
 
       if (mounted) {
         await _showSpinResult(_lastSpinReward!);
-        _cooldownService.startCooldown(user.uid, 'spin_daily', 86400);
 
         // Sync with backend in background
         userProvider.refreshUser().catchError((e) {
@@ -283,14 +270,7 @@ class _SpinScreenState extends State<SpinScreen> {
         children: [
           Consumer<UserProvider>(
             builder: (context, userProvider, _) {
-              final user = fb_auth.FirebaseAuth.instance.currentUser;
-              final remaining = user != null
-                  ? _cooldownService.getRemainingCooldown(
-                      user.uid,
-                      'spin_daily',
-                    )
-                  : 0;
-              final canSpin = remaining <= 0 && !_isSpinning;
+              final canSpin = !_isSpinning;
 
               return Column(
                 children: [
@@ -473,11 +453,7 @@ class _SpinScreenState extends State<SpinScreen> {
                                 ],
                               ),
                               child: Text(
-                                _isSpinning
-                                    ? 'Spinning...'
-                                    : remaining > 0
-                                    ? 'Wait ${_cooldownService.formatCooldown(remaining)}'
-                                    : 'Spin Now!',
+                                _isSpinning ? 'Spinning...' : 'Spin Now!',
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 20,

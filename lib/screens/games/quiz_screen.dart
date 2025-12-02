@@ -127,8 +127,11 @@ class _QuizScreenState extends State<QuizScreen> {
     final userProvider = context.read<UserProvider>();
     final reward = 50; // Fixed 50 Coins for Quiz
 
-    // Optimistic Update
-    userProvider.addOptimisticCoins(reward);
+    // Generate unique transaction ID for tracking
+    final transactionId = 'quiz_${DateTime.now().millisecondsSinceEpoch}';
+
+    // Optimistic Update with transaction tracking
+    userProvider.addOptimisticCoins(reward, transactionId, 'quiz');
 
     try {
       // Record result to backend with timeout
@@ -172,8 +175,8 @@ class _QuizScreenState extends State<QuizScreen> {
       }
     } catch (e) {
       debugPrint('Error claiming reward: $e');
-      // Rollback
-      userProvider.rollbackOptimisticCoins(reward);
+      // Rollback using transaction ID
+      userProvider.rollbackOptimisticCoins(transactionId);
       if (mounted) {
         StateSnackbar.showError(
           context,

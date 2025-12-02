@@ -88,8 +88,12 @@ class _WatchAdsScreenState extends State<WatchAdsScreen> {
           );
           final reward = AppConstants.rewardedAdReward;
 
-          // Optimistic Update
-          userProvider.addOptimisticCoins(reward);
+          // Generate unique transaction ID for tracking
+          final transactionId =
+              'ad_rewarded_${DateTime.now().millisecondsSinceEpoch}';
+
+          // Optimistic Update with transaction tracking
+          userProvider.addOptimisticCoins(reward, transactionId, 'ad');
 
           try {
             final fingerprint = Provider.of<DeviceFingerprintService>(
@@ -101,9 +105,8 @@ class _WatchAdsScreenState extends State<WatchAdsScreen> {
             // Get device fingerprint
             final deviceFingerprint = await fingerprint.getDeviceFingerprint();
 
-            // Generate unique request ID for deduplication
-            final requestId =
-                'ad_rewarded_${DateTime.now().millisecondsSinceEpoch}';
+            // Use same transaction ID for deduplication
+            final requestId = transactionId;
 
             // Record ad view via Cloudflare Worker
             final result = await cloudflareService
@@ -124,8 +127,8 @@ class _WatchAdsScreenState extends State<WatchAdsScreen> {
             if (result['success'] == true) {
               final newBalance = result['newBalance'];
               if (newBalance != null) {
-                userProvider.updateLocalState(coins: newBalance);
-                userProvider.confirmOptimisticCoins(reward);
+                // Confirm optimistic update with server balance
+                userProvider.confirmOptimisticCoins(transactionId, newBalance);
               }
 
               if (mounted) {
@@ -143,8 +146,8 @@ class _WatchAdsScreenState extends State<WatchAdsScreen> {
             }
           } catch (e) {
             debugPrint('Error recording ad view: $e');
-            // Rollback on error
-            userProvider.rollbackOptimisticCoins(reward);
+            // Rollback on error using transaction ID
+            userProvider.rollbackOptimisticCoins(transactionId);
             if (mounted) {
               StateSnackbar.showError(
                 context,

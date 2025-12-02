@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+
 import '../../core/constants/app_assets.dart';
 import '../../core/theme/colors.dart';
 import '../../core/constants/dimensions.dart';
@@ -83,16 +83,12 @@ class _SplashScreenState extends State<SplashScreen> {
                     ),
                   ],
                 ),
-                child: SvgPicture.asset(
-                  AppAssets.appLogo,
+                child: Image.asset(
+                  AppAssets.appIcon,
                   width: 80,
                   height: 80,
                   fit: BoxFit.contain,
                   alignment: Alignment.center,
-                  colorFilter: const ColorFilter.mode(
-                    Colors.white,
-                    BlendMode.srcIn,
-                  ),
                 ),
               ),
               const SizedBox(height: AppDimensions.space32),

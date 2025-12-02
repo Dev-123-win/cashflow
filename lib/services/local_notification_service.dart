@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:io';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
@@ -19,11 +21,12 @@ class LocalNotificationService {
   final Uuid _uuid = const Uuid();
 
   bool _isInitialized = false;
-  GlobalKey<NavigatorState>? navigatorKey;
 
-  void setNavigatorKey(GlobalKey<NavigatorState> key) {
-    navigatorKey = key;
-  }
+  // Stream controller for navigation events
+  final StreamController<String> _navigationStreamController =
+      StreamController<String>.broadcast();
+
+  Stream<String> get navigationStream => _navigationStreamController.stream;
 
   Future<void> initialize() async {
     if (_isInitialized) return;
@@ -35,9 +38,9 @@ class LocalNotificationService {
 
     const DarwinInitializationSettings iosSettings =
         DarwinInitializationSettings(
-          requestAlertPermission: true,
-          requestBadgePermission: true,
-          requestSoundPermission: true,
+          requestAlertPermission: false, // Request later
+          requestBadgePermission: false,
+          requestSoundPermission: false,
         );
 
     const InitializationSettings initSettings = InitializationSettings(
@@ -55,19 +58,33 @@ class LocalNotificationService {
     _isInitialized = true;
   }
 
+  /// Request notification permissions (required for Android 13+)
+  Future<bool> requestPermissions() async {
+    if (Platform.isIOS) {
+      final bool? result = await _notificationsPlugin
+          .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin
+          >()
+          ?.requestPermissions(alert: true, badge: true, sound: true);
+      return result ?? false;
+    } else if (Platform.isAndroid) {
+      final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
+          _notificationsPlugin
+              .resolvePlatformSpecificImplementation<
+                AndroidFlutterLocalNotificationsPlugin
+              >();
+
+      final bool? granted = await androidImplementation
+          ?.requestNotificationsPermission();
+      return granted ?? false;
+    }
+    return false;
+  }
+
   void _handleNotificationTap(String? payload) {
-    if (payload == null || navigatorKey == null) return;
-
-    debugPrint('Notification tapped: $payload');
-
-    if (payload == 'streak_reminder') {
-      // Navigate to Home (which is default)
-      navigatorKey!.currentState?.popUntil((route) => route.isFirst);
-    } else if (payload.startsWith('game_')) {
-      // Navigate to Games tab (index 2 in MainNavigationScreen)
-      // This is tricky with nested navigation.
-      // Ideally we use a stream to notify MainNavigationScreen to switch tabs.
-      // For now, let's just bring app to foreground.
+    if (payload != null) {
+      debugPrint('Notification tapped: $payload');
+      _navigationStreamController.add(payload);
     }
   }
 
@@ -114,9 +131,6 @@ class LocalNotificationService {
 
   Future<void> scheduleDailyReminder() async {
     // Schedule a notification if the user hasn't opened the app in 24 hours
-    // This is a simplified version. For true "inactivity" tracking,
-    // we'd need to cancel/reschedule this every time the user opens the app.
-
     await _notificationsPlugin.cancel(999); // Cancel existing reminder
 
     await _notificationsPlugin.zonedSchedule(
@@ -135,6 +149,7 @@ class LocalNotificationService {
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.time,
+      payload: 'home',
     );
   }
 
@@ -184,23 +199,6 @@ class LocalNotificationService {
     );
   }
 
-  /// Schedule a cooldown expiry notification
-  Future<void> scheduleCooldownExpiry({
-    required String gameName,
-    required Duration duration,
-  }) async {
-    // ID 1000-1999 reserved for cooldowns
-    final int id = 1000 + gameName.hashCode % 1000;
-
-    await scheduleNotification(
-      id: id,
-      title: '$gameName Ready! 🎮',
-      body: 'Your cooldown is over. Play now to earn more!',
-      delay: duration,
-      payload: 'game_$gameName',
-    );
-  }
-
   /// Schedule a streak reminder (e.g., 23 hours from now)
   Future<void> scheduleStreakReminder() async {
     // ID 2000 for streak
@@ -211,7 +209,7 @@ class LocalNotificationService {
       title: '🔥 Streak Warning!',
       body: 'Don\'t lose your daily streak! Check in now to keep it.',
       delay: const Duration(hours: 23),
-      payload: 'streak_reminder',
+      payload: 'home',
     );
   }
 
@@ -236,12 +234,20 @@ class LocalNotificationService {
         title: messages[i].$1,
         body: messages[i].$2,
         delay: delay,
-        payload: 'engagement_$i',
+        payload: 'engagement',
       );
     }
   }
 
   Future<void> cancelAll() async {
     await _notificationsPlugin.cancelAll();
+  }
+
+  Future<void> cancelNotification(int id) async {
+    await _notificationsPlugin.cancel(id);
+  }
+
+  void dispose() {
+    _navigationStreamController.close();
   }
 }

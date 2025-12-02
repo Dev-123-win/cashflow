@@ -7,7 +7,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/theme/colors.dart';
 import '../../core/constants/dimensions.dart';
 import '../../services/game_service.dart';
-import '../../services/cooldown_service.dart';
 import '../../services/ad_service.dart';
 import '../../services/device_fingerprint_service.dart';
 import '../../services/cloudflare_workers_service.dart';
@@ -27,7 +26,6 @@ class TicTacToeScreen extends StatefulWidget {
 
 class _TicTacToeScreenState extends State<TicTacToeScreen> {
   late final GameService _gameService;
-  late final CooldownService _cooldownService;
   late final AdService _adService;
   late TicTacToeGame _game;
   bool _isProcessing = false;
@@ -43,7 +41,6 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
   void initState() {
     super.initState();
     _gameService = GameService();
-    _cooldownService = CooldownService();
     _adService = AdService();
     _initializeGame();
     _showPreGameAd();
@@ -111,21 +108,6 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
         StateSnackbar.showWarning(
           context,
           'Daily game limit reached (20/20). Come back tomorrow!',
-        );
-      }
-      return;
-    }
-
-    // Check cooldown
-    final remaining = _cooldownService.getRemainingCooldown(
-      user.userId,
-      'game_tictactoe',
-    );
-    if (remaining > 0) {
-      if (mounted) {
-        StateSnackbar.showWarning(
-          context,
-          'Next game available in ${_cooldownService.formatCooldown(remaining)}',
         );
       }
       return;
@@ -224,8 +206,13 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
             listen: false,
           );
 
-          // 1. Optimistic Update
-          userProvider.addOptimisticCoins(60);
+          // Use the request ID as transaction ID for tracking
+          final transactionId =
+              _currentRequestId ??
+              'tictactoe_${DateTime.now().millisecondsSinceEpoch}';
+
+          // 1. Optimistic Update with transaction tracking
+          userProvider.addOptimisticCoins(60, transactionId, 'game');
 
           // 2. Call Backend with Timeout
           try {
@@ -235,10 +222,11 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
                 throw Exception('Request timed out');
               },
             );
+
             // Success handled in _recordGameWin
           } catch (e) {
-            // 3. Rollback on failure
-            userProvider.rollbackOptimisticCoins(60);
+            // 3. Rollback on failure using transaction ID
+            userProvider.rollbackOptimisticCoins(transactionId);
             if (mounted) {
               StateSnackbar.showError(
                 context,
@@ -289,12 +277,15 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
       if (result['success'] == true) {
         final newBalance = result['newBalance'];
         if (newBalance != null) {
-          userProvider.updateLocalState(coins: newBalance);
-          userProvider.confirmOptimisticCoins(80);
+          // Confirm optimistic update with server balance
+          final transactionId =
+              _currentRequestId ??
+              'tictactoe_${DateTime.now().millisecondsSinceEpoch}';
+          userProvider.confirmOptimisticCoins(transactionId, newBalance);
         }
 
-        // Update Cooldown locally
-        _cooldownService.startCooldown(user.uid, 'game_tictactoe', 300);
+        // ❌ REMOVED: Cooldown should start AFTER reward claim, not here
+        // Cooldown will be started in _executeClaimReward after ad is watched
 
         debugPrint('✅ Game win recorded: ${result['transaction']['id']}');
       }
@@ -588,59 +579,6 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
                           ],
                         ),
                         const SizedBox(height: AppDimensions.space16),
-
-                        // Cooldown Info (if on cooldown)
-                        Consumer<CooldownService>(
-                          builder: (context, cooldownService, _) {
-                            final remaining = cooldownService
-                                .getRemainingCooldown(
-                                  userProvider.user.userId,
-                                  'game_tictactoe',
-                                );
-
-                            if (remaining > 0) {
-                              return Column(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(
-                                      AppDimensions.space12,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.warning.withValues(
-                                        alpha: 0.1,
-                                      ),
-                                      border: Border.all(
-                                        color: AppColors.warning,
-                                      ),
-                                      borderRadius: BorderRadius.circular(
-                                        AppDimensions.radiusS,
-                                      ),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        const Icon(
-                                          Icons.schedule,
-                                          color: AppColors.warning,
-                                        ),
-                                        const SizedBox(
-                                          width: AppDimensions.space12,
-                                        ),
-                                        Expanded(
-                                          child: Text(
-                                            'Next game available in ${cooldownService.formatCooldown(remaining)}',
-                                            style: theme.textTheme.bodySmall,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              );
-                            }
-
-                            return const SizedBox.shrink();
-                          },
-                        ),
                       ],
                     ),
                   ),

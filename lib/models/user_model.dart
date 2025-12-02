@@ -145,4 +145,29 @@ class User {
       gamesPlayedToday: gamesPlayedToday ?? this.gamesPlayedToday,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'userId': userId,
+      'email': email,
+      'displayName': displayName,
+      'totalEarned': totalEarnings,
+      'availableBalance': availableBalance,
+      'monthlyEarnings': monthlyEarnings,
+      'totalTasks': totalTasks,
+      'completedTasks': completedTasks,
+      'coins': coins,
+      'streak': streak,
+      'createdAt': createdAt.toIso8601String(),
+      'referralCode': referralCode,
+      'referralCount': referralCount,
+      'referralEarnings': referralEarnings,
+      'kycVerified': kycVerified,
+      'upiId': upiId,
+      'failedWithdrawals': failedWithdrawals,
+      'accountLocked': accountLocked,
+      'completedTaskIds': completedTaskIds,
+      'gamesPlayedToday': gamesPlayedToday,
+    };
+  }
 }
