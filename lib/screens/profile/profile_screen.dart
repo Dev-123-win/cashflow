@@ -326,6 +326,10 @@ class ProfileScreen extends StatelessWidget {
         ? AppColors.textTertiaryDark
         : AppColors.textTertiaryLight;
 
+    if (userId.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     return StreamBuilder<List<AchievementUnlock>>(
       stream: AchievementService().getUserAchievements(userId),
       builder: (context, snapshot) {
@@ -418,6 +422,7 @@ class ProfileScreen extends StatelessWidget {
           physics: const NeverScrollableScrollPhysics(),
           mainAxisSpacing: AppDimensions.space12,
           crossAxisSpacing: AppDimensions.space12,
+          childAspectRatio: 0.85, // Adjusted to prevent overflow
           children: displayAchievements.asMap().entries.map((entry) {
             final index = entry.key;
             final achievement = entry.value;

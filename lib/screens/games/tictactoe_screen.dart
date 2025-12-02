@@ -475,6 +475,7 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
                               final isEmpty = cell.isEmpty;
 
                               return GestureDetector(
+                                behavior: HitTestBehavior.opaque,
                                 onTap: isEmpty ? () => _handleTap(index) : null,
                                 child:
                                     Container(

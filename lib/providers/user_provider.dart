@@ -143,8 +143,29 @@ class UserProvider extends ChangeNotifier {
       }
 
       // 2. Fetch fresh user stats from Worker
-      final userData = await _cloudflareService.getUserStats(userId: userId);
-      _user = User.fromJson(userData);
+      try {
+        final userData = await _cloudflareService.getUserStats(userId: userId);
+        _user = User.fromJson(userData);
+      } catch (e) {
+        // If user not found (404), try to create it
+        if (e.toString().contains('404') ||
+            (e is ApiException && e.statusCode == 404)) {
+          debugPrint('User not found, creating new user...');
+          final currentUser = _auth.currentUser;
+          if (currentUser != null) {
+            final newUserData = await _cloudflareService.createUser(
+              userId: userId,
+              email: currentUser.email ?? '',
+              displayName: currentUser.displayName ?? 'User',
+            );
+            _user = User.fromJson(newUserData);
+          } else {
+            rethrow;
+          }
+        } else {
+          rethrow;
+        }
+      }
 
       // Fallback to Firebase Auth data if backend returns empty fields
       if (currentUser != null) {

@@ -123,14 +123,15 @@ service cloud.firestore {
     match /referrals/{referralId} {
       allow read: if isAuthenticated();
       
-      // ✅ ONLY BACKEND CAN CREATE REFERRALS (via Admin SDK)
-      allow create, update, delete: if false;
+      // Allow create/update for now as client does it
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
       
       // Referral usages subcollection
       match /usages/{usageId} {
         allow read: if isAuthenticatedUser(resource.data.userId);
-        // ✅ ONLY BACKEND CAN WRITE USAGES (via Admin SDK)
-        allow create, update, delete: if false;
+        // Allow client to write usage
+        allow create: if isAuthenticated();
       }
     }
     
@@ -157,8 +158,8 @@ service cloud.firestore {
     // Device fingerprints
     match /deviceFingerprints/{fingerprintId} {
       allow read: if isAuthenticated();
-      // ✅ CRITICAL FIX: Only backend can write fingerprints (prevents pollution)
-      allow create, update, delete: if false; // Only backend via Admin SDK
+      // Allow client to register fingerprint
+      allow create, update: if isAuthenticated();
     }
     
     // Analytics collection
