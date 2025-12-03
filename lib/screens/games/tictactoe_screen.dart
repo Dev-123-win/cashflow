@@ -37,6 +37,7 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
   // Idempotency and Race Condition Handling
   String? _currentRequestId;
   Future<void>? _claimFuture;
+  bool _rewardClaimed = false; // ✅ BUG FIX: Prevent duplicate reward claims
 
   @override
   void initState() {
@@ -52,6 +53,7 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
     _game.setDifficulty(_difficulty);
     _isGameCompleted = false;
     _currentRequestId = null; // Reset request ID for new game
+    _rewardClaimed = false; // ✅ BUG FIX: Reset reward claim flag
   }
 
   // Show pre-game interstitial ad with 40% probability
@@ -196,6 +198,13 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
   }
 
   Future<void> _executeClaimReward() async {
+    // ✅ BUG FIX: Prevent multiple reward claims (fixes 4x multiplication)
+    if (_rewardClaimed) {
+      debugPrint('⚠️ Reward already claimed, ignoring duplicate callback');
+      return;
+    }
+    _rewardClaimed = true;
+
     try {
       // Show Rewarded Ad
       await _adService.showRewardedAd(
@@ -264,44 +273,48 @@ class _TicTacToeScreenState extends State<TicTacToeScreen> {
           _currentRequestId ??
           'tictactoe_${DateTime.now().millisecondsSinceEpoch}';
 
-      // Call Backend API
-      final result = await cloudflareService.recordGameResult(
+      // ✅ BUG FIX: Record local transaction FIRST (fixes missing history)
+      // Local history should show ALL games, regardless of backend success
+      await TransactionService().recordTransaction(
         userId: user.uid,
-        gameId: 'tictactoe',
-        won: true,
-        score: 0,
-        deviceId: deviceFingerprint,
-        requestId: requestId,
+        type: 'earning',
+        amount: 60.0,
+        gameType: 'tictactoe',
+        success: true,
+        status: 'completed',
+        description: 'Tic-Tac-Toe Win',
+        extraData: {'requestId': requestId},
       );
+      debugPrint('✅ Game transaction recorded locally');
 
-      // Update Local State from Backend Response
-      if (result['success'] == true) {
-        final newBalance = result['newBalance'];
-        if (newBalance != null) {
-          // Confirm optimistic update with server balance
-          final transactionId =
-              _currentRequestId ??
-              'tictactoe_${DateTime.now().millisecondsSinceEpoch}';
-          userProvider.confirmOptimisticCoins(transactionId, newBalance);
-        }
-
-        // ❌ REMOVED: Cooldown should start AFTER reward claim, not here
-        // Cooldown will be started in _executeClaimReward after ad is watched
-
-        // ✅ Record transaction locally for history screen
-        final actualReward = result['reward'] ?? 60;
-        await TransactionService().recordTransaction(
+      // THEN call Backend API (can fail safely)
+      try {
+        final result = await cloudflareService.recordGameResult(
           userId: user.uid,
-          type: 'earning',
-          amount: actualReward.toDouble(),
-          gameType: 'tictactoe',
-          success: true,
-          status: 'completed',
-          description: 'Tic-Tac-Toe Win',
-          extraData: {'requestId': requestId},
+          gameId: 'tictactoe',
+          won: true,
+          score: 0,
+          deviceId: deviceFingerprint,
+          requestId: requestId,
         );
 
-        debugPrint('✅ Game win recorded: ${result['transaction']['id']}');
+        // Update Local State from Backend Response
+        if (result['success'] == true) {
+          final newBalance = result['newBalance'];
+          if (newBalance != null) {
+            // Confirm optimistic update with server balance
+            final transactionId =
+                _currentRequestId ??
+                'tictactoe_${DateTime.now().millisecondsSinceEpoch}';
+            userProvider.confirmOptimisticCoins(transactionId, newBalance);
+          }
+
+          debugPrint('✅ Backend confirmed game win');
+        }
+      } catch (e) {
+        // Backend failure doesn't affect local history
+        debugPrint('⚠️ Backend call failed: $e');
+        rethrow; // Still throw to trigger rollback
       }
     } catch (e) {
       debugPrint('Error recording game: $e');

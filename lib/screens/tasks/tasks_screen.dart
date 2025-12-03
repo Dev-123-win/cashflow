@@ -15,6 +15,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../core/constants/app_assets.dart';
 import '../../widgets/zen_card.dart';
 import '../../services/task_service.dart';
+import '../../services/cloudflare_workers_service.dart';
 
 import '../../widgets/native_ad_widget.dart';
 import '../../widgets/shimmer_loading.dart';
@@ -236,17 +237,40 @@ class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
     }
 
     final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final transactionId =
+        'task_${DateTime.now().millisecondsSinceEpoch}_$taskId';
 
     try {
-      // Optimistic update
-      userProvider.updateLocalState(
-        coins: userProvider.user.coins + reward,
-        totalEarnings: userProvider.user.totalEarnings + (reward / 1000),
-        completedTasks: userProvider.user.completedTasks + 1,
-        completedTaskIds: [...userProvider.user.completedTaskIds, taskId],
-      );
+      // 1. Optimistic Update with transaction tracking
+      userProvider.addOptimisticCoins(reward, transactionId, 'task');
 
-      await TaskService().completeTask(user.uid, taskId, reward);
+      // 2. Call Backend API (routes through Cloudflare Worker)
+      final cloudflareService = CloudflareWorkersService();
+      final result = await cloudflareService
+          .recordTaskEarning(
+            userId: user.uid,
+            taskId: taskId,
+            deviceId: _deviceId!,
+            requestId: transactionId,
+          )
+          .timeout(
+            const Duration(seconds: 15),
+            onTimeout: () => throw Exception('Request timed out'),
+          );
+
+      // 3. Confirm with backend balance
+      if (result['success'] == true) {
+        final newBalance = result['newBalance'];
+        if (newBalance != null) {
+          userProvider.confirmOptimisticCoins(transactionId, newBalance);
+        }
+
+        // Update completed task IDs in local state
+        userProvider.updateLocalState(
+          completedTaskIds: [...userProvider.user.completedTaskIds, taskId],
+          completedTasks: userProvider.user.completedTasks + 1,
+        );
+      }
 
       if (mounted) {
         StateSnackbar.showSuccess(
@@ -256,7 +280,8 @@ class _TasksScreenState extends State<TasksScreen> with WidgetsBindingObserver {
       }
     } catch (e) {
       debugPrint('Error completing task: $e');
-      // Revert optimistic update if needed (omitted for brevity, but good practice)
+      // Rollback optimistic update on error
+      userProvider.rollbackOptimisticCoins(transactionId);
       if (mounted) {
         StateSnackbar.showError(context, 'Failed to complete task');
       }

@@ -72,6 +72,14 @@ class UserProvider extends ChangeNotifier {
   ///
   /// CRITICAL FIX: Each transaction has unique ID for proper reconciliation
   void addOptimisticCoins(int amount, String transactionId, String type) {
+    // ✅ BUG FIX: Prevent duplicate additions (fixes 4x multiplication)
+    if (_pendingTransactions.containsKey(transactionId)) {
+      debugPrint(
+        '⚠️ Transaction $transactionId already pending, skipping duplicate',
+      );
+      return;
+    }
+
     _pendingTransactions[transactionId] = PendingTransaction(
       id: transactionId,
       amount: amount,
@@ -186,6 +194,14 @@ class UserProvider extends ChangeNotifier {
           );
         }
       }
+
+      // ✅ BUG FIX: Clear pending transactions - server is source of truth
+      // This fixes coins not persisting after app restart
+      debugPrint(
+        '🧹 Clearing ${_pendingTransactions.length} pending transactions on startup',
+      );
+      _pendingTransactions.clear();
+      _savePendingTransactions();
 
       // 3. Save fresh data to local storage
       await _saveUserToPrefs();

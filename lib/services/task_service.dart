@@ -58,6 +58,11 @@ class TaskService {
   }
 
   /// Complete a task and update user balance
+  ///
+  /// ❌ DEPRECATED: This method writes directly to Firestore,
+  /// bypassing the Cloudflare Worker backend (no validation, no audit trail).
+  /// Use CloudflareWorkersService().recordTaskEarning() instead.
+  @Deprecated('Use CloudflareWorkersService().recordTaskEarning() instead')
   Future<void> completeTask(String userId, String taskId, int reward) async {
     try {
       await _firestore.collection('users').doc(userId).update({

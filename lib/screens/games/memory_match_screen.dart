@@ -42,6 +42,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
 
   // Idempotency
   String? _currentRequestId;
+  bool _rewardClaimed = false; // ✅ BUG FIX: Prevent duplicate reward claims
 
   @override
   void initState() {
@@ -223,6 +224,13 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
   Future<void> _watchAdToClaim() async {
     if (_claimFuture != null) return;
 
+    // ✅ BUG FIX: Prevent multiple reward claims (fixes 4x multiplication)
+    if (_rewardClaimed) {
+      debugPrint('⚠️ Reward already claimed, ignoring duplicate callback');
+      return;
+    }
+    _rewardClaimed = true;
+
     _claimFuture = _executeWatchAdToClaim();
     try {
       await _claimFuture;
@@ -310,40 +318,48 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
           _currentRequestId ??
           'memory_${DateTime.now().millisecondsSinceEpoch}';
 
-      final result = await cloudflareService.recordGameResult(
+      // ✅ BUG FIX: Record local transaction FIRST (fixes missing history)
+      // Local history should show ALL games, regardless of backend success
+      await TransactionService().recordTransaction(
         userId: user.uid,
-        gameId: 'memory_match',
-        won: true,
-        score: accuracy, // Pass accuracy as score
-        deviceId: deviceFingerprint,
-        requestId: requestId,
+        type: 'earning',
+        amount: estimatedReward.toDouble(),
+        gameType: 'memory_match',
+        success: true,
+        status: 'completed',
+        description: 'Memory Match Win',
+        extraData: {'requestId': requestId},
       );
+      debugPrint('✅ Game transaction recorded locally');
 
-      // Update Local State from Backend Response
-      if (result['success'] == true) {
-        final newBalance = result['newBalance'];
-        if (newBalance != null) {
-          // Confirm optimistic update with server balance
-          final transactionId =
-              _currentRequestId ??
-              'memory_${DateTime.now().millisecondsSinceEpoch}';
-          userProvider.confirmOptimisticCoins(transactionId, newBalance);
-        }
-
-        // ✅ Record transaction locally for history screen
-        final actualReward = result['reward'] ?? estimatedReward;
-        await TransactionService().recordTransaction(
+      // THEN call Backend API (can fail safely)
+      try {
+        final result = await cloudflareService.recordGameResult(
           userId: user.uid,
-          type: 'earning',
-          amount: actualReward.toDouble(),
-          gameType: 'memory_match',
-          success: true,
-          status: 'completed',
-          description: 'Memory Match Win',
-          extraData: {'requestId': requestId},
+          gameId: 'memory_match',
+          won: true,
+          score: accuracy, // Pass accuracy as score
+          deviceId: deviceFingerprint,
+          requestId: requestId,
         );
 
-        debugPrint('✅ Game win recorded: ${result['transaction']['id']}');
+        // Update Local State from Backend Response
+        if (result['success'] == true) {
+          final newBalance = result['newBalance'];
+          if (newBalance != null) {
+            // Confirm optimistic update with server balance
+            final transactionId =
+                _currentRequestId ??
+                'memory_${DateTime.now().millisecondsSinceEpoch}';
+            userProvider.confirmOptimisticCoins(transactionId, newBalance);
+          }
+
+          debugPrint('✅ Backend confirmed game win');
+        }
+      } catch (e) {
+        // Backend failure doesn't affect local history
+        debugPrint('⚠️ Backend call failed: $e');
+        rethrow; // Still throw to trigger rollback
       }
     } catch (e) {
       debugPrint('Error recording game: $e');
@@ -432,6 +448,7 @@ class _MemoryMatchScreenState extends State<MemoryMatchScreen>
       _isPreviewMode = true;
       _isGameCompleted = false;
       _currentRequestId = null;
+      _rewardClaimed = false; // ✅ BUG FIX: Reset reward claim flag
     });
 
     Future.delayed(Duration(seconds: _previewSeconds), () {
