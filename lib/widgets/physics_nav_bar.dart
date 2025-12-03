@@ -118,7 +118,7 @@ class _PhysicsNavBarState extends State<PhysicsNavBar>
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeOutCubic,
-          padding: const EdgeInsets.symmetric(vertical: AppDimensions.space8),
+          padding: const EdgeInsets.symmetric(vertical: AppDimensions.space4),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
@@ -129,7 +129,7 @@ class _PhysicsNavBarState extends State<PhysicsNavBar>
                 duration: const Duration(milliseconds: 200),
                 curve: Curves.easeOutBack,
                 child: Container(
-                  padding: const EdgeInsets.all(AppDimensions.space8),
+                  padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
                     gradient: isSelected
                         ? LinearGradient(
@@ -154,7 +154,7 @@ class _PhysicsNavBarState extends State<PhysicsNavBar>
                   ),
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 2),
               // Label
               AnimatedDefaultTextStyle(
                 duration: const Duration(milliseconds: 300),

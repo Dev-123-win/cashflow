@@ -129,7 +129,8 @@ service cloud.firestore {
       
       // Referral usages subcollection
       match /usages/{usageId} {
-        allow read: if isAuthenticatedUser(resource.data.userId);
+        allow read: if isAuthenticatedUser(resource.data.userId) || 
+                       get(/databases/$(database)/documents/referrals/$(referralId)).data.referrerId == request.auth.uid;
         // Allow client to write usage
         allow create: if isAuthenticated();
       }

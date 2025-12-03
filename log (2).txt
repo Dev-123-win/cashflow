@@ -1,0 +1,355 @@
+Connected devices:
+sdk gphone64 x86 64 (mobile) • emulator-5554  • android-x64 • Android 16 (API 36) (emulator)
+sdk gphone64 x86 64 (mobile) • localhost:5555 • android-x64 • Android 16 (API 36) (emulator)
+[1]: sdk gphone64 x86 64 (emulator-5554)
+[2]: sdk gphone64 x86 64 (localhost:5555)
+Please choose one (or "q" to quit): 1
+Launching lib/main.dart on sdk gphone64 x86 64 in debug mode...
+Running Gradle task 'assembleDebug'...                             10.8s
+✓ Built build/app/outputs/flutter-apk/app-debug.apk
+Installing build/app/outputs/flutter-apk/app-debug.apk...        1,173ms
+D/FlutterJNI( 6602): Beginning load of flutter...
+D/FlutterJNI( 6602): flutter (null) was loaded normally!
+I/flutter ( 6602): [IMPORTANT:flutter/shell/platform/android/android_context_gl_impeller.cc(104)] Using the Impeller rendering backend (OpenGLES).
+I/flutter ( 6602): Firebase initialized successfully
+I/flutter ( 6602): Firestore offline persistence enabled with 100MB limit
+I/flutter ( 6602): AuthService initialized successfully
+I/flutter ( 6602): Local Notification Service initialization error: PlatformException(exact_alarms_not_permitted, Exact alarms are not permitted, null, null)
+I/cr_CombinedPProvider( 6602): #registerProvider() provider:WV.C8@eac7f isPolicyCacheEnabled:false policyProvidersSize:0
+I/cr_PolicyProvider( 6602): #setManagerAndSource() 0
+I/cr_CombinedPProvider( 6602): #linkNativeInternal() 1
+I/cr_AppResProvider( 6602): #getApplicationRestrictionsFromUserManager() Bundle[EMPTY_PARCEL]
+I/cr_PolicyProvider( 6602): #notifySettingsAvailable() 0
+I/cr_CombinedPProvider( 6602): #onSettingsAvailable() 0
+I/cr_CombinedPProvider( 6602): #flushPolicies()
+Syncing files to device sdk gphone64 x86 64...                  
+I/upreet.rewardly( 6602): AssetManager2(0x71eaf44aaf58) locale list changing from [] to [en-US]
+I/upreet.rewardly( 6602): AssetManager2(0x71eaf44ac218) locale list changing from [] to [en-US]
+Syncing files to device sdk gphone64 x86 64...                     270ms
+
+Flutter run key commands.
+r Hot reload. 🔥🔥🔥
+R Hot restart.
+h List all available interactive commands.
+d Detach (terminate "flutter run" but leave application running).
+c Clear the screen
+q Quit (terminate the application on the device).
+
+A Dart VM Service on sdk gphone64 x86 64 is available at: http://127.0.0.1:40315/7PJGmrKxNcg=/
+The Flutter DevTools debugger and profiler on sdk gphone64 x86 64 is available at: http://127.0.0.1:40315/7PJGmrKxNcg=/devtools/?uri=ws://127.0.0.1:40315/7PJGmrKxNcg=/ws
+I/CameraManagerGlobal( 6602): Connecting to camera service
+I/flutter ( 6602): ✅ Google Mobile Ads initialized successfully
+I/flutter ( 6602): 🔄 All ads preloading in background
+I/flutter ( 6602): Google Mobile Ads initialized successfully
+I/Choreographer( 6602): Skipped 149 frames!  The application may be doing too much work on its main thread.
+D/ProfileInstaller( 6602): Installing profile for com.supreet.rewardly
+W/cr_media( 6602): BLUETOOTH_CONNECT permission is missing.
+W/cr_media( 6602): getBluetoothAdapter() requires BLUETOOTH permission
+W/cr_media( 6602): registerBluetoothIntentsIfNeeded: Requires BLUETOOTH permission
+W/libc    ( 6602): Access denied finding property "vendor.mesa.log"
+W/libc    ( 6602): Access denied finding property "vendor.mesa.log.file"
+E/MESA    ( 6602): Failed to open rendernode: No such file or directory
+D/vulkan  ( 6602): searching for layers in '/data/app/~~gEI3WttETVBS2n1yXOArEw==/com.supreet.rewardly-DUkpnrx-4tFey7J4WqAEag==/lib/x86_64'
+D/vulkan  ( 6602): searching for layers in '/data/app/~~gEI3WttETVBS2n1yXOArEw==/com.supreet.rewardly-DUkpnrx-4tFey7J4WqAEag==/base.apk!/lib/x86_64'
+W/libc    ( 6602): Access denied finding property "vendor.mesa.vk.trace.per.submit"
+W/libc    ( 6602): Access denied finding property "vendor.mesa.gallium.print.optio"
+W/libc    ( 6602): Access denied finding property "vendor.mesa.vk.trace.frame"
+W/libc    ( 6602): Access denied finding property "vendor.mesa.vk.wsi.headless.swa"
+I/upreet.rewardly( 6602): AssetManager2(0x71eaf44aa918) locale list changing from [] to [en-US]
+D/DynamitePackage( 6602): Instantiating com.google.android.gms.ads.ChimeraAdManagerCreatorImpl
+I/Ads     ( 6602): This request is sent from a test device.
+W/ConnectionStatusConfig( 6602): Dynamic lookup for intent failed for action: com.google.android.gms.ads.service.CACHE
+I/DynamiteModule( 6602): Considering local module com.google.android.gms.ads.dynamite:0 and remote module com.google.android.gms.ads.dynamite:244410203
+I/DynamiteModule( 6602): Selected remote version of com.google.android.gms.ads.dynamite, version >= 244410203
+V/DynamiteModule( 6602): Dynamite loader version >= 2, using loadModule2NoCrashUtils
+I/upreet.rewardly( 6602): AssetManager2(0x71eaf44b6ad8) locale list changing from [] to [en-US]
+I/upreet.rewardly( 6602): AssetManager2(0x71eaf44b5e58) locale list changing from [] to [en-US]
+I/upreet.rewardly( 6602): AssetManager2(0x71eaf44afd78) locale list changing from [] to [en-US]
+I/Ads     ( 6602): This request is sent from a test device.
+W/chromium( 6602): [WARNING:viz_main_impl.cc(85)] VizNullHypothesis is disabled (not a warning)
+I/DynamiteModule( 6602): Considering local module com.google.android.gms.ads.dynamite:0 and remote module com.google.android.gms.ads.dynamite:244410203
+I/DynamiteModule( 6602): Selected remote version of com.google.android.gms.ads.dynamite, version >= 244410203
+V/DynamiteModule( 6602): Dynamite loader version >= 2, using loadModule2NoCrashUtils
+I/Ads     ( 6602): This request is sent from a test device.
+D/DynamitePackage( 6602): Instantiating com.google.android.gms.ads.ChimeraAdManagerCreatorImpl
+I/Ads     ( 6602): This request is sent from a test device.
+D/DynamitePackage( 6602): Instantiating com.google.android.gms.ads.ChimeraAdManagerCreatorImpl
+I/Ads     ( 6602): This request is sent from a test device.
+I/LocationAssistant( 6602): onNeedLocationPermission called
+W/libc    ( 6602): Access denied finding property "ro.debuggable"
+W/upreet.rewardly( 6602): type=1400 audit(0.0:113): avc:  denied  { read } for  name="u:object_r:userdebug_or_eng_prop:s0" dev="tmpfs" ino=371 scontext=u:r:untrusted_app:s0:c217,c256,c512,c768 tcontext=u:object_r:userdebug_or_eng_prop:s0 tclass=file permissive=0 app=com.supreet.rewardly
+W/upreet.rewardly( 6602): Verification of void com.google.android.gms.common.internal.BaseGmsClient.<init>(android.content.Context, android.os.Handler, com.google.android.gms.common.internal.GmsClientSupervisor, com.google.android.gms.common.GoogleApiAvailabilityLight, int, com.google.android.gms.common.internal.BaseGmsClient$BaseConnectionCallbacks, com.google.android.gms.common.internal.BaseGmsClient$BaseOnConnectionFailedListener) took 120.436ms (730.68 bytecodes/s) (0B arena alloc)
+I/upreet.rewardly( 6602): Background concurrent mark compact GC freed 10MB AllocSpace bytes, 62(2004KB) LOS objects, 49% free, 8258KB/16MB, paused 1.792ms,4.067ms total 253.630ms
+D/nativeloader( 6602): Load /data/app/~~gEI3WttETVBS2n1yXOArEw==/com.supreet.rewardly-DUkpnrx-4tFey7J4WqAEag==/base.apk!/lib/x86_64/libtoolChecker.so using class loader ns clns-9 (caller=/data/app/~~gEI3WttETVBS2n1yXOArEw==/com.supreet.rewardly-DUkpnrx-4tFey7J4WqAEag==/base.apk!classes22.dex): ok
+W/libc    ( 6602): Access denied finding property "ro.debuggable"
+W/libc    ( 6602): Access denied finding property "ro.secure"
+I/Ads     ( 6602): JS: The jsLoaded GMSG has been sent (https://googleads.g.doubleclick.net/mads/static/mad/sdk/native/production/sdk-core-v40-impl.html:1008)
+I/chromium( 6602): [INFO:CONSOLE(1008)] "The jsLoaded GMSG has been sent", source: https://googleads.g.doubleclick.net/mads/static/mad/sdk/native/production/sdk-core-v40-impl.html (1008)
+W/libc    ( 6602): Access denied finding property "ro.debuggable"
+W/libc    ( 6602): Access denied finding property "ro.debuggable"
+W/libc    ( 6602): Access denied finding property "ro.secure"
+W/ConnectionStatusConfig( 6602): Dynamic lookup for intent failed for action: com.google.android.gms.ads.service.START
+W/Ads     ( 6602): Not retrying to fetch app settings
+I/flutter ( 6602): unhandled element <style/>; Picture key: Svg loader
+W/Ads     ( 6602): Not retrying to fetch app settings
+I/Choreographer( 6602): Skipped 186 frames!  The application may be doing too much work on its main thread.
+W/Ads     ( 6602): Not retrying to fetch app settings
+W/Ads     ( 6602): Not retrying to fetch app settings
+I/HWUI    ( 6602): Davey! duration=3385ms; Flags=1, FrameTimelineVsyncId=59437, IntendedVsync=477132972694, Vsync=480232972570, InputEventId=0, HandleInputStart=480234317683, AnimationStart=480234319931, PerformTraversalsStart=480247980535, DrawStart=480267418960, FrameDeadline=477149639360, FrameStartTime=480233083268, FrameInterval=16666666, WorkloadTarget=16666666, SyncQueued=480272558453, SyncStart=480273058187, IssueDrawCommandsStart=480273489021, SwapBuffers=480331956942, FrameCompleted=480518708348, DequeueBufferDuration=4031260, QueueBufferDuration=946516, GpuCompleted=480517115575, SwapBuffersCompleted=480518708348, DisplayPresentTime=0, CommandSubmissionCompleted=480331956942, 
+I/flutter ( 6602): 🔄 Health check: Fresh result (true)
+I/Choreographer( 6602): Skipped 38 frames!  The application may be doing too much work on its main thread.
+D/InsetsController( 6602): hide(ime(), fromIme=false)
+I/ImeTracker( 6602): com.supreet.rewardly:e11c612b: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+W/upreet.rewardly( 6602): JNI critical lock held for 24.093ms on Thread[109,tid=6807,Runnable,Thread*=0x71eba4592d70,peer=0x24f0658,"GassDGClient"]
+D/nativeloader( 6602): Configuring clns-13 for other apk . target_sdk_version=36, uses_libraries=ALL, library_path=, permitted_path=/data:/mnt/expand
+D/nativeloader( 6602): Load /data/user/0/com.supreet.rewardly/app_pccache/6/F0E15D8B981172FF4C62D64C6EAFD7A18C4E067E/pcam.jar!/libdF4B135777AD2.so using isolated ns clns-13 (caller=/data/user/0/com.supreet.rewardly/app_pccache/6/F0E15D8B981172FF4C62D64C6EAFD7A18C4E067E/pcam.jar): ok
+W/pool-27-thread-( 6602): type=1400 audit(0.0:925): avc:  granted  { execute } for  path="/data/data/com.supreet.rewardly/app_pccache/6/F0E15D8B981172FF4C62D64C6EAFD7A18C4E067E/pcam.jar" dev="dm-55" ino=361337 scontext=u:r:untrusted_app:s0:c217,c256,c512,c768 tcontext=u:object_r:app_data_file:s0:c217,c256,c512,c768 tclass=file app=com.supreet.rewardly
+I/Ads     ( 6602): Ad failed to load : 3
+I/flutter ( 6602): ❌ App Open Ad failed to load: Publisher data not found. <https://support.google.com/admob/answer/9905175#9>
+I/Ads     ( 6602): Ad failed to load : 3
+I/flutter ( 6602): ❌ Rewarded Ad failed to load: No fill.
+I/Ads     ( 6602): Ad failed to load : 3
+I/flutter ( 6602): ❌ Interstitial Ad failed to load: No fill.
+I/upreet.rewardly( 6602): Background concurrent mark compact GC freed 2600KB AllocSpace bytes, 47(5452KB) LOS objects, 49% free, 10150KB/19MB, paused 5.631ms,2.983ms total 177.782ms
+I/Ads     ( 6602): Ad failed to load : 3
+I/flutter ( 6602): ❌ Rewarded Interstitial Ad failed to load: No fill.
+I/Ads     ( 6602): JS: The jsLoaded GMSG has been sent (https://googleads.g.doubleclick.net/mads/static/mad/sdk/native/production/sdk-core-v40-impl.html:1008)
+I/chromium( 6602): [INFO:CONSOLE(1008)] "The jsLoaded GMSG has been sent", source: https://googleads.g.doubleclick.net/mads/static/mad/sdk/native/production/sdk-core-v40-impl.html (1008)
+I/DynamiteModule( 6602): Considering local module com.google.android.gms.ads.dynamite:0 and remote module com.google.android.gms.ads.dynamite:244410203
+I/DynamiteModule( 6602): Selected remote version of com.google.android.gms.ads.dynamite, version >= 244410203
+I/upreet.rewardly( 6602): AssetManager2(0x71eaf44aa918) locale list changing from [] to [en-US]
+I/upreet.rewardly( 6602): AssetManager2(0x71eaf44b03b8) locale list changing from [] to [en-US]
+I/upreet.rewardly( 6602): AssetManager2(0x71eaf44b86f8) locale list changing from [] to [en-US]
+I/flutter ( 6602): ✅ Banner Ad loaded
+W/WindowOnBackDispatcher( 6602): sendCancelIfRunning: isInProgress=false callback=io.flutter.embedding.android.FlutterActivity$1@ef67baf
+I/upreet.rewardly( 6602): AssetManager2(0x71eaf44c2c98) locale list changing from [] to [en-US]
+I/ImeTracker( 6602): com.supreet.rewardly:fb54d96c: onRequestShow at ORIGIN_CLIENT reason SHOW_SOFT_INPUT fromUser false
+D/InsetsController( 6602): show(ime(), fromIme=false)
+D/InsetsController( 6602): Setting requestedVisibleTypes to -1 (was -9)
+D/InputConnectionAdaptor( 6602): The input method toggled cursor monitoring on
+W/InteractionJankMonitor( 6602): Initializing without READ_DEVICE_CONFIG permission. enabled=false, interval=1, missedFrameThreshold=3, frameTimeThreshold=64, package=com.supreet.rewardly
+I/ImeTracker( 6602): com.supreet.rewardly:fb54d96c: onShown
+I/ImeTracker( 6602): com.supreet.rewardly:5b555622: onRequestShow at ORIGIN_CLIENT reason SHOW_SOFT_INPUT fromUser false
+D/InsetsController( 6602): show(ime(), fromIme=false)
+I/ImeTracker( 6602): com.supreet.rewardly:5b555622: onCancelled at PHASE_CLIENT_APPLY_ANIMATION
+I/ImeTracker( 6602): com.supreet.rewardly:d85c6377: onRequestShow at ORIGIN_CLIENT reason SHOW_SOFT_INPUT fromUser false
+D/InsetsController( 6602): show(ime(), fromIme=false)
+I/ImeTracker( 6602): com.supreet.rewardly:d85c6377: onCancelled at PHASE_CLIENT_APPLY_ANIMATION
+I/ImeTracker( 6602): com.supreet.rewardly:7eed1a96: onRequestShow at ORIGIN_CLIENT reason SHOW_SOFT_INPUT fromUser false
+D/InsetsController( 6602): show(ime(), fromIme=false)
+I/ImeTracker( 6602): com.supreet.rewardly:7eed1a96: onCancelled at PHASE_CLIENT_APPLY_ANIMATION
+D/InputConnectionAdaptor( 6602): The input method toggled cursor monitoring on
+D/InputConnectionAdaptor( 6602): The input method toggled cursor monitoring off
+D/InputConnectionAdaptor( 6602): The input method toggled cursor monitoring on
+I/ImeTracker( 6602): com.supreet.rewardly:1553f132: onRequestShow at ORIGIN_CLIENT reason SHOW_SOFT_INPUT fromUser false
+D/InsetsController( 6602): show(ime(), fromIme=false)
+I/ImeTracker( 6602): com.supreet.rewardly:1553f132: onCancelled at PHASE_CLIENT_APPLY_ANIMATION
+D/InputConnectionAdaptor( 6602): The input method toggled cursor monitoring on
+I/FirebaseAuth( 6602): Logging in as supreetdalawai113@gmail.com with empty reCAPTCHA token
+I/ImeTracker( 6602): com.supreet.rewardly:87cf0834: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser false
+D/InsetsController( 6602): hide(ime(), fromIme=false)
+W/WindowOnBackDispatcher( 6602): sendCancelIfRunning: isInProgress=false callback=android.view.ImeBackAnimationController@2eff1b4
+D/InsetsController( 6602): Setting requestedVisibleTypes to -9 (was -1)
+D/CompatChangeReporter( 6602): Compat change id reported: 395521150; UID 10217; state: ENABLED
+W/System  ( 6602): Ignoring header X-Firebase-Locale because its value was null.
+W/System  ( 6602): Ignoring header X-Firebase-Locale because its value was null.
+I/ImeTracker( 6602): system_server:4509e4aa: onCancelled at PHASE_CLIENT_ON_CONTROLS_CHANGED
+D/FirebaseAuth( 6602): Notifying id token listeners about user ( qnKKmMPOcjbwqyTN2VXbOM0bSjh2 ).
+D/FirebaseAuth( 6602): Notifying auth state listeners about user ( qnKKmMPOcjbwqyTN2VXbOM0bSjh2 ).
+I/flutter ( 6602): --------------------------------------------------
+I/flutter ( 6602): 📤 REQUEST: GET https://earnquest-worker.earnplay12345.workers.dev/api/leaderboard?limit=100
+I/flutter ( 6602): --------------------------------------------------
+
+══╡ EXCEPTION CAUGHT BY RENDERING LIBRARY ╞═════════════════════════════════════════════════════════
+The following assertion was thrown during layout:
+A RenderFlex overflowed by 10.0 pixels on the bottom.
+
+The relevant error-causing widget was:
+  Column Column:file:///home/user/myapp/lib/widgets/physics_nav_bar.dart:122:18
+
+To inspect this widget in Flutter DevTools, visit:
+http://127.0.0.1:40315/7PJGmrKxNcg=/devtools//#/inspector?uri=http%3A%2F%2F127.0.0.1%3A40315%2F7PJGmrKxNcg%3D%2F&inspectorRef=inspector-0
+
+The overflowing RenderFlex has an orientation of Axis.vertical.
+The edge of the RenderFlex that is overflowing has been marked in the rendering with a yellow and
+black striped pattern. This is usually caused by the contents being too big for the RenderFlex.
+Consider applying a flex factor (e.g. using an Expanded widget) to force the children of the
+RenderFlex to fit within the available space instead of being sized to their natural size.
+This is considered an error condition because it indicates that there is content that cannot be
+seen. If the content is legitimately bigger than the available space, consider clipping it with a
+ClipRect widget before putting it in the flex, or using a scrollable container rather than a Flex,
+like a ListView.
+The specific RenderFlex in question is: RenderFlex#72283 relayoutBoundary=up14 OVERFLOWING:
+  creator: Column ← Padding ← Container ← AnimatedContainer ← Listener ← _GestureSemantics ←
+    RawGestureDetector ← GestureDetector ← Expanded ← Row ← ClipRRect ← Padding ← ⋯
+  parentData: offset=Offset(0.0, 8.0) (can use size)
+  constraints: BoxConstraints(w=71.7, 0.0<=h<=52.0)
+  size: Size(71.7, 52.0)
+  direction: vertical
+  mainAxisAlignment: center
+  mainAxisSize: min
+  crossAxisAlignment: center
+  verticalDirection: down
+  spacing: 0.0
+◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+Another exception was thrown: A RenderFlex overflowed by 9.0 pixels on the bottom.
+Another exception was thrown: A RenderFlex overflowed by 9.0 pixels on the bottom.
+Another exception was thrown: A RenderFlex overflowed by 9.0 pixels on the bottom.
+Another exception was thrown: A RenderFlex overflowed by 9.0 pixels on the bottom.
+D/DynamitePackage( 6602): Instantiating com.google.android.gms.ads.ChimeraAdManagerCreatorImpl
+I/Ads     ( 6602): This request is sent from a test device.
+W/ConnectionStatusConfig( 6602): Dynamic lookup for intent failed for action: com.google.android.gms.ads.service.CACHE
+W/ConnectionStatusConfig( 6602): Dynamic lookup for intent failed for action: com.google.android.gms.ads.service.START
+I/upreet.rewardly( 6602): AssetManager2(0x71eaf44d8a98) locale list changing from [] to [en-US]
+D/DynamitePackage( 6602): Instantiating com.google.android.gms.ads.ChimeraAdManagerCreatorImpl
+I/upreet.rewardly( 6602): Background concurrent mark compact GC freed 6481KB AllocSpace bytes, 29(3244KB) LOS objects, 49% free, 10MB/21MB, paused 2.855ms,4.883ms total 155.546ms
+I/Ads     ( 6602): This request is sent from a test device.
+W/DynamiteModule( 6602): Local module descriptor class for com.google.android.gms.providerinstaller.dynamite not found.
+W/Ads     ( 6602): Not retrying to fetch app settings
+I/DynamiteModule( 6602): Considering local module com.google.android.gms.providerinstaller.dynamite:0 and remote module com.google.android.gms.providerinstaller.dynamite:0
+W/ProviderInstaller( 6602): Failed to load providerinstaller module: No acceptable module com.google.android.gms.providerinstaller.dynamite found. Local version is 0 and remote version is 0.
+I/upreet.rewardly( 6602): AssetManager2(0x71eaf44d1d38) locale list changing from [] to [en-US]
+D/ApplicationLoaders( 6602): Returning zygote-cached class loader: /system/framework/org.apache.http.legacy.jar
+D/ApplicationLoaders( 6602): Returning zygote-cached class loader: /system/framework/com.android.media.remotedisplay.jar
+D/ApplicationLoaders( 6602): Returning zygote-cached class loader: /system/framework/com.android.location.provider.jar
+D/ApplicationLoaders( 6602): Returning zygote-cached class loader: /system_ext/framework/androidx.window.extensions.jar
+D/ApplicationLoaders( 6602): Returning zygote-cached class loader: /system_ext/framework/androidx.window.sidecar.jar
+W/ProviderInstaller( 6602): Failed to report request stats: com.google.android.gms.common.security.ProviderInstallerImpl.reportRequestStats [class android.content.Context, long, long]
+I/flutter ( 6602): --------------------------------------------------
+I/flutter ( 6602): 📥 RESPONSE: GET https://earnquest-worker.earnplay12345.workers.dev/api/leaderboard?limit=100
+I/flutter ( 6602): Status Code: 200
+I/flutter ( 6602): Body: {"success":true,"leaderboard":[{"userId":"yCxe646Sx2SvmlHa6EuAqxLaWEt1","displayName":"supreet","totalEarned":1.4},{"userId":"qnKKmMPOcjbwqyTN2VXbOM0bSjh2","displayName":"supreet","totalEarned":0}],"source":"cache"}
+I/flutter ( 6602): --------------------------------------------------
+E/GoogleApiManager( 6602): Failed to get service from broker. 
+E/GoogleApiManager( 6602): java.lang.SecurityException: Unknown calling package name 'com.google.android.gms'.
+E/GoogleApiManager( 6602): 	at android.os.Parcel.createExceptionOrNull(Parcel.java:3340)
+E/GoogleApiManager( 6602): 	at android.os.Parcel.createException(Parcel.java:3324)
+E/GoogleApiManager( 6602): 	at android.os.Parcel.readException(Parcel.java:3307)
+E/GoogleApiManager( 6602): 	at android.os.Parcel.readException(Parcel.java:3249)
+E/GoogleApiManager( 6602): 	at asrs.a(:com.google.android.gms@250834038@25.08.34 (260800-739221510):36)
+E/GoogleApiManager( 6602): 	at aspz.z(:com.google.android.gms@250834038@25.08.34 (260800-739221510):143)
+E/GoogleApiManager( 6602): 	at arxi.run(:com.google.android.gms@250834038@25.08.34 (260800-739221510):54)
+E/GoogleApiManager( 6602): 	at android.os.Handler.handleCallback(Handler.java:995)
+E/GoogleApiManager( 6602): 	at android.os.Handler.dispatchMessage(Handler.java:103)
+E/GoogleApiManager( 6602): 	at bzmg.my(:com.google.android.gms@250834038@25.08.34 (260800-739221510):1)
+E/GoogleApiManager( 6602): 	at bzmg.dispatchMessage(:com.google.android.gms@250834038@25.08.34 (260800-739221510):5)
+E/GoogleApiManager( 6602): 	at android.os.Looper.loopOnce(Looper.java:248)
+E/GoogleApiManager( 6602): 	at android.os.Looper.loop(Looper.java:338)
+E/GoogleApiManager( 6602): 	at android.os.HandlerThread.run(HandlerThread.java:85)
+W/CondFlagRegistrar( 6602): Failed to register com.google.android.gms.providerinstaller#com.google.android.gms
+W/CondFlagRegistrar( 6602): eudb: 17: 17: API: Phenotype.API is not available on this device. Connection failed with: ConnectionResult{statusCode=DEVELOPER_ERROR, resolution=null, message=null}
+W/CondFlagRegistrar( 6602): 	at eudd.a(:com.google.android.gms@250834038@25.08.34 (260800-739221510):13)
+W/CondFlagRegistrar( 6602): 	at fodf.d(:com.google.android.gms@250834038@25.08.34 (260800-739221510):3)
+W/CondFlagRegistrar( 6602): 	at fodh.run(:com.google.android.gms@250834038@25.08.34 (260800-739221510):130)
+W/CondFlagRegistrar( 6602): 	at fofn.execute(:com.google.android.gms@250834038@25.08.34 (260800-739221510):1)
+W/CondFlagRegistrar( 6602): 	at fodx.h(:com.google.android.gms@250834038@25.08.34 (260800-739221510):1)
+W/CondFlagRegistrar( 6602): 	at fodx.l(:com.google.android.gms@250834038@25.08.34 (260800-739221510):101)
+W/CondFlagRegistrar( 6602): 	at fodx.p(:com.google.android.gms@250834038@25.08.34 (260800-739221510):19)
+W/CondFlagRegistrar( 6602): 	at emtb.hJ(:com.google.android.gms@250834038@25.08.34 (260800-739221510):35)
+W/CondFlagRegistrar( 6602): 	at ebcn.run(:com.google.android.gms@250834038@25.08.34 (260800-739221510):14)
+W/CondFlagRegistrar( 6602): 	at fofn.execute(:com.google.android.gms@250834038@25.08.34 (260800-739221510):1)
+W/CondFlagRegistrar( 6602): 	at ebco.b(:com.google.android.gms@250834038@25.08.34 (260800-739221510):18)
+W/CondFlagRegistrar( 6602): 	at ebdd.b(:com.google.android.gms@250834038@25.08.34 (260800-739221510):36)
+W/CondFlagRegistrar( 6602): 	at ebdf.d(:com.google.android.gms@250834038@25.08.34 (260800-739221510):25)
+W/CondFlagRegistrar( 6602): 	at aruq.c(:com.google.android.gms@250834038@25.08.34 (260800-739221510):9)
+W/CondFlagRegistrar( 6602): 	at arxg.q(:com.google.android.gms@250834038@25.08.34 (260800-739221510):48)
+W/CondFlagRegistrar( 6602): 	at arxg.d(:com.google.android.gms@250834038@25.08.34 (260800-739221510):10)
+W/CondFlagRegistrar( 6602): 	at arxg.g(:com.google.android.gms@250834038@25.08.34 (260800-739221510):211)
+W/CondFlagRegistrar( 6602): 	at arxg.onConnectionFailed(:com.google.android.gms@250834038@25.08.34 (260800-739221510):2)
+W/CondFlagRegistrar( 6602): 	at arxi.run(:com.google.android.gms@250834038@25.08.34 (260800-739221510):82)
+W/CondFlagRegistrar( 6602): 	at android.os.Handler.handleCallback(Handler.java:995)
+W/CondFlagRegistrar( 6602): 	at android.os.Handler.dispatchMessage(Handler.java:103)
+W/CondFlagRegistrar( 6602): 	at bzmg.my(:com.google.android.gms@250834038@25.08.34 (260800-739221510):1)
+W/CondFlagRegistrar( 6602): 	at bzmg.dispatchMessage(:com.google.android.gms@250834038@25.08.34 (260800-739221510):5)
+W/CondFlagRegistrar( 6602): 	at android.os.Looper.loopOnce(Looper.java:248)
+W/CondFlagRegistrar( 6602): 	at android.os.Looper.loop(Looper.java:338)
+W/CondFlagRegistrar( 6602): 	at android.os.HandlerThread.run(HandlerThread.java:85)
+W/CondFlagRegistrar( 6602): Caused by: arti: 17: API: Phenotype.API is not available on this device. Connection failed with: ConnectionResult{statusCode=DEVELOPER_ERROR, resolution=null, message=null}
+W/CondFlagRegistrar( 6602): 	at aspl.a(:com.google.android.gms@250834038@25.08.34 (260800-739221510):15)
+W/CondFlagRegistrar( 6602): 	at arut.a(:com.google.android.gms@250834038@25.08.34 (260800-739221510):1)
+W/CondFlagRegistrar( 6602): 	at aruq.c(:com.google.android.gms@250834038@25.08.34 (260800-739221510):5)
+W/CondFlagRegistrar( 6602): 	... 12 more
+D/nativeloader( 6602): Load /product/priv-app/PrebuiltGmsCore/PrebuiltGmsCore.apk!/lib/x86_64/libconscrypt_gmscore_jni.so using class loader ns product-clns-10 (caller=/product/priv-app/PrebuiltGmsCore/PrebuiltGmsCore.apk!classes3.dex): ok
+V/NativeCrypto( 6602): Registering com/google/android/gms/org/conscrypt/NativeCrypto's 308 native methods...
+I/upreet.rewardly( 6602): hiddenapi: Accessing hidden method Ldalvik/system/VMStack;->getStackClass2()Ljava/lang/Class; (runtime_flags=0, domain=core-platform, api=unsupported) from Lfjlv; (domain=app) using reflection: allowed
+I/upreet.rewardly( 6602): hiddenapi: Accessing hidden method Ljava/security/spec/ECParameterSpec;->getCurveName()Ljava/lang/String; (runtime_flags=0, domain=core-platform, api=unsupported) from Lcom/google/android/gms/org/conscrypt/Platform; (domain=app) using reflection: allowed
+I/euco    ( 6602): Unable to retrieve flag snapshot for com.google.android.gms.providerinstaller#com.google.android.gms, using defaults.
+I/ProviderInstaller( 6602): Installed default security provider GmsCore_OpenSSL
+I/upreet.rewardly( 6602): hiddenapi: Accessing hidden field Ljava/net/Socket;->impl:Ljava/net/SocketImpl; (runtime_flags=0, domain=core-platform, api=unsupported) from Lcom/google/android/gms/org/conscrypt/Platform; (domain=app) using reflection: allowed
+I/upreet.rewardly( 6602): hiddenapi: Accessing hidden method Ljava/security/spec/ECParameterSpec;->setCurveName(Ljava/lang/String;)V (runtime_flags=0, domain=core-platform, api=unsupported) from Lcom/google/android/gms/org/conscrypt/Platform; (domain=app) using reflection: allowed
+W/upreet.rewardly( 6602): Suspending all threads took: 10.395ms
+I/DynamiteModule( 6602): Considering local module com.google.android.gms.ads.dynamite:0 and remote module com.google.android.gms.ads.dynamite:244410203
+I/DynamiteModule( 6602): Selected remote version of com.google.android.gms.ads.dynamite, version >= 244410203
+I/upreet.rewardly( 6602): AssetManager2(0x71eaf44d8458) locale list changing from [] to [en-US]
+I/upreet.rewardly( 6602): AssetManager2(0x71eaf44fc998) locale list changing from [] to [en-US]
+I/upreet.rewardly( 6602): Background concurrent mark compact GC freed 5172KB AllocSpace bytes, 48(5764KB) LOS objects, 49% free, 13MB/27MB, paused 12.133ms,5.737ms total 296.973ms
+I/flutter ( 6602): ✅ Banner Ad loaded
+I/PlatformViewsController( 6602): Hosting view in view hierarchy for platform view: 0
+I/PlatformViewsController( 6602): PlatformView is using SurfaceProducer backend
+I/flutter ( 6602): --------------------------------------------------
+I/flutter ( 6602): 📤 REQUEST: GET https://earnquest-worker.earnplay12345.workers.dev/api/user/stats?userId=qnKKmMPOcjbwqyTN2VXbOM0bSjh2
+I/flutter ( 6602): --------------------------------------------------
+I/DynamiteModule( 6602): Considering local module com.google.android.gms.ads.dynamite:0 and remote module com.google.android.gms.ads.dynamite:244410203
+I/DynamiteModule( 6602): Selected remote version of com.google.android.gms.ads.dynamite, version >= 244410203
+I/flutter ( 6602): ✅ Banner Ad loaded
+I/Choreographer( 6602): Skipped 57 frames!  The application may be doing too much work on its main thread.
+I/PlatformViewsController( 6602): Hosting view in view hierarchy for platform view: 1
+I/PlatformViewsController( 6602): PlatformView is using SurfaceProducer backend
+I/flutter ( 6602): --------------------------------------------------
+I/flutter ( 6602): 📥 RESPONSE: GET https://earnquest-worker.earnplay12345.workers.dev/api/user/stats?userId=qnKKmMPOcjbwqyTN2VXbOM0bSjh2
+I/flutter ( 6602): Status Code: 404
+I/flutter ( 6602): Body: {"error":"Not Found"}
+I/flutter ( 6602): --------------------------------------------------
+I/flutter ( 6602): User stats error: ApiException(404): Not Found
+I/flutter ( 6602): User not found, creating new user...
+W/System  ( 6602): Ignoring header X-Firebase-Locale because its value was null.
+W/Firestore( 6602): (24.11.0) [Firestore]: Listen for Query(target=Query(referrals/7ektE3htQkO6C7sldYZJ/usages order by -usedAt, -__name__);limitType=LIMIT_TO_FIRST) failed: Status{code=PERMISSION_DENIED, description=Missing or insufficient permissions., cause=null}
+I/flutter ( 6602): Error getting referral stats: [cloud_firestore/permission-denied] The caller does not have permission to execute the specified operation.
+D/FirebaseAuth( 6602): Notifying id token listeners about user ( qnKKmMPOcjbwqyTN2VXbOM0bSjh2 ).
+I/flutter ( 6602): --------------------------------------------------
+I/flutter ( 6602): 📤 REQUEST: POST https://earnquest-worker.earnplay12345.workers.dev/api/user/create
+I/flutter ( 6602): Body: {"userId":"qnKKmMPOcjbwqyTN2VXbOM0bSjh2","email":"supreetdalawai113@gmail.com","displayName":"supreet","referralCode":null}
+I/flutter ( 6602): --------------------------------------------------
+I/flutter ( 6602): ✅ Device fingerprint updated: 4ecde754187def057cdecc38e7f7c29c32fa8005327c0796ce524df312e1f835
+I/flutter ( 6602): --------------------------------------------------
+I/flutter ( 6602): 📥 RESPONSE: POST https://earnquest-worker.earnplay12345.workers.dev/api/user/create
+I/flutter ( 6602): Status Code: 200
+I/flutter ( 6602): Body: {"success":true,"user":{"accountCreatedAt":"2025-12-02T09:18:14.357Z","kycVerified":false,"referralCount":0,"referralCode":"EQ7094357","lastActivity":"2025-12-02T15:58:17.630Z","availableBalance":0,"lockReason":"","lastAdWatchDate":"2025-12-02T10:40:04.130Z","tictactoePlayedToday":2,"totalEarned":240,"currentStreak":0,"longestStreak":0,"failedWithdrawals":0,"isAccountLocked":false,"tasksCompletedToday":0,"lastLoginAt":"2025-12-02T09:18:14.357Z","gamesPlayedToday":2,"totalWithdrawn":0,"coins":240,"dailySpins":0,"upiId":null,"email":"supreetdalawai113@gmail.com","displayName":"supreet","referredBy":null,"userId":"qnKKmMPOcjbwqyTN2VXbOM0bSjh2","adsWatchedToday":1}}
+I/flutter ( 6602): --------------------------------------------------
+I/flutter ( 6602): 🧹 Clearing 0 pending transactions on startup
+E/GoogleApiManager( 6602): Failed to get service from broker. 
+E/GoogleApiManager( 6602): java.lang.SecurityException: Unknown calling package name 'com.google.android.gms'.
+E/GoogleApiManager( 6602): 	at android.os.Parcel.createExceptionOrNull(Parcel.java:3340)
+E/GoogleApiManager( 6602): 	at android.os.Parcel.createException(Parcel.java:3324)
+E/GoogleApiManager( 6602): 	at android.os.Parcel.readException(Parcel.java:3307)
+E/GoogleApiManager( 6602): 	at android.os.Parcel.readException(Parcel.java:3249)
+E/GoogleApiManager( 6602): 	at asrs.a(:com.google.android.gms@250834038@25.08.34 (260800-739221510):36)
+E/GoogleApiManager( 6602): 	at aspz.z(:com.google.android.gms@250834038@25.08.34 (260800-739221510):143)
+E/GoogleApiManager( 6602): 	at arxi.run(:com.google.android.gms@250834038@25.08.34 (260800-739221510):54)
+E/GoogleApiManager( 6602): 	at android.os.Handler.handleCallback(Handler.java:995)
+E/GoogleApiManager( 6602): 	at android.os.Handler.dispatchMessage(Handler.java:103)
+E/GoogleApiManager( 6602): 	at bzmg.my(:com.google.android.gms@250834038@25.08.34 (260800-739221510):1)
+E/GoogleApiManager( 6602): 	at bzmg.dispatchMessage(:com.google.android.gms@250834038@25.08.34 (260800-739221510):5)
+E/GoogleApiManager( 6602): 	at android.os.Looper.loopOnce(Looper.java:248)
+E/GoogleApiManager( 6602): 	at android.os.Looper.loop(Looper.java:338)
+E/GoogleApiManager( 6602): 	at android.os.HandlerThread.run(HandlerThread.java:85)
+D/DynamitePackage( 6602): Instantiating com.google.android.gms.ads.ChimeraAdManagerCreatorImpl
+I/Ads     ( 6602): This request is sent from a test device.
+W/ConnectionStatusConfig( 6602): Dynamic lookup for intent failed for action: com.google.android.gms.ads.service.START
+I/DynamiteModule( 6602): Considering local module com.google.android.gms.ads.dynamite:0 and remote module com.google.android.gms.ads.dynamite:244410203
+I/DynamiteModule( 6602): Selected remote version of com.google.android.gms.ads.dynamite, version >= 244410203
+I/flutter ( 6602): ✅ Banner Ad loaded
+I/PlatformViewsController( 6602): Hosting view in view hierarchy for platform view: 2
+I/PlatformViewsController( 6602): PlatformView is using SurfaceProducer backend
+I/flutter ( 6602): ⚠️ Rewarded Ad not ready
+I/DynamiteModule( 6602): Considering local module com.google.android.gms.ads.dynamite:0 and remote module com.google.android.gms.ads.dynamite:244410203
+I/DynamiteModule( 6602): Selected remote version of com.google.android.gms.ads.dynamite, version >= 244410203
+V/DynamiteModule( 6602): Dynamite loader version >= 2, using loadModule2NoCrashUtils
+I/Ads     ( 6602): This request is sent from a test device.
+W/ConnectionStatusConfig( 6602): Dynamic lookup for intent failed for action: com.google.android.gms.ads.service.START
+I/Ads     ( 6602): Ad failed to load : 3
+I/flutter ( 6602): ❌ Rewarded Ad failed to load: No fill.
+I/upreet.rewardly( 6602): Background concurrent mark compact GC freed 10MB AllocSpace bytes, 39(3488KB) LOS objects, 49% free, 13MB/27MB, paused 16.578ms,65.217ms total 521.888ms
+Lost connection to device.
